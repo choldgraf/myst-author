@@ -32,10 +32,12 @@ Rebuild and reload the page after changes.
   It follows the current Markdown editor, scrolls with it, and clicking a block reveals its source line.
   Cmd-click (or Ctrl-click) a link to follow it.
 - Files outside the server's project folder get the fast preview and open-file references only.
+- The language features need jupyter-lsp, which ships with JupyterLab.
+  Without it, the extension logs a warning in the browser console, and only the preview works.
 
 ## Develop
 
 - `build.mjs`: compiles `src/` with esbuild, then bundles it with `@jupyterlab/builder`.
   JupyterLab and CodeMirror packages stay external, so the extension uses Lab's copies.
-- `src/index.ts`: attaches the language client to Markdown editors and adds the preview panel.
+- `src/index.ts`: attaches the language client (`@myst-author/lsp/client`) to Markdown editors and adds the preview panel (`@myst-author/preview/controller`).
   The preview panel is an iframe of the server's `preview.html`, the same page as the VS Code preview (`@myst-author/preview/page`).

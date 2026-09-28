@@ -1,5 +1,6 @@
 // VS Code runs extensions on its own Node without TypeScript support, so bundle everything into dist/.
 import { build } from 'esbuild';
+import { buildServer } from '@myst-author/lsp/build';
 import { execFileSync } from 'node:child_process';
 import { cpSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -10,7 +11,7 @@ const alias = { punycode: 'punycode/punycode.js' };
 const node = { alias, bundle: true, platform: 'node', format: 'cjs', target: 'node20', sourcemap: true, logLevel: 'warning' };
 await Promise.all([
   build({ ...node, entryPoints: ['src/extension.ts'], outfile: 'dist/extension.js', external: ['vscode'] }),
-  build({ ...node, entryPoints: ['../lsp/src/server.ts'], outfile: 'dist/lsp.js' }),
+  buildServer('dist/lsp.js'),
   build({
     entryPoints: ['src/webview.tsx'],
     outfile: 'dist/webview.js',

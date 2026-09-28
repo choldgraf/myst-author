@@ -7,14 +7,16 @@ import type { IDocumentWidget } from '@jupyterlab/docregistry';
 import { IEditorTracker, type FileEditor } from '@jupyterlab/fileeditor';
 import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
+import { connectLsp } from '@myst-author/lsp/client';
 import { builtPages, watchBuilds } from '@myst-author/preview/built';
-import { connectLsp } from '../../app/src/lsp.ts';
+import { PreviewController } from '@myst-author/preview/controller';
 
 type Editor = IDocumentWidget<FileEditor>;
 type Lsp = Awaited<ReturnType<typeof connectLsp>>;
 
 // The MyST Author server, which jupyter-server-proxy runs at <base>/myst-author/ (see binder/jupyter_server_config.py).
 const server = URLExt.join(PageConfig.getBaseUrl(), 'myst-author/');
+const serverOrigin = new URL(server, location.href).origin;
 // Jupyter's root folder as a file:// URI (set by jupyter-lsp, which ships with JupyterLab), to map Lab paths to document URIs.
 const jupyterRoot = PageConfig.getOption('rootUri').replace(/\/$/, '');
 const uriOf = (path: string) => `${jupyterRoot}/${path.split('/').map(encodeURIComponent).join('/')}`;
@@ -22,6 +24,12 @@ const pathOf = (uri: string) => (uri.startsWith(jupyterRoot + '/') ? decodeURICo
 
 const isMarkdown = (w: Editor | null): w is Editor => !!w && w.context.path.endsWith('.md');
 const cm = (w: Editor) => w.content.editor as CodeMirrorEditor;
+
+/** The (1-based) line at the top of the editor's viewport. */
+function topLine(w: Editor) {
+  const view = cm(w).editor;
+  return view.state.doc.lineAt(view.lineBlockAtHeight(view.scrollDOM.scrollTop).from).number;
+}
 
 /** Open `path` in Lab and put the cursor on (0-based) `line`. */
 async function show(docs: IDocumentManager, path: string, line: number) {
@@ -39,7 +47,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
   requires: [IEditorTracker, IDocumentManager],
   optional: [ICommandPalette],
   activate: (app: JupyterFrontEnd, tracker: IEditorTracker, docs: IDocumentManager, palette: ICommandPalette | null) => {
-    const lsp = connectLsp(server);
+    // Without rootUri, document URIs would be wrong, so skip the language features. The preview still works.
+    const lsp = jupyterRoot ? connectLsp(server) : Promise.reject(new Error("jupyter-lsp didn't set rootUri"));
     lsp.then((l) => {
       // Go to definition in another file: open it in Lab, then hand lsp-client its editor.
       l.client.workspace.displayFile = async (uri) => {
@@ -50,7 +59,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       const attach = (w: Editor) => isMarkdown(w) && cm(w).injectExtension(l.client.plugin(uriOf(w.context.path), 'markdown'));
       tracker.forEach(attach);
       tracker.widgetAdded.connect((_, w) => attach(w));
-    }, (err) => console.warn(`MyST Author: no server at ${server} (${err})`));
+    }, (err) => console.warn(`MyST Author: no language features from ${server} (${err})`));
 
     let preview: MainAreaWidget<MystPreview> | undefined;
     const command = 'myst-author:open-preview';
@@ -72,15 +81,32 @@ const plugin: JupyterFrontEndPlugin<void> = {
 class MystPreview extends Widget {
   private iframe = document.createElement('iframe');
   private editor: Editor | null = null;
-  private pages = builtPages(server + 'myst');
   private project: Promise<string>; // the project folder, relative to Jupyter's root
-  private stopWatching = watchBuilds(server.replace(/^http/, 'ws') + 'myst/socket', () => this.sendBuilt());
+  private preview = new PreviewController({
+    current: async () => {
+      const w = this.editor;
+      return w ? { path: PathExt.relative(await this.project, w.context.path), text: w.content.model.sharedModel.getSource(), dirty: w.context.model.dirty, line: topLine(w) } : undefined;
+    },
+    post: (m) => this.iframe.contentWindow?.postMessage(m, serverOrigin),
+    open: async (path, line) => show(this.docs, PathExt.join(await this.project, path), line),
+    openExternal: (url) => void window.open(url, '_blank', 'noopener'),
+    findLabel: async (id) => {
+      const l = await this.lsp;
+      const symbols = await l.client.request<unknown, { name: string; location: { uri: string; range: { start: { line: number } } } }[] | null>('workspace/symbol', { query: id });
+      const s = symbols?.find((s) => s.name === id.toLowerCase());
+      const path = s && pathOf(s.location.uri);
+      return path != null ? { path: PathExt.relative(await this.project, path), line: s!.location.range.start.line } : undefined;
+    },
+    warn: (message) => console.warn(`MyST Author: ${message}`),
+  });
+  private stopWatching = watchBuilds(server.replace(/^http/, 'ws') + 'myst/socket', () => this.preview.sendBuilt());
 
   constructor(private tracker: IEditorTracker, private docs: IDocumentManager, private lsp: Promise<Lsp>) {
     super();
     this.title.label = 'MyST Preview';
     this.title.closable = true;
     this.project = lsp.then((l) => pathOf(l.root) ?? '', () => '');
+    this.preview.pages = builtPages(server + 'myst');
     this.iframe.src = server + 'preview.html';
     this.iframe.style.cssText = 'width: 100%; height: 100%; border: 0';
     this.node.appendChild(this.iframe);
@@ -106,78 +132,23 @@ class MystPreview extends Widget {
       cm(this.editor).editor.scrollDOM.removeEventListener('scroll', this.onScroll);
     }
     this.editor = w;
+    this.title.label = `MyST: ${PathExt.basename(w.context.path)}`;
     w.content.model.sharedModel.changed.connect(this.sendText, this);
     w.context.model.stateChanged.connect(this.sendText, this); // the dirty flag
     cm(w).editor.scrollDOM.addEventListener('scroll', this.onScroll);
-    this.sendText();
-    this.sendBuilt();
+    this.preview.sendText();
+    this.preview.sendBuilt();
   }
 
-  private onScroll = () => {
-    const view = this.editor && cm(this.editor).editor;
-    if (view) this.post({ type: 'scroll', line: view.state.doc.lineAt(view.lineBlockAtHeight(view.scrollDOM.scrollTop).from).number });
+  private sendText() {
+    this.preview.sendText();
+  }
+
+  private onScroll = () => this.editor && this.preview.scroll(topLine(this.editor));
+
+  private onMessage = ({ source, data }: MessageEvent) => {
+    if (source === this.iframe.contentWindow) this.preview.onMessage(data);
   };
-
-  private onMessage = async ({ source, data: m }: MessageEvent) => {
-    if (source !== this.iframe.contentWindow || !this.editor) return;
-    if (m.type === 'ready') {
-      this.sendText();
-      this.sendBuilt();
-      this.onScroll();
-    } else if (m.type === 'reveal') {
-      show(this.docs, this.editor.context.path, m.line - 1);
-    } else if (m.type === 'follow') {
-      this.followLink(m.href, m.line);
-    }
-  };
-
-  /** Cmd/Ctrl-click on a link in the preview; `line` is where an in-page `#id` target renders, if found. */
-  private async followLink(href: string, line?: number) {
-    if (/^[a-z][\w+.-]*:/i.test(href)) return void window.open(href, '_blank', 'noopener'); // http:, mailto:, …
-    const here = this.editor!.context.path;
-    const [path, id] = href.split('#');
-    if (id) {
-      // Labels are project-wide, so ask the LSP where it is.
-      const symbols = await this.lsp.then((l) => l.client.request<unknown, { name: string; location: { uri: string; range: { start: { line: number } } } }[] | null>('workspace/symbol', { query: id })).catch(() => null);
-      const s = symbols?.find((s) => s.name === id.toLowerCase());
-      const target = s && pathOf(s.location.uri);
-      if (target) return show(this.docs, target, s.location.range.start.line);
-      if (line && !path) return show(this.docs, here, line - 1);
-    }
-    if (!path) return;
-    // Built pages link to other pages by slug (`/slug`); the fast preview keeps the author's relative path.
-    const location = [...this.pages.slugs].find(([, slug]) => '/' + slug === path)?.[0];
-    const target = location ? PathExt.join(await this.project, location) : PathExt.join(PathExt.dirname(here), decodeURIComponent(path));
-    show(this.docs, target, 0);
-  }
-
-  private post(message: object) {
-    this.iframe.contentWindow?.postMessage(message, '*');
-  }
-
-  /** The editor's path relative to the project, matching the content server's page `location`. */
-  private async path(w: Editor) {
-    const project = await this.project;
-    return !project ? w.context.path : w.context.path.startsWith(project + '/') ? w.context.path.slice(project.length + 1) : w.context.path;
-  }
-
-  private async sendText() {
-    const w = this.editor;
-    if (!w) return;
-    this.title.label = `MyST: ${PathExt.basename(w.context.path)}`;
-    this.post({ type: 'text', path: await this.path(w), text: w.content.model.sharedModel.getSource(), dirty: w.context.model.dirty });
-  }
-
-  private async sendBuilt() {
-    const w = this.editor;
-    if (!w) return;
-    const path = await this.path(w);
-    try {
-      this.post({ type: 'built', path, page: await this.pages.page(path) });
-    } catch (err) {
-      this.post({ type: 'built', path, page: null, error: (err as Error).message });
-    }
-  }
 }
 
 export default plugin;

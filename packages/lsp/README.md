@@ -55,3 +55,7 @@ Open documents are re-parsed live with `@myst-author/preview/parse`, so unsaved 
 - `src/project.ts`: the project index (content server pages plus open documents).
 - `src/xref.ts`: external project inventories and `xref:` resolution.
 - `src/server.ts`: the LSP wiring.
+- `src/client/`: the browser client (`@myst-author/lsp/client`), a `@codemirror/lsp-client` over a websocket, with inlay hints.
+- `src/myst.ts`: starts `myst start --headless` (`@myst-author/lsp/myst`).
+- `build.mjs`: bundles the server into `dist/server.cjs` with esbuild, which starts faster than the source.
+  The VS Code extension builds its copy with the same function.
