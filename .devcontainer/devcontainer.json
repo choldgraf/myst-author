@@ -1,0 +1,13 @@
+// GitHub Codespaces: opens the editor on the tour project in a browser tab.
+// postCreateCommand builds the VS Code extension but doesn't install it.
+// To try the extension, load it from source in desktop VS Code (see packages/vscode/README.md).
+{
+  "name": "MyST Author",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
+  "postCreateCommand": "npm ci && npm install -g mystmd && (cd packages/vscode && node build.mjs)",
+  "postAttachCommand": "npm start -- docs/examples/tour",
+  "forwardPorts": [4321],
+  "portsAttributes": {
+    "4321": { "label": "MyST Author", "onAutoForward": "openBrowser" }
+  }
+}

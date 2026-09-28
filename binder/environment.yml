@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+dependencies:
+  - nodejs=24
+  - jupyterlab
+  - jupyter-server-proxy
