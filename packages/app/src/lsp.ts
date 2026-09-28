@@ -36,6 +36,7 @@ export async function connectLsp(base = location.href) {
   const { uri: root }: { uri: string } = await fetch(new URL('api/root', base)).then((r) => r.json());
   const client = new LSPClient({
     rootUri: root,
+    timeout: 20000, // the host starts a language server process per connection, which can take seconds on a busy host (e.g. Binder)
     extensions: [inlayHints(), ...languageServerExtensions(), { editorExtension: definitionClick }], // inlayHints first: serverDiagnostics consumes the notification
   }).connect(transport(new URL('lsp', base).href.replace(/^http/, 'ws')));
   return {
