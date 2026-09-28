@@ -6,6 +6,12 @@ npm run build
 mkdir -p ~/.jupyter
 ln -sf "$PWD/binder/jupyter_server_config.py" ~/.jupyter/jupyter_server_config.py
 
+# The JupyterLab extension, which talks to the MyST Author server that jupyter_server_config.py sets up.
+npm run build -w packages/jupyterlab
+labextensions="$(jupyter --data-dir)/labextensions/@myst-author"
+mkdir -p "$labextensions"
+ln -sfn "$PWD/packages/jupyterlab/dist/labextension" "$labextensions/jupyterlab"
+
 # VS Code in the browser (jupyter-vscode-proxy launches it), with the MyST Author extension.
 # The standalone release bundles its own Node; conda-forge's code-server needs an older Node than this repo.
 curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix="$HOME/.local"

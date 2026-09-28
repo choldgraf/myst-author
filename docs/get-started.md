@@ -37,11 +37,11 @@ To point it at another folder, stop it with {kbd}`Ctrl+C` in the terminal and ru
 
 ## Open it on Binder
 
-[![Launch on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/choldgraf/myst-author/main?urlpath=myst-author/)
+[![Launch on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/choldgraf/myst-author/main?urlpath=lab/tree/docs/examples/tour/index.md)
 
-Binder builds the repository and opens the web editor on the tour project.
-It can't open other projects.
-To use VS Code with the extension instead, change the end of the URL from `/myst-author/` to `/vscode/` and open `docs/examples/tour/index.md`.
+Binder builds the repository and opens the tour in JupyterLab, with the [JupyterLab extension](guide/jupyterlab.md).
+The Launcher also has **VS Code**, with the [VS Code extension](guide/vscode.md), and **MyST Author**, the web editor.
+Only the tour project gets the whole-project features.
 The first launch can take a few minutes.
 Changes are lost when the Binder session ends.
 

@@ -56,4 +56,4 @@ After changing any package, rebuild (`node build.mjs`) and reload the window (**
   It also builds the webview CSS with Tailwind.
 - `src/extension.ts`: starts mystmd and the language client.
 - `src/preview.ts`: the preview panel (extension side).
-- `src/webview.tsx`: the preview page (webview side).
+- `src/webview.tsx`: the preview page (webview side), which is `@myst-author/preview/page`.

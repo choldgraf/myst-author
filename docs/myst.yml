@@ -21,6 +21,7 @@ project:
         - file: guide/preview.md
         - file: guide/directives.md
         - file: guide/vscode.md
+        - file: guide/jupyterlab.md
     - file: develop/index.md
       children:
         - file: develop/architecture.md

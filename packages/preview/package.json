@@ -30,6 +30,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./parse": "./src/parse.ts",
-    "./built": "./src/built.ts"
+    "./built": "./src/built.ts",
+    "./page": "./src/page.tsx",
+    "./page.css": "./src/page.css"
   }
 }
