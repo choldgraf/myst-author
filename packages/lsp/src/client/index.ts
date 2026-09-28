@@ -3,8 +3,7 @@ import { EditorView } from '@codemirror/view';
 import { inlayHints } from './inlayHints.ts';
 
 /** A websocket transport that buffers messages until the socket opens. */
-function transport(url: string): Transport {
-  const ws = new WebSocket(url);
+function transport(ws: WebSocket): Transport {
   let handlers: ((message: string) => void)[] = [];
   const pending: string[] = [];
   ws.onopen = () => pending.splice(0).forEach((m) => ws.send(m));
@@ -14,6 +13,20 @@ function transport(url: string): Transport {
     subscribe: (h) => handlers.push(h),
     unsubscribe: (h) => (handlers = handlers.filter((x) => x !== h)),
   };
+}
+
+/**
+ * Connect `client` to `url`, and reconnect with backoff when the socket closes or `initialize` fails.
+ * Reconnecting re-sends `initialize`, and lsp-client re-opens every attached editor's file.
+ */
+function keepConnected(client: LSPClient, url: string, delay = 1000) {
+  const ws = new WebSocket(url);
+  client.connect(transport(ws));
+  client.initializing.then(() => (delay = 1000), () => ws.close());
+  ws.addEventListener('close', () => {
+    client.disconnect(); // a fresh `initializing` promise; requests made meanwhile wait for the next connection
+    setTimeout(() => keepConnected(client, url, Math.min(delay * 2, 30000)), delay);
+  });
 }
 
 // Cmd/Ctrl-click a reference to jump to its target (F12 comes with languageServerExtensions).
@@ -38,7 +51,8 @@ export async function connectLsp(base = location.href) {
     rootUri: root,
     timeout: 20000, // the host starts a language server process per connection, which can take seconds on a busy host (e.g. Binder)
     extensions: [inlayHints(), ...languageServerExtensions(), { editorExtension: definitionClick }], // inlayHints first: serverDiagnostics consumes the notification
-  }).connect(transport(new URL('lsp', base).href.replace(/^http/, 'ws')));
+  });
+  keepConnected(client, new URL('lsp', base).href.replace(/^http/, 'ws'));
   return {
     client,
     root,

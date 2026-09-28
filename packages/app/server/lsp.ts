@@ -5,7 +5,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node';
 import { WebSocketServer } from 'ws';
 
-const serverScript = fileURLToPath(import.meta.resolve('@myst-author/lsp/src/server.ts'));
+// Production runs the bundle from `npm run build`, which answers `initialize` several times sooner than the TypeScript source.
+const serverScript = fileURLToPath(import.meta.resolve(process.env.NODE_ENV === 'production' ? '@myst-author/lsp/dist/server.cjs' : '@myst-author/lsp/server'));
 
 /** Returns an upgrade handler that bridges each websocket to its own `@myst-author/lsp` process over stdio. */
 export function lspBridge(root: string, contentServer: string) {

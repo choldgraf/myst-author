@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test src/parse.test.ts"
+    "test": "node --test src/*.test.ts"
   },
   "dependencies": {
     "@myst-theme/common": "^1.4.1",
@@ -31,6 +31,7 @@
     ".": "./src/index.ts",
     "./parse": "./src/parse.ts",
     "./built": "./src/built.ts",
+    "./controller": "./src/controller.ts",
     "./page": "./src/page.tsx",
     "./page.css": "./src/page.css"
   }

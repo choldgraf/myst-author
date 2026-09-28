@@ -1,11 +1,11 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { EditorView } from 'codemirror';
 import type { SymbolInformation } from 'vscode-languageserver-protocol';
+import { connectLsp } from '@myst-author/lsp/client';
 import { type BuiltPage, fromBuiltPage, parseMyst, Preview } from '@myst-author/preview';
 import { listFiles, readFile, writeFile } from './api.ts';
 import { builtPage, fileForSlug, sha256, watchBuilds } from './built.ts';
 import { Editor } from './Editor.tsx';
-import { connectLsp } from './lsp.ts';
 import { myst } from 'codemirror-lang-myst';
 import { QuickSwitcher } from './QuickSwitcher.tsx';
 

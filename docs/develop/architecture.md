@@ -13,11 +13,14 @@ The editor features live in reusable packages, and each host (the web app, VS Co
   Also loads mystmd's built page JSON for the built preview.
   Each rendered block keeps its source line range, which is what click-to-source and scroll sync use.
   `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews embed.
+  `@myst-author/preview/controller` is their host side: it sends the page the current file and answers its clicks.
+  Each extension gives it a small adapter to open files and look up labels.
 
 `packages/lsp` (`@myst-author/lsp`)
 : A language server for MyST references: completion, hover, go to definition, warnings, hints, and external references.
   It indexes mystmd's built pages plus the unsaved text of open files.
   It reads them from the *content server*, the local HTTP server that `myst start --headless` runs to serve built page JSON.
+  It also has the browser client for it (`@myst-author/lsp/client`), used by the web app and JupyterLab, and the launcher for `myst start --headless` (`@myst-author/lsp/myst`).
   See its [README](https://github.com/choldgraf/myst-author/tree/main/packages/lsp).
 
 `packages/codemirror-lang-myst`
@@ -65,6 +68,8 @@ flowchart TB
 4. The preview fetches the rebuilt page JSON through `/myst` and shows it if it matches the editor text.
    Until then it shows the fast in-browser render.
 5. Each browser connection to `/lsp` gets its own language server process.
+   In production it runs the bundle from `npm run build`, which starts faster than the TypeScript source.
+   If the connection drops, the browser reconnects and re-opens its files.
    The host adds the project folder and mystmd's address to the client's `initialize` message.
    The host picks mystmd's port when it starts it, so the address is known before the first build.
    The server loads the project once mystmd is up, and reloads its index on each rebuild.

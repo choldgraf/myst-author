@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
-import { startMyst } from '../../app/server/myst.ts';
+import { startMyst } from '@myst-author/lsp/myst';
 import { MystPreview } from './preview.ts';
 
 let client: LanguageClient | undefined;

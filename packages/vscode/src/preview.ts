@@ -1,8 +1,9 @@
 import { randomBytes } from 'node:crypto';
-import { join, relative, sep } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
 import { builtPages, watchBuilds } from '@myst-author/preview/built';
-import type { startMyst } from '../../app/server/myst.ts';
+import { PreviewController } from '@myst-author/preview/controller';
+import type { startMyst } from '@myst-author/lsp/myst';
 
 const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.document.languageId === 'markdown';
 
@@ -10,38 +11,56 @@ const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.documen
 export class MystPreview {
   private panel?: vscode.WebviewPanel;
   private editor = isMarkdown(vscode.window.activeTextEditor) ? vscode.window.activeTextEditor : undefined;
-  private pages?: ReturnType<typeof builtPages> | null; // undefined while mystmd starts, null if unavailable
+  private assets: Thenable<string | undefined>; // the content server's URL as the webview reaches it
+  private preview = new PreviewController({
+    current: () => {
+      const doc = this.panel && this.editor?.document;
+      const top = this.editor?.visibleRanges[0];
+      return doc && { path: this.path(doc.uri), text: doc.getText(), dirty: doc.isDirty, line: top && top.start.line + 1 };
+    },
+    post: (m) => this.panel?.webview.postMessage(m),
+    open: (path, line) => this.show(vscode.Uri.file(resolve(this.root ?? '/', path)), line),
+    openExternal: (url) => vscode.env.openExternal(vscode.Uri.parse(url)),
+    findLabel: async (id) => {
+      const symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeWorkspaceSymbolProvider', id);
+      const s = symbols?.find((s) => s.name === id.toLowerCase());
+      return s && { path: this.path(s.location.uri), line: s.location.range.start.line };
+    },
+    warn: (message) => vscode.window.showWarningMessage(message),
+  });
 
   constructor(
     private context: vscode.ExtensionContext,
     private root: string | undefined,
     myst: Awaited<ReturnType<typeof startMyst>> | undefined,
   ) {
+    // In Codespaces and code-server the webview runs in the browser, so images need the forwarded URL.
+    this.assets = myst ? vscode.env.asExternalUri(vscode.Uri.parse(myst.url)).then((u) => u.toString().replace(/\/$/, '')) : Promise.resolve(undefined);
     const ready = myst ? myst.ready.then(() => myst.url, () => undefined) : Promise.resolve(undefined);
     ready.then(async (url) => {
-      // In Codespaces and code-server the webview runs in the browser, so images need the forwarded URL.
-      const assets = url && (await vscode.env.asExternalUri(vscode.Uri.parse(url))).toString().replace(/\/$/, '');
-      this.pages = url ? builtPages(url, assets) : null;
-      if (url) context.subscriptions.push({ dispose: watchBuilds(`${url.replace(/^http/, 'ws')}/socket`, () => this.sendBuilt()) });
-      this.sendBuilt();
+      this.preview.pages = url ? builtPages(url, await this.assets) : null;
+      if (url) context.subscriptions.push({ dispose: watchBuilds(`${url.replace(/^http/, 'ws')}/socket`, () => this.preview.sendBuilt()) });
+      this.preview.sendBuilt();
     });
     context.subscriptions.push(
       vscode.window.onDidChangeActiveTextEditor((e) => {
         // Focusing the preview itself leaves no active editor; keep following the last markdown one.
         if (!isMarkdown(e) || e === this.editor) return;
         this.editor = e;
-        this.sendText();
-        this.sendBuilt();
+        this.retitle();
+        this.preview.sendText();
+        this.preview.sendBuilt();
       }),
-      vscode.workspace.onDidChangeTextDocument((e) => e.document === this.editor?.document && this.sendText()),
-      vscode.workspace.onDidSaveTextDocument((d) => d === this.editor?.document && this.sendText()),
+      vscode.workspace.onDidChangeTextDocument((e) => e.document === this.editor?.document && this.preview.sendText()),
+      vscode.workspace.onDidSaveTextDocument((d) => d === this.editor?.document && this.preview.sendText()),
       vscode.window.onDidChangeTextEditorVisibleRanges((e) => {
-        if (e.textEditor === this.editor && e.visibleRanges[0]) this.post({ type: 'scroll', line: e.visibleRanges[0].start.line + 1 });
+        if (e.textEditor === this.editor && e.visibleRanges[0]) this.preview.scroll(e.visibleRanges[0].start.line + 1);
       }),
     );
   }
 
-  open() {
+  async open() {
+    const assets = await this.assets;
     if (this.panel) return this.panel.reveal(vscode.ViewColumn.Beside, true);
     const dist = vscode.Uri.joinPath(this.context.extensionUri, 'dist');
     const panel = vscode.window.createWebviewPanel(
@@ -53,8 +72,8 @@ export class MystPreview {
     const { webview } = panel;
     const src = (file: string) => webview.asWebviewUri(vscode.Uri.joinPath(dist, file));
     const nonce = randomBytes(16).toString('base64');
-    // Built pages load images from the content server, which may be forwarded to any host.
-    const csp = `default-src 'none'; img-src ${webview.cspSource} http: https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
+    // Built pages load images from the content server, plus any remote images the author links to.
+    const csp = `default-src 'none'; img-src ${webview.cspSource} ${assets ? new URL(assets).origin : ''} https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
     webview.html = `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
@@ -64,45 +83,10 @@ export class MystPreview {
 <div id="root"></div>
 <script nonce="${nonce}" src="${src('webview.js')}"></script>
 </body></html>`;
-    webview.onDidReceiveMessage((m) => this.onMessage(m));
+    webview.onDidReceiveMessage((m) => this.preview.onMessage(m));
     panel.onDidDispose(() => (this.panel = undefined));
     this.panel = panel;
-  }
-
-  private onMessage(m: { type: string; line?: number; href?: string }) {
-    const editor = this.editor;
-    if (m.type === 'ready') {
-      this.sendText();
-      this.sendBuilt();
-      if (editor?.visibleRanges[0]) this.post({ type: 'scroll', line: editor.visibleRanges[0].start.line + 1 });
-    } else if (m.type === 'reveal' && editor) {
-      this.show(editor.document.uri, m.line! - 1);
-    } else if (m.type === 'follow') {
-      this.follow(m.href!, m.line);
-    }
-  }
-
-  /** Cmd/Ctrl-click on a link in the preview; `line` is where an in-page `#id` target renders, if found. */
-  private async follow(href: string, line?: number) {
-    if (/^[a-z][\w+.-]*:/i.test(href)) return vscode.env.openExternal(vscode.Uri.parse(href)); // http:, mailto:, …
-    const doc = this.editor?.document;
-    if (!doc) return;
-    const [path, id] = href.split('#');
-    // Built pages link to other pages by slug (`/slug`); the fast preview keeps the author's relative path.
-    const location = [...(this.pages?.slugs ?? [])].find(([, slug]) => '/' + slug === path)?.[0];
-    const uri = !path ? doc.uri
-      : location && this.root ? vscode.Uri.file(join(this.root, location))
-      : path.startsWith('/') ? undefined
-      : vscode.Uri.joinPath(doc.uri, '..', decodeURIComponent(path));
-    if (id) {
-      // Labels are project-wide, so ask the LSP where it is.
-      const symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeWorkspaceSymbolProvider', id);
-      const s = symbols?.find((s) => s.name === id.toLowerCase());
-      if (s) return this.show(s.location.uri, s.location.range.start.line);
-      if (line && uri?.toString() === doc.uri.toString()) return this.show(doc.uri, line - 1);
-    }
-    if (uri) this.show(uri, 0);
-    else vscode.window.showWarningMessage(`Can't follow ${href}`);
+    this.retitle();
   }
 
   private show(uri: vscode.Uri, line: number) {
@@ -110,32 +94,12 @@ export class MystPreview {
     return vscode.window.showTextDocument(uri, { viewColumn: this.editor?.viewColumn, selection: new vscode.Range(pos, pos) });
   }
 
-  private post(message: object) {
-    this.panel?.webview.postMessage(message);
+  private retitle() {
+    if (this.panel && this.editor) this.panel.title = `MyST: ${this.editor.document.uri.path.split('/').pop()}`;
   }
 
   /** Project-relative path with `/` separators, matching the content server's page `location`. */
-  private path(doc: vscode.TextDocument) {
-    const rel = this.root ? relative(this.root, doc.uri.fsPath) : '..';
-    return rel.startsWith('..') ? doc.uri.fsPath : rel.split(sep).join('/');
-  }
-
-  private sendText() {
-    const doc = this.editor?.document;
-    if (!doc || !this.panel) return;
-    this.panel.title = `MyST: ${doc.uri.path.split('/').pop()}`;
-    this.post({ type: 'text', path: this.path(doc), text: doc.getText(), dirty: doc.isDirty });
-  }
-
-  private async sendBuilt() {
-    const doc = this.editor?.document;
-    if (!doc || !this.panel || this.pages === undefined) return;
-    const path = this.path(doc);
-    if (this.pages === null) return this.post({ type: 'built', path, page: null, error: 'mystmd not found' });
-    try {
-      this.post({ type: 'built', path, page: await this.pages.page(path) });
-    } catch (err) {
-      this.post({ type: 'built', path, page: null, error: (err as Error).message });
-    }
+  private path(uri: vscode.Uri) {
+    return relative(this.root ?? '/', uri.fsPath).split(sep).join('/');
   }
 }
