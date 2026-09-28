@@ -8,7 +8,7 @@ import { WebSocketServer } from 'ws';
 const serverScript = fileURLToPath(import.meta.resolve('@myst-author/lsp/src/server.ts'));
 
 /** Returns an upgrade handler that bridges each websocket to its own `@myst-author/lsp` process over stdio. */
-export function lspBridge(root: string, contentServer: Promise<string | undefined>) {
+export function lspBridge(root: string, contentServer: string) {
   const wss = new WebSocketServer({ noServer: true });
   wss.on('connection', (ws) => {
     const child = spawn(process.execPath, [serverScript, '--stdio'], { stdio: ['pipe', 'pipe', 'inherit'] });
@@ -21,17 +21,13 @@ export function lspBridge(root: string, contentServer: Promise<string | undefine
     const writer = new StreamMessageWriter(child.stdin);
     new StreamMessageReader(child.stdout).listen((msg) => ws.send(JSON.stringify(msg)));
     // The browser doesn't know the project's path or the content server, so fill them in on `initialize`.
-    // Messages are queued so nothing overtakes `initialize` while it waits for myst.
-    let queue = Promise.resolve();
     ws.on('message', (data) => {
-      queue = queue.then(async () => {
-        const msg = JSON.parse(String(data));
-        if (msg.method === 'initialize') {
-          msg.params.rootUri = pathToFileURL(root).href;
-          msg.params.initializationOptions = { ...msg.params.initializationOptions, contentServer: await contentServer };
-        }
-        await writer.write(msg);
-      });
+      const msg = JSON.parse(String(data));
+      if (msg.method === 'initialize') {
+        msg.params.rootUri = pathToFileURL(root).href;
+        msg.params.initializationOptions = { ...msg.params.initializationOptions, contentServer };
+      }
+      writer.write(msg);
     });
   });
   return (req: IncomingMessage, socket: Duplex, head: Buffer) =>

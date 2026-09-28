@@ -39,8 +39,11 @@ async function json(url: string) {
   return r.json();
 }
 
-/** Load built pages from a `myst start` content server at `base` (e.g. `myst` or `http://localhost:3100`). */
-export function builtPages(base: string) {
+/**
+ * Load built pages from a `myst start` content server at `base` (e.g. `myst` or `http://localhost:3100`).
+ * Image URLs point at `assets`, for when whoever displays the page reaches the server by another URL.
+ */
+export function builtPages(base: string, assets = base) {
   // config.json lists slugs but not files, so map source location → slug by fetching each page once.
   let slugs = new Map<string, string>();
   let slugList = '';
@@ -56,7 +59,7 @@ export function builtPages(base: string) {
     const slug = slugs.get('/' + path);
     if (!slug) return null;
     const result: BuiltPage = await json(`${base}/content/${slug}.json`);
-    rebaseImages(result.mdast, base);
+    rebaseImages(result.mdast, assets);
     return result;
   }
   return {

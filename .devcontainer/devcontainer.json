@@ -1,13 +1,19 @@
-// GitHub Codespaces: opens the editor on the tour project in a browser tab.
-// postCreateCommand builds the VS Code extension but doesn't install it.
-// To try the extension, load it from source in desktop VS Code (see packages/vscode/README.md).
+// GitHub Codespaces: VS Code with the MyST Author extension, plus the web app on port 4321.
+// The extension starts when you open a Markdown file; the tour opens on start.
 {
   "name": "MyST Author",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
-  "postCreateCommand": "npm ci && npm install -g mystmd && (cd packages/vscode && node build.mjs)",
-  "postAttachCommand": "npm start -- docs/examples/tour",
+  "postCreateCommand": "npm ci && npm install -g mystmd && npm run package -w packages/vscode",
+  // `code` only reaches the editor once it has attached, so install the extension here rather than in postCreateCommand.
+  "postAttachCommand": {
+    "extension": "code --install-extension packages/vscode/myst-author.vsix",
+    "app": "npm start -- docs/examples/tour"
+  },
   "forwardPorts": [4321],
   "portsAttributes": {
-    "4321": { "label": "MyST Author", "onAutoForward": "openBrowser" }
+    "4321": { "label": "MyST Author", "onAutoForward": "notify" }
+  },
+  "customizations": {
+    "codespaces": { "openFiles": ["docs/examples/tour/index.md"] }
   }
 }

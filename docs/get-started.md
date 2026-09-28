@@ -29,17 +29,19 @@ References to labels in other files aren't completed or checked, and you only ge
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/choldgraf/myst-author)
 
-Codespaces installs everything and starts the editor on the tour project.
-The editor opens once setup finishes.
+Codespaces installs everything, including the [VS Code extension](guide/vscode.md), and opens the tour project's first page.
+To see the preview, run **MyST: Open Preview to the Side** from the Command Palette.
 
-To open another folder in the codespace, stop the editor with {kbd}`Ctrl+C` in the terminal and run `npm start -- <path>`.
+The web editor also runs on the tour project, on port 4321 (see the **Ports** tab).
+To point it at another folder, stop it with {kbd}`Ctrl+C` in the terminal and run `npm start -- <path>`.
 
 ## Open it on Binder
 
 [![Launch on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/choldgraf/myst-author/main?urlpath=myst-author/)
 
-Binder builds the repository and opens the editor on the tour project.
+Binder builds the repository and opens the web editor on the tour project.
 It can't open other projects.
+To use VS Code with the extension instead, change the end of the URL from `/myst-author/` to `/vscode/` and open `docs/examples/tour/index.md`.
 The first launch can take a few minutes.
 Changes are lost when the Binder session ends.
 

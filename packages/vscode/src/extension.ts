@@ -1,30 +1,29 @@
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
 import { startMyst } from '../../app/server/myst.ts';
 import { MystPreview } from './preview.ts';
 
 let client: LanguageClient | undefined;
-let myst: ReturnType<typeof startMyst> | undefined;
+let myst: Awaited<ReturnType<typeof startMyst>> | undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
-  const folder = vscode.workspace.workspaceFolders?.find((f) => existsSync(join(f.uri.fsPath, 'myst.yml')));
-  const root = folder?.uri.fsPath;
-  const port = root ? contentServer(root) : Promise.resolve(undefined);
+  const root = projectRoot();
+  myst = root ? await startMyst(root) : undefined;
 
-  const preview = new MystPreview(context, root, port);
+  const preview = new MystPreview(context, root, myst);
   context.subscriptions.push(vscode.commands.registerCommand('mystAuthor.openPreview', () => preview.open()));
 
-  // Wait for the content server so the LSP indexes the whole project from the start.
-  const p = await port;
+  // The LSP loads the whole project once mystmd has built it; until then it knows the open files.
   client = new LanguageClient(
     'mystAuthor',
     'MyST Author',
     { module: context.asAbsolutePath('dist/lsp.js'), transport: TransportKind.ipc },
     {
       documentSelector: [{ scheme: 'file', language: 'markdown' }],
-      initializationOptions: { contentServer: p && `http://localhost:${p}` },
+      workspaceFolder: root ? { uri: vscode.Uri.file(root), name: basename(root), index: 0 } : undefined,
+      initializationOptions: { contentServer: myst?.url },
     },
   );
   await client.start();
@@ -35,9 +34,13 @@ export async function deactivate() {
   await client?.stop();
 }
 
-/** Start `myst start --headless` in `root`; resolves with its port, or undefined if mystmd is missing or slow. */
-function contentServer(root: string): Promise<number | undefined> {
-  myst = startMyst(root);
-  const timeout = new Promise<undefined>((resolve) => setTimeout(resolve, 60_000));
-  return Promise.race([myst.ready, timeout]).catch(() => undefined);
+/** The folder of the nearest `myst.yml` above the Markdown file that activated us, if any. */
+function projectRoot() {
+  const doc = vscode.window.activeTextEditor?.document ?? vscode.workspace.textDocuments.find((d) => d.languageId === 'markdown');
+  const top = doc && vscode.workspace.getWorkspaceFolder(doc.uri)?.uri.fsPath;
+  if (!doc || !top) return;
+  for (let dir = dirname(doc.uri.fsPath); ; dir = dirname(dir)) {
+    if (existsSync(join(dir, 'myst.yml'))) return dir;
+    if (dir === top) return;
+  }
 }

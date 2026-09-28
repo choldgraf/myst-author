@@ -4,3 +4,4 @@ dependencies:
   - nodejs=24
   - jupyterlab
   - jupyter-server-proxy
+  - jupyter-vscode-proxy

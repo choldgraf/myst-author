@@ -5,3 +5,12 @@ npm install -g mystmd
 npm run build
 mkdir -p ~/.jupyter
 ln -sf "$PWD/binder/jupyter_server_config.py" ~/.jupyter/jupyter_server_config.py
+
+# VS Code in the browser (jupyter-vscode-proxy launches it), with the MyST Author extension.
+# The standalone release bundles its own Node; conda-forge's code-server needs an older Node than this repo.
+curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix="$HOME/.local"
+npm run package -w packages/vscode
+~/.local/bin/code-server --install-extension packages/vscode/myst-author.vsix
+# A Binder is a throwaway copy of this repo, so skip the "trust this folder?" prompt that disables extensions.
+mkdir -p ~/.local/share/code-server/User
+echo '{"security.workspace.trust.enabled": false}' > ~/.local/share/code-server/User/settings.json

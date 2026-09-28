@@ -17,9 +17,17 @@ code --extensionDevelopmentPath="$PWD" /path/to/a/myst/project
 `--extensionDevelopmentPath` loads the extension in that window only.
 It doesn't install it.
 
+To install it (in VS Code, Codespaces, or code-server), package it and install the `.vsix`:
+
+```sh
+npm run package -w packages/vscode   # from the repo root; writes packages/vscode/myst-author.vsix
+code --install-extension packages/vscode/myst-author.vsix
+```
+
 ## What works
 
-- If a workspace folder has a `myst.yml`, the extension runs `myst start --headless` there.
+- The extension starts when you open a Markdown file.
+  Its project is the folder of the nearest `myst.yml` above that file, and it runs `myst start --headless` there.
   Set `MYST_BIN` if `myst` isn't on your `PATH`.
 - Without mystmd the extension still runs.
   The language server only knows the open files, and the preview only shows the fast render.
