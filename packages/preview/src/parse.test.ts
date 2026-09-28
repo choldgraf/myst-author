@@ -1,7 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fromBuiltPage } from './built.ts';
-import { parseMyst } from './parse.ts';
+import { fromBuiltPage, parseMyst } from './parse.ts';
 
 const md = [
   '---', 'title: Hi', '---',          // 1-3

@@ -1,4 +1,4 @@
-# Serves MyST Author at <server>/myst-author/ via jupyter-server-proxy.
+# Serves MyST Author at <server>/myst-author/ via jupyter-server-proxy: the web editor, and the backend of the JupyterLab extension.
 # postBuild symlinks this file into ~/.jupyter/, so resolve the link to find the repo.
 import os
 

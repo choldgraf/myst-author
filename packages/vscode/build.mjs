@@ -25,7 +25,7 @@ await Promise.all([
   }),
 ]);
 
-execFileSync('npx', ['tailwindcss', '-c', 'tailwind.config.cjs', '-i', 'src/webview.css', '-o', 'dist/webview.css', '--minify'], { stdio: 'inherit' });
+execFileSync('npx', ['tailwindcss', '-c', 'tailwind.config.cjs', '-i', '../preview/src/page.css', '-o', 'dist/webview.css', '--minify'], { stdio: 'inherit' });
 // katex.min.css refers to its fonts relative to itself.
 const katex = dirname(createRequire(import.meta.url).resolve('katex/package.json'));
 cpSync(join(katex, 'dist/fonts'), 'dist/fonts', { recursive: true });

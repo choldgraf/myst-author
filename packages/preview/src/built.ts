@@ -1,5 +1,4 @@
 import type { GenericParent } from 'myst-common';
-import { toBlocks, type ParseResult } from './parse.ts';
 
 /** The parts of a `myst start` page JSON (`/content/{slug}.json`) that we use. */
 export type BuiltPage = {
@@ -14,17 +13,6 @@ export type BuiltPage = {
 export function pageSlugs(config: any): string[] {
   const project = config.projects[0];
   return [project.index, ...project.pages.map((p: { slug?: string }) => p.slug).filter(Boolean)];
-}
-
-/** Render a page built by mystmd the same way as the fast in-browser parse. */
-export function fromBuiltPage(page: BuiltPage): ParseResult {
-  return {
-    tree: page.mdast,
-    blocks: toBlocks(page.mdast),
-    messages: [],
-    frontmatter: page.frontmatter ?? {},
-    references: page.references,
-  };
 }
 
 /** Hex SHA-256 of the text, as mystmd records it in page JSON. */

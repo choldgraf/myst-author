@@ -4,7 +4,7 @@ description: The packages that make up MyST Author and how they talk to each oth
 ---
 
 MyST Author is a set of small packages in one repository.
-The editor features live in reusable packages, and each host (the web app, VS Code) wires them together.
+The editor features live in reusable packages, and each host (the web app, VS Code, JupyterLab) wires them together.
 
 ## Packages
 
@@ -12,6 +12,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 : Parses a MyST page in the browser with mystmd's parser and transforms, and renders it with `myst-to-react`.
   Also loads mystmd's built page JSON for the built preview.
   Each rendered block keeps its source line range, which is what click-to-source and scroll sync use.
+  `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews embed.
 
 `packages/lsp` (`@myst-author/lsp`)
 : A language server for MyST references: completion, hover, go to definition, warnings, hints, and external references.
@@ -29,6 +30,10 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 `packages/vscode`
 : The VS Code extension.
   It runs the same language server and shows the same preview in a webview.
+
+`packages/jupyterlab` (`@myst-author/jupyterlab`)
+: The JupyterLab extension.
+  It connects Lab's Markdown editors to the host server's language server and shows the server's preview page beside them.
 
 ## How the web app fits together
 
@@ -61,10 +66,14 @@ flowchart TB
    Until then it shows the fast in-browser render.
 5. Each browser connection to `/lsp` gets its own language server process.
    The host adds the project folder and mystmd's address to the client's `initialize` message.
-   It holds that `initialize` message until mystmd is ready or has failed to start.
-   The server reloads its index on each rebuild.
+   The host picks mystmd's port when it starts it, so the address is known before the first build.
+   The server loads the project once mystmd is up, and reloads its index on each rebuild.
 
 The VS Code extension does the same without the host server: it starts `myst start --headless` and the language server itself, and fetches built pages from mystmd directly.
+
+The JupyterLab extension uses the host server, which jupyter-server-proxy runs inside Jupyter.
+Lab's editors connect to its `/lsp` bridge, and the preview panel is an iframe of its `preview.html`.
+Lab reads and saves the files itself, so it doesn't use `/api/files`.
 
 ## Design choices
 

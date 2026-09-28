@@ -22,6 +22,7 @@ import { proofDirective } from 'myst-ext-proof';
 import { tabDirectives } from 'myst-ext-tabs';
 import type { GenericNode, GenericParent } from 'myst-common';
 import { load } from 'js-yaml';
+import type { BuiltPage } from './built.ts';
 import { unified } from 'unified';
 import { EXIT, SKIP, visit } from 'unist-util-visit';
 import { VFile } from 'vfile';
@@ -101,4 +102,15 @@ function firstPosition(node: GenericNode) {
     return EXIT;
   });
   return pos;
+}
+
+/** Render a page built by mystmd the same way as the fast in-browser parse. */
+export function fromBuiltPage(page: BuiltPage): ParseResult {
+  return {
+    tree: page.mdast,
+    blocks: toBlocks(page.mdast),
+    messages: [],
+    frontmatter: page.frontmatter ?? {},
+    references: page.references,
+  };
 }

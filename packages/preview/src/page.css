@@ -1,7 +1,7 @@
 @import '@myst-theme/styles/app.css';
 @import 'katex/dist/katex.min.css';
 
-/* The preview uses myst-theme's light theme whatever the VS Code theme is. */
+/* The preview uses myst-theme's light theme whatever the host editor's theme is. */
 body { background: white; color: black; padding: 1rem 2rem; }
 [data-line-start]:hover { outline: 1px dashed #ccd; cursor: pointer; }
 .badge { position: fixed; top: 0.5rem; right: 0.75rem; z-index: 10; padding: 0 0.4rem; border: 1px solid #ccc; border-radius: 999px; background: white; color: #666; font: 0.8rem system-ui, sans-serif; }

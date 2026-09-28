@@ -1,6 +1,5 @@
 import { jumpToDefinition, languageServerExtensions, LSPClient, type Transport } from '@codemirror/lsp-client';
-import { EditorView } from 'codemirror';
-import { wsUrl } from './api.ts';
+import { EditorView } from '@codemirror/view';
 import { inlayHints } from './inlayHints.ts';
 
 /** A websocket transport that buffers messages until the socket opens. */
@@ -29,15 +28,19 @@ const definitionClick = EditorView.domEventHandlers({
   },
 });
 
-/** Connect to the host's `lsp` bridge. Document URIs are built under the project's `file://` URI, which the host reports at `api/root`. */
-export async function connectLsp() {
-  const { uri: root }: { uri: string } = await fetch('api/root').then((r) => r.json());
+/**
+ * Connect to the `lsp` bridge of the MyST Author server at `base` (default: the page's own server).
+ * Document URIs are built under the project's `file://` URI, which the server reports at `api/root`.
+ */
+export async function connectLsp(base = location.href) {
+  const { uri: root }: { uri: string } = await fetch(new URL('api/root', base)).then((r) => r.json());
   const client = new LSPClient({
     rootUri: root,
     extensions: [inlayHints(), ...languageServerExtensions(), { editorExtension: definitionClick }], // inlayHints first: serverDiagnostics consumes the notification
-  }).connect(transport(wsUrl('lsp')));
+  }).connect(transport(new URL('lsp', base).href.replace(/^http/, 'ws')));
   return {
     client,
+    root,
     uri: (path: string) => `${root}/${path.split('/').map(encodeURIComponent).join('/')}`,
     path: (uri: string) => (uri.startsWith(root + '/') ? decodeURIComponent(uri.slice(root.length + 1)) : null),
   };
