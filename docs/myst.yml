@@ -1,0 +1,33 @@
+version: 1
+extends:
+  - https://raw.githubusercontent.com/myst-contrib/myst-contrib.github.io/main/docs/footer.yml
+project:
+  id: myst-author
+  title: MyST Author
+  github: https://github.com/choldgraf/myst-author
+  plugins:
+    # Rewrites relative links in {include}d repo files (READMEs) to GitHub.
+    - https://github.com/myst-contrib/myst-include-link-rewrites/releases/latest/download/index.mjs
+  # The tour is a separate MyST project with its own myst.yml.
+  exclude:
+    - examples/**
+  toc:
+    - file: index.md
+    - file: get-started.md
+    - file: guide/index.md
+      children:
+        - file: guide/tour.md
+        - file: guide/references.md
+        - file: guide/preview.md
+        - file: guide/directives.md
+        - file: guide/vscode.md
+    - file: develop/index.md
+      children:
+        - file: develop/architecture.md
+        - file: develop/contributing.md
+        - file: develop/upstream.md
+site:
+  template: book-theme
+  options:
+    folders: true
+    logo_text: MyST Author

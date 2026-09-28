@@ -1,0 +1,11 @@
+version: 1
+project:
+  title: MyST Author tour
+  references:
+    python: https://docs.python.org/3/
+  toc:
+    - file: index.md
+    - file: references.md
+    - file: directives.md
+site:
+  template: book-theme
