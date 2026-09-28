@@ -13,14 +13,13 @@ const root = path.resolve(process.argv[2] ?? '.');
 const port = Number(process.env.PORT ?? 4321);
 
 // The content server for the built preview. Until it's up, /myst/* answers 503 with this reason.
-let mystTarget = '';
+const myst = await startMyst(root);
 let mystDown = 'myst starting';
-const contentServer = startMyst(root).ready.then((p) => `http://localhost:${p}`); // myst listens on localhost, which may be IPv6-only
-contentServer.then(
-  (url) => (mystTarget = url),
+myst.ready.then(
+  () => (mystDown = ''),
   (err) => (mystDown = err.code === 'ENOENT' ? 'mystmd not found' : String(err)),
 );
-const lsp = lspBridge(root, contentServer.catch(() => undefined)); // without myst, the LSP indexes open documents only
+const lsp = lspBridge(root, myst.url); // the LSP loads the project once myst is up; until then it knows open documents
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => process.exit()); // runs the 'exit' hook that stops myst
 const proxy = createProxyServer();
 proxy.on('error', (err, _req, res) => {
@@ -38,9 +37,9 @@ async function readBody(req: http.IncomingMessage) {
 const server = http.createServer(async (req, res) => {
   const { pathname } = new URL(req.url ?? '/', 'http://localhost');
   if (pathname.startsWith('/myst/')) {
-    if (!mystTarget) return res.writeHead(503).end(mystDown);
+    if (mystDown) return res.writeHead(503).end(mystDown);
     req.url = req.url!.slice('/myst'.length);
-    return proxy.web(req, res, { target: mystTarget });
+    return proxy.web(req, res, { target: myst.url });
   }
   if (pathname === '/api/root') {
     res.setHeader('content-type', 'application/json');
@@ -70,9 +69,9 @@ const server = http.createServer(async (req, res) => {
 // Websocket routes. Anything unmatched is left alone: Vite handles its own HMR upgrades (by protocol).
 server.on('upgrade', (req, socket, head) => {
   if (req.url === '/myst/socket') {
-    if (!mystTarget) return socket.destroy();
+    if (mystDown) return socket.destroy();
     req.url = '/socket';
-    return proxy.ws(req, socket, head, { target: mystTarget });
+    return proxy.ws(req, socket, head, { target: myst.url });
   }
   if (req.url === '/lsp') return lsp(req, socket, head);
 });

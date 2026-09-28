@@ -34,7 +34,6 @@ export async function connectLsp() {
   const { uri: root }: { uri: string } = await fetch('api/root').then((r) => r.json());
   const client = new LSPClient({
     rootUri: root,
-    timeout: 20000, // `initialize` waits for mystmd's first build on the host
     extensions: [inlayHints(), ...languageServerExtensions(), { editorExtension: definitionClick }], // inlayHints first: serverDiagnostics consumes the notification
   }).connect(transport(wsUrl('lsp')));
   return {

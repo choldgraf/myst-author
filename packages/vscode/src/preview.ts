@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { join, relative, sep } from 'node:path';
 import * as vscode from 'vscode';
 import { builtPages, watchBuilds } from '@myst-author/preview/built';
+import type { startMyst } from '../../app/server/myst.ts';
 
 const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.document.languageId === 'markdown';
 
@@ -14,11 +15,14 @@ export class MystPreview {
   constructor(
     private context: vscode.ExtensionContext,
     private root: string | undefined,
-    port: Promise<number | undefined>,
+    myst: Awaited<ReturnType<typeof startMyst>> | undefined,
   ) {
-    port.then((p) => {
-      this.pages = p ? builtPages(`http://localhost:${p}`) : null;
-      if (p) context.subscriptions.push({ dispose: watchBuilds(`ws://localhost:${p}/socket`, () => this.sendBuilt()) });
+    const ready = myst ? myst.ready.then(() => myst.url, () => undefined) : Promise.resolve(undefined);
+    ready.then(async (url) => {
+      // In Codespaces and code-server the webview runs in the browser, so images need the forwarded URL.
+      const assets = url && (await vscode.env.asExternalUri(vscode.Uri.parse(url))).toString().replace(/\/$/, '');
+      this.pages = url ? builtPages(url, assets) : null;
+      if (url) context.subscriptions.push({ dispose: watchBuilds(`${url.replace(/^http/, 'ws')}/socket`, () => this.sendBuilt()) });
       this.sendBuilt();
     });
     context.subscriptions.push(
@@ -49,8 +53,8 @@ export class MystPreview {
     const { webview } = panel;
     const src = (file: string) => webview.asWebviewUri(vscode.Uri.joinPath(dist, file));
     const nonce = randomBytes(16).toString('base64');
-    // Built pages load images straight from the content server on localhost.
-    const csp = `default-src 'none'; img-src ${webview.cspSource} http://localhost:* https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
+    // Built pages load images from the content server, which may be forwarded to any host.
+    const csp = `default-src 'none'; img-src ${webview.cspSource} http: https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
     webview.html = `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
