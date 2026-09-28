@@ -1,0 +1,204 @@
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { EditorView } from 'codemirror';
+import type { SymbolInformation } from 'vscode-languageserver-protocol';
+import { type BuiltPage, fromBuiltPage, parseMyst, Preview } from '@myst-author/preview';
+import { listFiles, readFile, writeFile } from './api.ts';
+import { builtPage, fileForSlug, sha256, watchBuilds } from './built.ts';
+import { Editor } from './Editor.tsx';
+import { connectLsp } from './lsp.ts';
+import { myst } from 'codemirror-lang-myst';
+import { QuickSwitcher } from './QuickSwitcher.tsx';
+
+type Doc = { path: string; text: string };
+type Built = { path: string; page: BuiltPage | null; error?: string };
+type Lsp = Awaited<ReturnType<typeof connectLsp>>;
+
+export function App() {
+  const [files, setFiles] = useState<string[]>([]);
+  const [doc, setDoc] = useState<Doc | null>(null); // the file as loaded (editor's initial content)
+  const [text, setText] = useState(''); // live editor content
+  const [status, setStatus] = useState('');
+  const [showFiles, setShowFiles] = useState(true);
+  const [showPreview, setShowPreview] = useState(true);
+  const [switcher, setSwitcher] = useState(false);
+  const [topLine, setTopLine] = useState(1);
+  const [built, setBuilt] = useState<Built | null>(null); // mystmd's latest build of the open file
+  const [hash, setHash] = useState('');
+  const [lsp, setLsp] = useState<Lsp | null>(null);
+  const viewOpened = useRef<((view: EditorView | null) => void) | null>(null); // resolves a cross-file jump
+  const saved = useRef(''); // last text known to be on disk
+  const viewRef = useRef<EditorView | null>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const latest = useRef({ doc, text });
+  latest.current = { doc, text };
+
+  const open = useCallback(async (path: string) => {
+    setSwitcher(false);
+    let loaded: string;
+    try {
+      loaded = await readFile(path);
+      // Flush after loading, reading the ref, so keystrokes typed while the switch was in flight aren't lost.
+      const cur = latest.current;
+      if (cur.doc && cur.text !== saved.current) await writeFile(cur.doc.path, cur.text);
+    } catch (err) {
+      setStatus(`couldn't open ${path}: ${(err as Error).message}`);
+      return;
+    }
+    saved.current = loaded;
+    setText(loaded);
+    setDoc({ path, text: loaded });
+    setTopLine(1);
+    setStatus('');
+  }, []);
+
+  useEffect(() => {
+    Promise.all([listFiles(), connectLsp()]).then(([f, l]) => {
+      // Go to definition in another file: open it, then hand lsp-client the new editor (see the effect below).
+      l.client.workspace.displayFile = (uri) => {
+        const path = l.path(uri);
+        if (!path) return Promise.resolve(null);
+        return new Promise((resolve) => { viewOpened.current = resolve; open(path); });
+      };
+      setLsp(l);
+      setFiles(f);
+      const first = f.includes('index.md') ? 'index.md' : f[0];
+      if (first) open(first);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!doc || text === saved.current) return;
+    setStatus('unsaved');
+    const t = setTimeout(() => {
+      writeFile(doc.path, text)
+        .then(() => { saved.current = text; setStatus('saved'); })
+        .catch((err) => setStatus(`save failed: ${err.message}`));
+    }, 500);
+    return () => clearTimeout(t);
+  }, [doc, text]);
+
+  // Last-chance save when the tab closes.
+  useEffect(() => {
+    const flush = () => { if (doc && text !== saved.current) writeFile(doc.path, text, true); };
+    window.addEventListener('beforeunload', flush);
+    return () => window.removeEventListener('beforeunload', flush);
+  }, [doc, text]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'p') { e.preventDefault(); setSwitcher(true); }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // The new Editor's mount effect (a child) has already set viewRef by the time this runs.
+  useEffect(() => {
+    viewOpened.current?.(viewRef.current);
+    viewOpened.current = null;
+  }, [doc]);
+
+  const refreshBuilt = useCallback(() => {
+    const path = latest.current.doc?.path;
+    if (!path) return;
+    builtPage(path)
+      .then((page): Built => ({ path, page }), (err): Built => ({ path, page: null, error: err.message }))
+      .then((b) => latest.current.doc?.path === path && setBuilt(b));
+  }, []);
+  useEffect(refreshBuilt, [doc]);
+  useEffect(() => watchBuilds(refreshBuilt), []);
+
+  const deferred = useDeferredValue(text);
+  useEffect(() => {
+    let current = true;
+    sha256(deferred).then((h) => current && setHash(h));
+    return () => { current = false; };
+  }, [deferred]);
+
+  // Show mystmd's build when it matches the editor text exactly; otherwise the fast in-browser parse.
+  const current = built?.path === doc?.path ? built : null;
+  const page = current?.page?.sha256 === hash ? current.page : null;
+  // Parses on the main thread; `deferred` lets React keep typing responsive while it runs.
+  const parsed = useMemo(() => (page ? fromBuiltPage(page) : parseMyst(deferred)), [page, deferred]);
+  const badge = current?.error === 'mystmd not found' ? 'no mystmd'
+    : page ? 'built ✓'
+    : current?.page && text === saved.current ? 'building…'
+    : 'fast preview';
+
+  useEffect(() => {
+    const pane = previewRef.current;
+    if (!pane) return;
+    const blocks = [...pane.querySelectorAll<HTMLElement>('[data-line-start]')];
+    const el = blocks.findLast((b) => Number(b.dataset.lineStart) <= topLine);
+    if (el) el.scrollIntoView({ block: 'start' });
+    else pane.scrollTop = 0;
+  }, [topLine]);
+
+  function gotoLine(line: number) {
+    const view = viewRef.current;
+    if (!view) return;
+    const pos = view.state.doc.line(Math.min(line, view.state.doc.lines)).from;
+    view.dispatch({ selection: { anchor: pos }, effects: EditorView.scrollIntoView(pos, { y: 'nearest' }) });
+    view.focus();
+  }
+
+  function openAt(path: string, line: number) {
+    if (path === doc?.path) return gotoLine(line);
+    new Promise((resolve) => { viewOpened.current = resolve; open(path); }).then(() => gotoLine(line));
+  }
+
+  // Cmd/Ctrl-click on a preview link: external links open a tab, internal ones open the file at the target.
+  async function followLink(href: string) {
+    if (/^[a-z][\w+.-]*:/i.test(href)) return void window.open(href, '_blank'); // http:, mailto:, …
+    const [path, id] = href.split('#');
+    // Built pages link to other pages by slug (`/slug`); the fast preview keeps the author's relative path.
+    const file = !path ? doc?.path
+      : path.startsWith('/') ? fileForSlug(path.slice(1) || 'index')
+      : decodeURIComponent(new URL(path, `http://x/${doc?.path}`).pathname.slice(1));
+    if (!file || !files.includes(file)) return setStatus(`can't follow ${href}`);
+    if (id) {
+      // Labels are project-wide, so ask the LSP where it is; if it doesn't know, find the rendered anchor.
+      const symbols = await lsp?.client.request<unknown, SymbolInformation[] | null>('workspace/symbol', { query: id }).catch(() => null);
+      const s = symbols?.find((s) => s.name === id.toLowerCase());
+      const target = s && lsp!.path(s.location.uri);
+      if (target) return openAt(target, s.location.range.start.line + 1);
+      const block = previewRef.current?.querySelector(`[id="${CSS.escape(id)}"]`)?.closest<HTMLElement>('[data-line-start]');
+      if (block && file === doc?.path) return gotoLine(Number(block.dataset.lineStart));
+    }
+    openAt(file, 1);
+  }
+
+  return (
+    <div className="layout">
+      <div className="toolbar">
+        <button onClick={() => setShowFiles(!showFiles)}>Files</button>
+        <button onClick={() => setSwitcher(true)}>Open… (⌘P)</button>
+        <button onClick={() => setShowPreview(!showPreview)}>Preview</button>
+        <span className="status">{doc?.path} {status}</span>
+        <span className="badge" title="Preview source">{badge}</span>
+      </div>
+      <div className="panes">
+        {showFiles && (
+          <nav className="files" aria-label="Files">
+            {files.map((f) => {
+              const slash = f.lastIndexOf('/') + 1;
+              return (
+                <button key={f} aria-current={f === doc?.path} onClick={() => open(f)}>
+                  <span className="dir">{f.slice(0, slash)}</span>{f.slice(slash)}
+                </button>
+              );
+            })}
+          </nav>
+        )}
+        {doc && <Editor key={doc.path} initial={doc.text} onChange={setText} onTopLine={setTopLine} viewRef={viewRef}
+          extensions={lsp ? [lsp.client.plugin(lsp.uri(doc.path), 'markdown'), myst()] : myst()} />}
+        {showPreview && (
+          <div className="preview" ref={previewRef}>
+            <Preview result={parsed} onLineClick={gotoLine} onFollowLink={followLink} />
+          </div>
+        )}
+      </div>
+      {switcher && <QuickSwitcher files={files} onPick={open} onClose={() => setSwitcher(false)} />}
+    </div>
+  );
+}

@@ -1,0 +1,33 @@
+{
+  "name": "myst-author",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "test": "node --test server/files.test.ts"
+  },
+  "dependencies": {
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/lsp-client": "^6.3.0",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.13",
+    "@myst-author/lsp": "*",
+    "@myst-author/preview": "*",
+    "@myst-theme/styles": "^1.4.1",
+    "@tailwindcss/typography": "^0.5.20",
+    "codemirror": "^6.0.2",
+    "codemirror-lang-myst": "*",
+    "http-proxy-3": "^2.0.1",
+    "katex": "^0.15.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sirv": "^3.0.2",
+    "tailwindcss": "^3.4.19",
+    "vite": "^8.3.1",
+    "vscode-jsonrpc": "^9.0.3",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "vscode-languageserver-protocol": "^3.18.4"
+  }
+}

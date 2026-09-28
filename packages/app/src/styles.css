@@ -1,0 +1,23 @@
+@import '@myst-theme/styles/app.css';
+@import 'katex/dist/katex.min.css';
+
+html, body, #root { height: 100%; margin: 0; }
+.layout { display: flex; flex-direction: column; height: 100%; font-family: system-ui, sans-serif; }
+.toolbar { display: flex; gap: 0.5rem; align-items: center; padding: 0.25rem 0.75rem; border-bottom: 1px solid #ddd; font-size: 0.85rem; }
+.toolbar button { padding: 0.1rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; background: #fafafa; }
+.toolbar button:hover { background: #eee; }
+.toolbar .status { margin-left: auto; color: #888; }
+.panes { flex: 1; display: flex; min-height: 0; }
+.files { width: 14rem; overflow: auto; border-right: 1px solid #ddd; padding: 0.5rem 0; font-size: 0.85rem; }
+.files button { display: block; width: 100%; text-align: left; padding: 0.15rem 0.75rem; }
+.files button[aria-current='true'] { background: #eef; }
+.files .dir { color: #999; }
+.editor { flex: 1; min-width: 0; overflow: hidden; }
+.editor .cm-editor { height: 100%; }
+.preview { flex: 1; min-width: 0; overflow: auto; padding: 1rem 2rem; border-left: 1px solid #ddd; }
+.preview [data-line-start]:hover { outline: 1px dashed #ccd; cursor: pointer; }
+.switcher { position: fixed; inset: 15% 0 auto; margin: auto; width: 30rem; background: white; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 8px 30px #0003; }
+.switcher input { width: 100%; padding: 0.5rem 0.75rem; border: 0; border-bottom: 1px solid #ddd; outline: none; }
+.switcher li { padding: 0.25rem 0.75rem; cursor: pointer; }
+.switcher li[aria-selected='true'] { background: #eef; }
+.toolbar .badge { padding: 0 0.4rem; border: 1px solid #ccc; border-radius: 999px; color: #666; }

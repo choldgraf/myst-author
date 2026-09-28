@@ -1,0 +1,8 @@
+{
+  "name": "codemirror-lang-myst",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "test": "node --test src/*.test.ts" },
+  "peerDependencies": { "@codemirror/view": "^6.0.0", "@codemirror/state": "^6.0.0" }
+}
