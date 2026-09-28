@@ -1,0 +1,15 @@
+{
+  "name": "myst-author-monorepo",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*"],
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node packages/app/server/index.ts",
+    "build": "npm run build -w packages/app",
+    "serve": "NODE_ENV=production node packages/app/server/index.ts",
+    "test": "npm test --workspaces --if-present",
+    "build:docs": "cd docs && npx -y mystmd build --html",
+    "docs:live": "cd docs && npx -y mystmd start"
+  }
+}
