@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { CompletionItemKind, DiagnosticSeverity, SymbolKind, type CompletionItem, type Diagnostic, type Position } from 'vscode-languageserver';
+import { CompletionItemKind, DiagnosticSeverity, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type Position } from 'vscode-languageserver';
 import { directives, roles } from '@myst-author/preview/parse';
 import type { createProject } from './project.ts';
 import { optionAt, refAt, refsInText, type Ref } from './syntax.ts';
@@ -26,6 +26,15 @@ function hint(t: Target) {
   if (t.kind === 'equation' && t.enumerator) return `(${t.enumerator})`;
   return t.enumerator ? title(t) : `${title(t)}: ${t.text}`;
 }
+
+/**
+ * Semantic tokens: each reference is a `label`, with its target's kind as a modifier (e.g. `label.figure`).
+ * Kinds not listed here get the bare `label` type.
+ */
+export const semanticTokensLegend = {
+  tokenTypes: ['label'],
+  tokenModifiers: ['heading', 'figure', 'table', 'equation', 'code', 'quote', 'paragraph', 'proof', 'exercise', 'admonition', 'page'],
+};
 
 const rangeOf = (ref: Ref) => ({ start: { line: ref.line, character: ref.start }, end: { line: ref.line, character: ref.end } });
 
@@ -195,6 +204,18 @@ export function createService(root: string | undefined, project: ReturnType<type
         const label = t ? hint(t) : ref.kind === 'xref' && !ref.text && xrefEntry(ref)?.title;
         return label ? [{ position: { line: ref.line, character: ref.after }, label, paddingLeft: true }] : [];
       });
+    },
+
+    semanticTokens({ textDocument }: { textDocument: { uri: string } }) {
+      const targets = lookup();
+      const builder = new SemanticTokensBuilder();
+      for (const ref of refs(textDocument.uri)) {
+        if (ref.kind === 'doc') continue; // a file path, not a label
+        const kind = ref.kind === 'xref' ? xrefEntry(ref)?.kind : find(targets, ref)?.kind;
+        const i = semanticTokensLegend.tokenModifiers.indexOf(kind ?? '');
+        builder.push(ref.line, ref.start, ref.end - ref.start, 0, i < 0 ? 0 : 1 << i);
+      }
+      return builder.build();
     },
 
     documentLinks({ textDocument }: { textDocument: { uri: string } }) {

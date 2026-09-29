@@ -5,7 +5,7 @@ import { createConnection, ProposedFeatures, TextDocuments, TextDocumentSyncKind
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { startMyst } from './myst.ts';
 import { createProject } from './project.ts';
-import { createService } from './service.ts';
+import { createService, semanticTokensLegend } from './service.ts';
 
 // The LSP wiring: features live in service.ts.
 const connection = createConnection(ProposedFeatures.all);
@@ -15,10 +15,11 @@ const args = parseArgs({ strict: false, options: { 'content-server': { type: 'st
 
 connection.onInitialize(async (params) => {
   const folder = params.workspaceFolders?.[0]?.uri ?? params.rootUri;
-  const refreshHints = params.capabilities.workspace?.inlayHint?.refreshSupport;
+  const workspace = params.capabilities.workspace;
   const refresh = () => {
     documents.all().forEach(({ uri }) => connection.sendDiagnostics({ uri, diagnostics: service.diagnostics(uri) }));
-    if (refreshHints) connection.languages.inlayHint.refresh();
+    if (workspace?.inlayHint?.refreshSupport) connection.languages.inlayHint.refresh();
+    if (workspace?.semanticTokens?.refreshSupport) connection.languages.semanticTokens.refresh();
   };
   const root = args.root ?? (folder ? fileURLToPath(folder) : undefined);
   // With --myst the server runs mystmd itself, for clients (like Neovim) that don't start it.
@@ -33,6 +34,7 @@ connection.onInitialize(async (params) => {
       inlayHintProvider: true,
       workspaceSymbolProvider: true,
       documentLinkProvider: {},
+      semanticTokensProvider: { legend: semanticTokensLegend, full: true },
     },
   };
 });
@@ -41,6 +43,7 @@ connection.onCompletion((p) => service.completion(p));
 connection.onHover((p) => service.hover(p));
 connection.onDefinition((p) => service.definition(p));
 connection.languages.inlayHint.on((p) => service.inlayHints(p));
+connection.languages.semanticTokens.on((p) => service.semanticTokens(p));
 connection.onDocumentLinks((p) => service.documentLinks(p));
 connection.onWorkspaceSymbol((p) => service.workspaceSymbols(p));
 

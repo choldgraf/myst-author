@@ -41,6 +41,9 @@ Directive options come from mystmd's directive specs.
 - **Diagnostics**: warns about references to unknown targets.
   These are only reported with a content server, once the project has loaded.
 - **Inlay hints**: the resolved text after each reference, e.g. `Figure 1` or `(1)`.
+- **Semantic tokens**: each reference is a `label` token, with its target's kind as a modifier (`label.figure`, `label.table`, `label.equation`, `label.heading`, ...).
+  The kinds are `semanticTokensLegend` in `src/service.ts`.
+  To colour references to figures, in VS Code set `"editor.semanticTokenColorCustomizations": { "rules": { "label.figure": "#2a9d8f" } }`, or in Neovim `vim.api.nvim_set_hl(0, '@lsp.typemod.label.figure', { fg = '#2a9d8f' })`.
 - **Workspace symbols**: every label, so clients can search for and jump to them.
 - **External references** (`[](xref:key#target)`, `<xref:key/page#target>`): completion of keys, pages and targets, hover with the resolved URL, inlay hints with the remote title, diagnostics, and document links.
   Keys come from `project.references` in `myst.yml`.
