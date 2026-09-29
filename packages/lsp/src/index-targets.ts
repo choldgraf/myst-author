@@ -1,7 +1,7 @@
 import type { GenericNode } from 'myst-common';
 
-/** Something a reference can point at. `line` is 1-based, as in mdast positions. */
-export type Target = { identifier: string; kind: string; text: string; enumerator?: string; file: string; line: number };
+/** Something a reference can point at. `line` is 1-based, as in mdast positions. `depth` is a heading's level. */
+export type Target = { identifier: string; kind: string; text: string; enumerator?: string; file: string; line: number; depth?: number };
 
 const targetTypes = new Set(['heading', 'container', 'math', 'code', 'table', 'paragraph', 'proof', 'exercise', 'admonition']);
 
@@ -17,6 +17,7 @@ export function targetsFromTree(tree: GenericNode, file: string): Target[] {
         enumerator: node.enumerator,
         file,
         line: lineOf(node) ?? 1,
+        depth: node.type === 'heading' ? node.depth : undefined,
       });
     }
     node.children?.forEach(walk);

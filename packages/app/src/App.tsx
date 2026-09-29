@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { EditorView } from 'codemirror';
-import type { SymbolInformation } from 'vscode-languageserver-protocol';
+import type { DocumentSymbol, SymbolInformation } from 'vscode-languageserver-protocol';
 import { connectLsp } from '@myst-author/lsp/client';
 import { type Built, Preview, usePreview } from '@myst-author/preview';
 import { contentServer } from '@myst-author/preview/built';
@@ -8,7 +8,7 @@ import { followLink } from '@myst-author/preview/controller';
 import { listFiles, readFile, writeFile } from './api.ts';
 import { Editor } from './Editor.tsx';
 import { myst } from 'codemirror-lang-myst';
-import { QuickSwitcher } from './QuickSwitcher.tsx';
+import { type Item, QuickSwitcher } from './QuickSwitcher.tsx';
 
 type Doc = { path: string; text: string };
 type Lsp = Awaited<ReturnType<typeof connectLsp>>;
@@ -124,6 +124,31 @@ export function App() {
     new Promise((resolve) => { viewOpened.current = resolve; open(path); }).then(() => gotoLine(line));
   }
 
+  // The switcher: `@label` searches the project's labels (as in MyST's `@label` references), `#` this page's outline, anything else file names.
+  async function search(q: string): Promise<Item[]> {
+    if (!q.startsWith('@') && !q.startsWith('#')) return files.filter((f) => f.toLowerCase().includes(q.toLowerCase())).map((f) => ({ label: f, path: f }));
+    if (!lsp) return [];
+    if (q.startsWith('@')) {
+      const labels = await lsp.client.request<unknown, SymbolInformation[] | null>('workspace/symbol', { query: q.slice(1) });
+      return (labels ?? []).flatMap((s) => {
+        const path = lsp.path(s.location.uri);
+        return path ? [{ label: s.name, detail: s.containerName, path, line: s.location.range.start.line + 1 }] : [];
+      });
+    }
+    if (!doc) return [];
+    const outline = await lsp.client.request<unknown, DocumentSymbol[] | null>('textDocument/documentSymbol', { textDocument: { uri: lsp.uri(doc.path) } });
+    const flat = (symbols: DocumentSymbol[]): DocumentSymbol[] => symbols.flatMap((s) => [s, ...flat(s.children ?? [])]);
+    return flat(outline ?? [])
+      .filter((s) => s.name.toLowerCase().includes(q.slice(1).toLowerCase()))
+      .map((s) => ({ label: s.name, detail: s.detail, path: doc.path, line: s.range.start.line + 1 }));
+  }
+
+  function pick(item: Item) {
+    setSwitcher(false);
+    if (item.line) openAt(item.path, item.line);
+    else open(item.path);
+  }
+
   // Cmd/Ctrl-click on a preview link: external links open a tab, internal ones open the file at the target.
   function follow(href: string, line?: number) {
     if (!doc) return;
@@ -171,7 +196,7 @@ export function App() {
           </div>
         )}
       </div>
-      {switcher && <QuickSwitcher files={files} onPick={open} onClose={() => setSwitcher(false)} />}
+      {switcher && <QuickSwitcher search={search} onPick={pick} onClose={() => setSwitcher(false)} />}
     </div>
   );
 }

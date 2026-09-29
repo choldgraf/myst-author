@@ -18,6 +18,7 @@ project:
       children:
         - file: guide/tour.md
         - file: guide/references.md
+        - file: guide/navigate.md
         - file: guide/preview.md
         - file: guide/directives.md
         - file: guide/vscode.md

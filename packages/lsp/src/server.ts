@@ -33,6 +33,7 @@ connection.onInitialize(async (params) => {
       definitionProvider: true,
       inlayHintProvider: true,
       workspaceSymbolProvider: true,
+      documentSymbolProvider: true,
       documentLinkProvider: {},
       semanticTokensProvider: { legend: semanticTokensLegend, full: true },
     },
@@ -46,6 +47,7 @@ connection.languages.inlayHint.on((p) => service.inlayHints(p));
 connection.languages.semanticTokens.on((p) => service.semanticTokens(p));
 connection.onDocumentLinks((p) => service.documentLinks(p));
 connection.onWorkspaceSymbol((p) => service.workspaceSymbols(p));
+connection.onDocumentSymbol((p) => service.documentSymbols(p));
 
 // Diagnostics are sent when the project changes (after the service re-parses an edited document), not on every keystroke.
 documents.onDidChangeContent(({ document }) => service.update(document.uri, document.getText()));
