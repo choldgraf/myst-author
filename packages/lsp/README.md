@@ -6,16 +6,17 @@ It speaks the [Language Server Protocol](https://microsoft.github.io/language-se
 ## Run
 
 ```sh
-node src/server.ts --stdio
+node src/server.ts --stdio [--content-server=http://127.0.0.1:3100] [--root=path/to/project]
 ```
 
-## Initialization options
-
-- `contentServer` (optional): URL of a `myst start --headless` content server, e.g. `http://localhost:3100`.
+- `--content-server` (optional): URL of a `myst start --headless` content server.
   The server indexes every built page and reloads when the content server sends `RELOAD`.
   Without it, only open documents are indexed, and unknown targets aren't reported.
+- `--root` (optional): the project folder.
+  It overrides the client's, so a host that bridges untrusted clients (like the web app's `/lsp`) decides which folder the server reads.
+- Hosts that start mystmd and the server get these arguments from `lspArgs(url, root)` in `@myst-author/lsp/myst`.
 
-The workspace root is the first workspace folder, or `rootUri` if there is none.
+Otherwise the workspace root is the first workspace folder, or `rootUri` if there is none.
 It's used to list files for path completion and to read `myst.yml` for external references.
 
 ## Capabilities

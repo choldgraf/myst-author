@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
-import { startMyst } from '@myst-author/lsp/myst';
+import { lspArgs, startMyst } from '@myst-author/lsp/myst';
 import { MystPreview } from './preview.ts';
 
 let client: LanguageClient | undefined;
@@ -19,11 +19,10 @@ export async function activate(context: vscode.ExtensionContext) {
   client = new LanguageClient(
     'mystAuthor',
     'MyST Author',
-    { module: context.asAbsolutePath('dist/lsp.js'), transport: TransportKind.ipc },
+    { module: context.asAbsolutePath('dist/lsp.js'), transport: TransportKind.ipc, args: lspArgs(myst?.url) },
     {
       documentSelector: [{ scheme: 'file', language: 'markdown' }],
       workspaceFolder: root ? { uri: vscode.Uri.file(root), name: basename(root), index: 0 } : undefined,
-      initializationOptions: { contentServer: myst?.url },
     },
   );
   await client.start();

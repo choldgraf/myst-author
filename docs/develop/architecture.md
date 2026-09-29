@@ -70,7 +70,7 @@ flowchart TB
 5. Each browser connection to `/lsp` gets its own language server process.
    In production it runs the bundle from `npm run build`, which starts faster than the TypeScript source.
    If the connection drops, the browser reconnects and re-opens its files.
-   The host adds the project folder and mystmd's address to the client's `initialize` message.
+   The host starts it with the project folder and mystmd's address as arguments.
    The host picks mystmd's port when it starts it, so the address is known before the first build.
    The server loads the project once mystmd is up, and reloads its index on each rebuild.
 
