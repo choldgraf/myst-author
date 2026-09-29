@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
 import { contentServer } from '@myst-author/preview/built';
-import { PreviewController } from '@myst-author/preview/controller';
+import { PreviewController, type PreviewHost } from '@myst-author/preview/controller';
 import type { startMyst } from '@myst-author/lsp/myst';
 
 const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.document.languageId === 'markdown';
@@ -12,7 +12,8 @@ export class MystPreview {
   private panel?: vscode.WebviewPanel;
   private editor = isMarkdown(vscode.window.activeTextEditor) ? vscode.window.activeTextEditor : undefined;
   private assets: Thenable<string | undefined>; // the content server's URL as the webview reaches it
-  private preview = new PreviewController({
+  private preview: PreviewController;
+  private host: PreviewHost = {
     current: () => {
       const doc = this.panel && this.editor?.document;
       const top = this.editor?.visibleRanges[0];
@@ -27,7 +28,7 @@ export class MystPreview {
       return s && { path: this.path(s.location.uri), line: s.location.range.start.line };
     },
     warn: (message) => vscode.window.showWarningMessage(message),
-  });
+  };
 
   constructor(
     private context: vscode.ExtensionContext,
@@ -36,21 +37,19 @@ export class MystPreview {
   ) {
     // In Codespaces and code-server the webview runs in the browser, so images need the forwarded URL.
     this.assets = myst ? vscode.env.asExternalUri(vscode.Uri.parse(myst.url)).then((u) => u.toString().replace(/\/$/, '')) : Promise.resolve(undefined);
-    const ready = myst ? myst.ready.then(() => myst.url, () => undefined) : Promise.resolve(undefined);
-    ready.then(async (url) => {
-      const server = url ? contentServer(url, await this.assets) : null;
-      this.preview.pages = server;
-      if (server) context.subscriptions.push({ dispose: server.watch(() => this.preview.sendBuilt()) });
-      this.preview.sendBuilt();
-    });
+    // Without mystmd installed there's no built preview; the controller warns about any other failure.
+    const server = myst
+      ? myst.ready.then(async () => contentServer(myst.url, await this.assets), (err) => { if (err.code !== 'ENOENT') throw err; return null; })
+      : Promise.resolve(null);
+    this.preview = new PreviewController(this.host, server);
     context.subscriptions.push(
+      this.preview,
       vscode.window.onDidChangeActiveTextEditor((e) => {
         // Focusing the preview itself leaves no active editor; keep following the last markdown one.
         if (!isMarkdown(e) || e === this.editor) return;
         this.editor = e;
         this.retitle();
-        this.preview.sendText();
-        this.preview.sendBuilt();
+        this.preview.sendFile();
       }),
       vscode.workspace.onDidChangeTextDocument((e) => e.document === this.editor?.document && this.preview.sendText()),
       vscode.workspace.onDidSaveTextDocument((d) => d === this.editor?.document && this.preview.sendText()),
