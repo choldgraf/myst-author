@@ -5,6 +5,7 @@
   "exports": {
     "./client": "./src/client/index.ts",
     "./args": "./src/args.ts",
+    "./labels": "./src/labels.ts",
     "./server": "./src/server.ts",
     "./dist/server.cjs": "./dist/server.cjs",
     "./build": "./build.mjs"

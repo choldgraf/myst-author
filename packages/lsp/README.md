@@ -89,6 +89,9 @@ Find references and rename search open cells, not notebooks on disk.
 - `src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
 - `src/server.ts`: the LSP wiring.
 - `src/client/`: the browser client (`@myst-author/lsp/client`), a `@codemirror/lsp-client` over a websocket, with inlay hints.
+  The host passes it the websocket URL and the root for document URIs.
+- `src/labels.ts`: `findLabel` (`@myst-author/lsp/labels`), which finds a label's definition through any LSP client's `workspace/symbol` request.
+  Hosts use it to follow preview `#label` links.
 - `src/args.ts`: the arguments hosts start the server with (`@myst-author/lsp/args`).
 - `build.mjs`: bundles the server into `dist/server.cjs` with esbuild, which starts faster than the source.
   The VS Code extension builds its copy with the same function.

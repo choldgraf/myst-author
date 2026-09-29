@@ -9,19 +9,19 @@ import { INotebookTracker, type NotebookPanel } from '@jupyterlab/notebook';
 import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { connectLsp } from '@myst-author/lsp/client';
+import { findLabel } from '@myst-author/lsp/labels';
 import { contentServer } from '@myst-author/mystmd/built';
 import { PreviewController } from '@myst-author/preview/controller';
 
 type Editor = IDocumentWidget<FileEditor>;
-type Lsp = Awaited<ReturnType<typeof connectLsp>>;
+type Lsp = ReturnType<typeof connectLsp>;
 
 // The MyST Author server, which jupyter-server-proxy runs at <base>/myst-author/ (see binder/jupyter_server_config.py).
 const server = URLExt.join(PageConfig.getBaseUrl(), 'myst-author/');
 const serverOrigin = new URL(server, location.href).origin;
 // Jupyter's root folder as a file:// URI (set by jupyter-lsp, which ships with JupyterLab), to map Lab paths to document URIs.
+// The server's `/lsp` bridge starts the language server with the project folder, which overrides this root.
 const jupyterRoot = PageConfig.getOption('rootUri').replace(/\/$/, '');
-const uriOf = (path: string) => `${jupyterRoot}/${path.split('/').map(encodeURIComponent).join('/')}`;
-const pathOf = (uri: string) => (uri.startsWith(jupyterRoot + '/') ? decodeURIComponent(uri.slice(jupyterRoot.length + 1)) : null);
 
 const isMarkdown = (w: Editor | null): w is Editor => !!w && w.context.path.endsWith('.md');
 const cm = (w: Editor) => w.content.editor as CodeMirrorEditor;
@@ -63,19 +63,19 @@ const plugin: JupyterFrontEndPlugin<void> = {
   optional: [ICommandPalette],
   activate: (app: JupyterFrontEnd, tracker: IEditorTracker, docs: IDocumentManager, notebooks: INotebookTracker, palette: ICommandPalette | null) => {
     // Without rootUri, document URIs would be wrong, so skip the language features. The preview still works.
-    const lsp = jupyterRoot ? connectLsp(server) : Promise.reject(new Error("jupyter-lsp didn't set rootUri"));
+    const lsp = jupyterRoot ? Promise.resolve(connectLsp(server + 'lsp', jupyterRoot)) : Promise.reject(new Error("jupyter-lsp didn't set rootUri"));
     lsp.then((l) => {
       // Go to definition in another file or notebook cell: open it in Lab, then hand lsp-client its editor.
       l.client.workspace.displayFile = async (uri) => {
         const [file, cell] = uri.split('#');
-        const path = pathOf(file);
+        const path = l.path(file);
         if (path == null) return null;
         if (cell) return editCell(docs, path, cell);
         const w = docs.openOrReveal(path) as Editor | undefined;
         await w?.context.ready;
         return w ? cm(w).editor : null;
       };
-      const attach = (w: Editor) => isMarkdown(w) && cm(w).injectExtension(l.client.plugin(uriOf(w.context.path), 'markdown'));
+      const attach = (w: Editor) => isMarkdown(w) && cm(w).injectExtension(l.client.plugin(l.uri(w.context.path), 'markdown'));
       tracker.forEach(attach);
       tracker.widgetAdded.connect((_, w) => attach(w));
 
@@ -88,7 +88,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
           if (cell.model.type !== 'markdown' || attached.has(cell)) return;
           attached.add(cell);
           await cell.ready;
-          (cell.editor as CodeMirrorEditor).injectExtension(l.client.plugin(`${uriOf(nb.context.path)}#${cell.model.id}`, 'markdown'));
+          (cell.editor as CodeMirrorEditor).injectExtension(l.client.plugin(`${l.uri(nb.context.path)}#${cell.model.id}`, 'markdown'));
         });
       const watch = (nb: NotebookPanel) =>
         nb.context.ready.then(() => {
@@ -131,10 +131,9 @@ class MystPreview extends Widget {
     openExternal: (url) => void window.open(url, '_blank', 'noopener'),
     findLabel: async (id) => {
       const l = await this.lsp;
-      const symbols = await l.client.request<unknown, { name: string; location: { uri: string; range: { start: { line: number } } } }[] | null>('workspace/symbol', { query: id });
-      const s = symbols?.find((s) => s.name === id.toLowerCase());
-      const path = s && pathOf(s.location.uri.split('#')[0]); // a label in a notebook cell has `#<cell id>`
-      return path != null ? { path: PathExt.relative(await this.project, path), line: s!.location.range.start.line } : undefined;
+      const s = await findLabel((method, params) => l.client.request(method, params), id);
+      const path = s && l.path(s.uri.split('#')[0]); // a label in a notebook cell has `#<cell id>`
+      return path != null ? { path: PathExt.relative(await this.project, path), line: s!.line } : undefined;
     },
     warn: (message) => console.warn(`MyST Author: ${message}`),
   }, Promise.resolve(contentServer(server + 'myst')));
@@ -143,7 +142,8 @@ class MystPreview extends Widget {
     super();
     this.title.label = 'MyST Preview';
     this.title.closable = true;
-    this.project = lsp.then((l) => pathOf(l.root) ?? '', () => '');
+    const root = fetch(server + 'api/root').then((r) => r.json());
+    this.project = Promise.all([lsp, root]).then(([l, { uri }]) => l.path(uri) ?? '', () => '');
     this.iframe.src = server + 'preview.html';
     this.iframe.style.cssText = 'width: 100%; height: 100%; border: 0';
     this.node.appendChild(this.iframe);

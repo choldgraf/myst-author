@@ -7,6 +7,8 @@ async function ok(r: Response) {
   return r;
 }
 
+// The project folder as a `file://` URI, the root of the language server's document URIs.
+export const projectRoot = (): Promise<string> => fetch('api/root').then(ok).then((r) => r.json()).then((r) => r.uri);
 export const listFiles = (): Promise<string[]> => fetch('api/files').then(ok).then((r) => r.json());
 export const readFile = (path: string) => fetch(url(path)).then(ok).then((r) => r.text());
 export const writeFile = (path: string, text: string, keepalive = false) =>
