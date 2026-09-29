@@ -61,6 +61,17 @@ If the download fails, for example when you're offline, external references aren
 
 ![Completing an external reference](../images/xref-completion.png)
 
+## Citations
+
+Type `@` or `` {cite}` `` to complete citation keys from your project's `.bib` files.
+Each item shows the author, year, and title, and you can search by title.
+Hover a citation to see its entry, or go to definition to open it in the `.bib` file.
+`@name` also completes and resolves labels: like mystmd, it's a citation if your bibliography has `name`, and a cross-reference otherwise.
+
+The bibliography is `project.bibliography` in your `myst.yml`, or every `.bib` file in the project if that isn't set.
+It's read when the language server starts, so restart the editor after editing a `.bib` file.
+Unknown citation keys are only flagged when all of your bibliography files are local.
+
 ## Where targets come from
 
 The editor runs `myst start --headless` on your project, and the language server reads the pages mystmd builds.
@@ -73,7 +84,6 @@ It doesn't warn about unknown labels, because they might be defined in a file it
 
 ## Not supported
 
-- Citation completion (`@` and `{cite}`).
 - Suggestions for new labels.
 
 Developers can find the full list of language server features in the [`@myst-author/lsp` README](https://github.com/choldgraf/myst-author/tree/main/packages/lsp).

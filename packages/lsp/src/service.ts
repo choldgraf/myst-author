@@ -1,8 +1,9 @@
-import { readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { CompletionItemKind, DiagnosticSeverity, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position } from 'vscode-languageserver';
 import { directives, roles } from '@myst-author/preview/parse';
+import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import type { createProject } from './project.ts';
 import { optionAt, refAt, refsInText, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
@@ -33,7 +34,7 @@ function hint(t: Target) {
  */
 export const semanticTokensLegend = {
   tokenTypes: ['label'],
-  tokenModifiers: ['heading', 'figure', 'table', 'equation', 'code', 'quote', 'paragraph', 'proof', 'exercise', 'admonition', 'page'],
+  tokenModifiers: ['heading', 'figure', 'table', 'equation', 'code', 'quote', 'paragraph', 'proof', 'exercise', 'admonition', 'page', 'citation'],
 };
 
 const rangeOf = (ref: Ref) => ({ start: { line: ref.line, character: ref.start }, end: { line: ref.line, character: ref.end } });
@@ -59,23 +60,30 @@ export function createService(root: string | undefined, project: ReturnType<type
     const path = fileURLToPath(uri);
     return root && !relative(root, path).startsWith('..') ? relative(root, path) : path;
   };
+  // Citations from the project's .bib files, read once on startup.
+  const bib = root && existsSync(root) ? readBibliography(root, workspaceFiles(root, /\.bib$/)) : { entries: [], complete: false };
+  const citations = new Map(bib.entries.map((e) => [e.key, e]));
+  const bibLocation = (e: BibEntry) => ({ uri: pathToFileURL(e.file).href, range: { start: { line: e.line, character: 0 }, end: { line: e.line, character: 0 } } });
+
   const toUri = (file: string) => pathToFileURL(root ? resolve(root, file) : file).href;
   const locationOf = (t: Target) => {
     const start = { line: t.line - 1, character: 0 };
     return { uri: toUri(t.file), range: { start, end: start } };
   };
 
-  function workspaceFiles(dir = root): string[] {
+  function workspaceFiles(dir = root, pattern = /\.(md|ipynb)$/): string[] {
     if (!dir) return [];
     return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
       if (e.name.startsWith('.') || e.name === 'node_modules' || e.name === '_build') return [];
       const path = join(dir, e.name);
-      return e.isDirectory() ? workspaceFiles(path) : /\.(md|ipynb)$/.test(e.name) ? [path] : [];
+      return e.isDirectory() ? workspaceFiles(path, pattern) : pattern.test(e.name) ? [path] : [];
     });
   }
 
   const lookup = () => new Map(project.targets().map((t) => [t.identifier, t]));
   const find = (targets: Map<string, Target>, ref: Ref) => targets.get(ref.target.trim().toLowerCase());
+  // mystmd reads `@key` and `{cite}` keys as citations first, and only falls back to labels when there's no such citation.
+  const citation = (ref: Ref) => (ref.kind === 'cite' ? citations.get(ref.target) : undefined);
 
   function xrefEntry(ref: Ref): XrefEntry | undefined {
     const { key, page, hash } = splitXref(ref.target);
@@ -140,7 +148,15 @@ export function createService(root: string | undefined, project: ReturnType<type
         ...extra,
       });
 
+      const citeItems = () =>
+        bib.entries.map((e) => item(e.key, CompletionItemKind.Value, { detail: [authorYear(e), e.title].filter(Boolean).join(' · '), filterText: `${e.key} ${e.author ?? ''} ${e.title ?? ''}` }));
+      const labelItem = (t: Target) => item(t.identifier, CompletionItemKind.Reference, { detail: `${title(t)} · ${t.file}`, documentation: t.text, filterText: `${t.identifier} ${t.text}` });
+
       switch (ctx.trigger) {
+        case 'cite':
+          return citeItems();
+        case 'at':
+          return [...citeItems(), ...project.targets().map(labelItem)];
         case 'ref':
         case 'numref':
         case 'eq':
@@ -148,7 +164,7 @@ export function createService(root: string | undefined, project: ReturnType<type
           return project
             .targets()
             .filter((t) => (ctx.trigger === 'numref' ? t.enumerator : ctx.trigger === 'eq' ? t.kind === 'equation' : true))
-            .map((t) => item(t.identifier, CompletionItemKind.Reference, { detail: `${title(t)} · ${t.file}`, documentation: t.text, filterText: `${t.identifier} ${t.text}` }));
+            .map(labelItem);
         case 'doc':
         case 'link-path': {
           // mystmd resolves both `{doc}` and `[](path)` relative to the current file.
@@ -183,6 +199,8 @@ export function createService(root: string | undefined, project: ReturnType<type
         const e = xrefEntry(ref);
         return e ? { contents: { kind: 'markdown' as const, value: `**${e.title || e.name || e.page || e.url}** · ${e.kind}\n\n${e.url}` } } : null;
       }
+      const c = ref && citation(ref);
+      if (c) return { contents: { kind: 'markdown' as const, value: `**${authorYear(c) || c.key}** · ${relative(root ?? '', c.file)}\n\n${c.title ?? ''}` } };
       const t = ref && find(lookup(), ref);
       if (!t) return null;
       return { contents: { kind: 'markdown' as const, value: `**${title(t)}** · ${t.file}\n\n${t.text}` } };
@@ -192,6 +210,8 @@ export function createService(root: string | undefined, project: ReturnType<type
       const ref = refAtCursor(at);
       if (!ref) return null;
       if (ref.kind === 'doc') return { uri: pathToFileURL(join(dirname(fileURLToPath(at.textDocument.uri)), ref.target)).href, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } };
+      const c = citation(ref);
+      if (c) return bibLocation(c);
       const t = find(lookup(), ref);
       return t ? locationOf(t) : null;
     },
@@ -199,7 +219,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     inlayHints({ textDocument }: { textDocument: { uri: string } }) {
       const targets = lookup();
       return refs(textDocument.uri).flatMap((ref) => {
-        const t = ref.kind !== 'doc' && ref.kind !== 'xref' && find(targets, ref);
+        const t = ref.kind !== 'doc' && ref.kind !== 'xref' && !citation(ref) && find(targets, ref);
         // An xref link without text renders with the remote title, so show that.
         const label = t ? hint(t) : ref.kind === 'xref' && !ref.text && xrefEntry(ref)?.title;
         return label ? [{ position: { line: ref.line, character: ref.after }, label, paddingLeft: true }] : [];
@@ -211,7 +231,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       const builder = new SemanticTokensBuilder();
       for (const ref of refs(textDocument.uri)) {
         if (ref.kind === 'doc') continue; // a file path, not a label
-        const kind = ref.kind === 'xref' ? xrefEntry(ref)?.kind : find(targets, ref)?.kind;
+        const kind = ref.kind === 'xref' ? xrefEntry(ref)?.kind : citation(ref) ? 'citation' : find(targets, ref)?.kind;
         const i = semanticTokensLegend.tokenModifiers.indexOf(kind ?? '');
         builder.push(ref.line, ref.start, ref.end - ref.start, 0, i < 0 ? 0 : 1 << i);
       }
@@ -267,6 +287,8 @@ export function createService(root: string | undefined, project: ReturnType<type
       const targets = lookup();
       return refs(uri).flatMap((ref) => {
         const message = ref.kind === 'xref' ? xrefProblem(ref)
+          // Citation keys are only checked when every .bib file was read, and DOIs (`@10.1234/x`) resolve without one.
+          : ref.kind === 'cite' ? (project.loaded && bib.complete && !citation(ref) && !find(targets, ref) && !/^10\.\d+\//.test(ref.target) ? `Unknown citation or reference target \`${ref.target}\`` : undefined)
           : ref.kind !== 'doc' && project.loaded && !find(targets, ref) ? `Unknown reference target \`${ref.target}\``
           : undefined;
         return message ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message, source: 'myst' }] : [];

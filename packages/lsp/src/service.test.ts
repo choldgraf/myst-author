@@ -1,5 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { createService, semanticTokensLegend } from './service.ts';
 
 const root = '/book';
@@ -64,4 +68,20 @@ test('edits reach the project once typing stops, as project-relative files', asy
   assert.deepEqual(project.opened, []);
   await new Promise((r) => setTimeout(r, 200));
   assert.deepEqual(project.opened, ['index.md', '/elsewhere/notes.md']);
+});
+
+test('`@key` and `{cite}` resolve to citations first, then labels', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'lsp-'));
+  writeFileSync(join(dir, 'refs.bib'), '@article{nelson1977,\n  author = {Nelson, Ted and Smith, J.},\n  title = {{Computer} Lib},\n  year = 1977\n}\n');
+  const service = createService(dir, stubProject(), () => {});
+  const doc = pathToFileURL(join(dir, 'index.md')).href;
+  service.update(doc, 'See @fig-built and [@nelson1977], {cite}`nelson1977, nope`.\n@');
+  assert.deepEqual(service.inlayHints({ textDocument: { uri: doc } }).map((h) => h.label), ['Figure 2']);
+  assert.deepEqual(service.definition({ textDocument: { uri: doc }, position: { line: 0, character: 25 } }), {
+    uri: pathToFileURL(join(dir, 'refs.bib')).href,
+    range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } },
+  });
+  assert.deepEqual(service.diagnostics(doc).map((d) => d.message), ['Unknown citation or reference target `nope`']);
+  const items = service.completion({ textDocument: { uri: doc }, position: { line: 1, character: 1 } }) as any[];
+  assert.deepEqual(items.map((i) => [i.label, i.detail]).slice(0, 2), [['nelson1977', 'Nelson et al. 1977 · Computer Lib'], ['fig-built', 'Figure 2 · chapter/plots.md']]);
 });
