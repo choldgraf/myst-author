@@ -29,10 +29,8 @@ export function activate(context: vscode.ExtensionContext) {
     watch.forEach((w) => w.dispose());
     output.appendLine(`Starting mystmd in ${root}`);
     myst = await startMyst(root, (line) => output.appendLine(stripVTControlCharacters(line)));
-    preview = new MystPreview(context, root, myst, (method, params) => client!.sendRequest(method, params)); // `client` is set just below
-
     // The LSP loads the whole project once mystmd has built it; until then it knows the open files.
-    client = new LanguageClient(
+    const lsp = new LanguageClient(
       'mystAuthor',
       'MyST Author',
       { module: context.asAbsolutePath('dist/lsp.js'), transport: TransportKind.ipc, args: lspArgs(myst.url) },
@@ -41,7 +39,9 @@ export function activate(context: vscode.ExtensionContext) {
         workspaceFolder: { uri: vscode.Uri.file(root), name: basename(root), index: 0 },
       },
     );
-    await client.start();
+    client = lsp;
+    preview = new MystPreview(context, root, myst, (method, params) => lsp.sendRequest(method, params));
+    await lsp.start();
   };
   const watch = [
     vscode.window.onDidChangeActiveTextEditor((e) => isMarkdown(e?.document) && start(e!.document.uri)),
