@@ -14,6 +14,8 @@ import {
   ReferenceState,
   resolveReferencesPlugin,
 } from 'myst-transforms';
+import { defaultDirectives } from 'myst-directives';
+import { defaultRoles } from 'myst-roles';
 import { buttonRole } from 'myst-ext-button';
 import { cardDirective } from 'myst-ext-card';
 import { exerciseDirectives } from 'myst-ext-exercise';
@@ -37,14 +39,17 @@ export type ParseResult = {
   references?: Record<string, any>; // extra ArticleProvider references from a built page (e.g. cite)
 };
 
-// The extensions mystmd enables by default, so the preview matches `myst build`. myst-parser adds its own defaults.
-export const directives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
-export const roles = [buttonRole];
+// The extensions mystmd enables by default, so the preview matches `myst build`.
+const extDirectives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
+const extRoles = [buttonRole];
+/** Every directive and role the parser knows: myst-parser's defaults plus the extensions. */
+export const directives = [...defaultDirectives, ...extDirectives];
+export const roles = [...defaultRoles, ...extRoles];
 
 /** Parse and transform a single MyST page in the browser. */
 export function parseMyst(md: string): ParseResult {
   const vfile = new VFile();
-  const parse = (s: string) => mystParse(s, { markdownit: { linkify: true }, directives, roles, vfile });
+  const parse = (s: string) => mystParse(s, { markdownit: { linkify: true }, directives: extDirectives, roles: extRoles, vfile });
   const tree = parse(md) as GenericParent;
 
   let frontmatter: Record<string, any> = {};
