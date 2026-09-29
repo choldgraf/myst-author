@@ -28,12 +28,16 @@ It's used to list files for path completion and to read `myst.yml` for external 
 | Typing | Completes |
 |---|---|
 | `` {ref}` ``, `` {numref}` ``, `` {eq}` ``, `[](#`, `<#` | reference targets |
+| `@`, `[@` | citation keys and reference targets |
+| `` {cite}` `` | citation keys |
 | `` {doc}` ``, `[](` | files, relative to the current file |
 | ```` ```{ ````, `:::{` | directive names |
 | `{` | role names |
 | `:` on a line inside a directive's options | that directive's options, skipping ones already set |
 
 Directive options come from mystmd's directive specs.
+Citation keys come from `project.bibliography` in `myst.yml`, or every `.bib` file in the project, as in mystmd.
+They're read on startup.
 
 **Other features**
 
@@ -41,9 +45,12 @@ Directive options come from mystmd's directive specs.
 - **Diagnostics**: warns about references to unknown targets.
   These are only reported with a content server, once the project has loaded.
 - **Inlay hints**: the resolved text after each reference, e.g. `Figure 1` or `(1)`.
-- **Semantic tokens**: each reference is a `label` token, with its target's kind as a modifier (`label.figure`, `label.table`, `label.equation`, `label.heading`, ...).
+- **Semantic tokens**: each reference is a `label` token, with its target's kind as a modifier (`label.figure`, `label.table`, `label.equation`, `label.heading`, ...), or `label.citation` for citations.
   The kinds are `semanticTokensLegend` in `src/service.ts`.
   To colour references to figures, in VS Code set `"editor.semanticTokenColorCustomizations": { "rules": { "label.figure": "#2a9d8f" } }`, or in Neovim `vim.api.nvim_set_hl(0, '@lsp.typemod.label.figure', { fg = '#2a9d8f' })`.
+- **Citations** (`@key`, `[@a; @b]`, `` {cite:p}`a, b` ``): hover with author, year and title, go to definition in the `.bib` file, and diagnostics.
+  Like mystmd, `@x` is a citation if the bibliography has `x`, else a reference to label `x`.
+  Unknown keys are only reported when every bibliography file is local, so projects without a `.bib` get no citation warnings.
 - **Workspace symbols**: every label, searchable by label or text, so clients can jump to them.
 - **Document symbols**: the page outline, with headings nested by level and each section's labeled figures, tables, equations, ... under it.
   See [Find your way around](https://choldgraf.github.io/myst-author/guide/navigate) for how it compares to VS Code's Markdown outline.
@@ -62,6 +69,7 @@ Open documents are re-parsed live with `@myst-author/preview/parse`, so unsaved 
 - `src/index-targets.ts`: collects reference targets from an mdast tree.
 - `src/project.ts`: the project index (content server pages plus open documents).
 - `src/xref.ts`: external project inventories and `xref:` resolution.
+- `src/cite.ts`: reads the project's `.bib` files.
 - `src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
 - `src/server.ts`: the LSP wiring.
 - `src/client/`: the browser client (`@myst-author/lsp/client`), a `@codemirror/lsp-client` over a websocket, with inlay hints.

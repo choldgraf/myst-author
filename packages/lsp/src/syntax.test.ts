@@ -63,3 +63,10 @@ test('optionAt finds the enclosing directive and options already used', () => {
   assert.equal(optionAt([':::{note}', 'body', ':x'], 2, 2), null); // options must come right after the fence
   assert.equal(optionAt(['plain', ':'], 1, 1), null);
 });
+
+test('citations: `@key` and `{cite}` keys, but not emails or URLs', () => {
+  assert.equal(at('see [@smi|]')?.trigger, 'at');
+  assert.deepEqual(at('{cite:p}`a, b|`'), { trigger: 'cite', prefix: 'b', start: 12, end: 13 });
+  const refs = refsInText('See @fig-a. [@doe2020, p. 3; -@roe] {cite:t}`a, b` a@b.com https://x.com/@me');
+  assert.deepEqual(refs.map((r) => [r.kind, r.target, r.start]), [['cite', 'fig-a', 5], ['cite', 'doe2020', 14], ['cite', 'roe', 31], ['cite', 'a', 45], ['cite', 'b', 48]]);
+});

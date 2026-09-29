@@ -1,6 +1,6 @@
 // Pure, line-based recognition of MyST reference syntax. Character offsets are 0-based.
 
-export type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'link-hash' | 'link-path' | 'xref-key' | 'xref-target' | 'directive' | 'role';
+export type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'link-hash' | 'link-path' | 'xref-key' | 'xref-target' | 'directive' | 'role' | 'cite' | 'at';
 
 /**
  * What the cursor is inside: `prefix` is the text typed so far, `start`/`end` the span a completion replaces.
@@ -11,11 +11,14 @@ export type RefContext = { trigger: Trigger; prefix: string; start: number; end:
 /**
  * A reference in the text. `start`/`end` span the target; `after` is just past the closing delimiter.
  * `text` is the link text of an `xref:` link (undefined for autolinks).
+ * `cite` is a `{cite}` key or an `@key`, which may be a citation or a label.
  */
-export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'link' | 'xref'; target: string; line: number; start: number; end: number; after: number; text?: string };
+export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'link' | 'xref' | 'cite'; target: string; line: number; start: number; end: number; after: number; text?: string };
 
 // Each pattern matches the text before the cursor; the last group is the prefix.
 const contexts: [RegExp, Trigger | null][] = [
+  [/\{cite(?::\w+)?\}`(?:[^`]*[,;]\s*)?([^`,;\s]*)$/, 'cite'],
+  [/(?<=^|[\s[(]|[\s[]-)@([\w:.#$%&+?~/-]*)$/, 'at'],
   [/\{(ref|numref|eq|doc)\}`(?:[^`<]*<)?([^`<>]*)$/, null], // trigger is the role name
   [/(?:\]\(|<)xref:([^#)>\s]+)#([^)>\s]*)$/, 'xref-target'],
   [/(?:\]\(|<)xref:([^#)>\s]*)$/, 'xref-key'],
@@ -48,7 +51,7 @@ export function refAt(lineText: string, character: number): RefContext | null {
     const m = before.match(re);
     if (!m) continue;
     const prefix = m[m.length - 1];
-    const rest = lineText.slice(character).match(/^[^`<>)}\s]*/)![0];
+    const rest = lineText.slice(character).match(/^[^`<>)}\]\s,;]*/)![0];
     const ctx: RefContext = { trigger: trigger ?? (m[1] as Trigger), prefix, start: character - prefix.length, end: character + rest.length };
     return trigger === 'xref-target' ? { ...ctx, key: m[1] } : ctx;
   }
@@ -61,6 +64,9 @@ const refPatterns: [RegExp, (m: RegExpExecArray) => Ref['kind']][] = [
   [/<#([^>\s]+)>/g, () => 'link'],
   [/\[(?<text>[^\]]*)\]\(xref:([^)\s]+)\)/g, () => 'xref'],
   [/<xref:([^>\s]+)>/g, () => 'xref'],
+  [/(?<=\{cite(?::\w+)?\}`(?:[^`]*[,;])?\s*)[^`,;\s]+(?=[^`]*`)/g, () => 'cite'], // each key of a `{cite}` role
+  // `@key`, as mystmd reads it: after a space, `[`, `(` or `-` (`[-@key]`), so not in emails or URLs, and not ending in punctuation.
+  [/(?<=^|[\s[(]|[\s[]-)@(\w(?:[\w:.#$%&+?~/-]*\w)?)/g, () => 'cite'],
 ];
 
 // Blank out inline code (keeping roles and offsets) so examples of MyST syntax aren't treated as references.

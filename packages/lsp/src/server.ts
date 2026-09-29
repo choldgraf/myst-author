@@ -28,7 +28,7 @@ connection.onInitialize(async (params) => {
   return {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
-      completionProvider: { triggerCharacters: ['`', '#', '{', '(', '/', ':'] },
+      completionProvider: { triggerCharacters: ['`', '#', '{', '(', '/', ':', '@'] },
       hoverProvider: true,
       definitionProvider: true,
       inlayHintProvider: true,
