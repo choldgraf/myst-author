@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
-import { contentServer, mystmdMissing } from '@myst-author/mystmd/built';
+import { contentServer } from '@myst-author/mystmd/built';
 import { PreviewController, type PreviewHost } from '@myst-author/preview/controller';
 import { findLabel, type Request } from '@myst-author/lsp/labels';
 import type { startMyst } from '@myst-author/mystmd/start';
@@ -13,7 +13,7 @@ const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.documen
 export class MystPreview {
   private panel?: vscode.WebviewPanel;
   private editor = isMarkdown(vscode.window.activeTextEditor) ? vscode.window.activeTextEditor : undefined;
-  private assets: Thenable<string | undefined>; // the content server's URL as the webview reaches it
+  private assets: Thenable<string>; // the content server's URL as the webview reaches it
   private preview: PreviewController;
   private host: PreviewHost = {
     current: () => {
@@ -34,16 +34,12 @@ export class MystPreview {
   constructor(
     private context: vscode.ExtensionContext,
     private root: string | undefined,
-    myst: Awaited<ReturnType<typeof startMyst>> | undefined,
+    myst: Awaited<ReturnType<typeof startMyst>>,
     private request: Request, // to the language server
   ) {
     // In Codespaces and code-server the webview runs in the browser, so images need the forwarded URL.
-    this.assets = myst ? vscode.env.asExternalUri(vscode.Uri.parse(myst.url)).then((u) => u.toString().replace(/\/$/, '')) : Promise.resolve(undefined);
-    // Without mystmd installed there's no built preview; the controller warns about any other failure.
-    const server = myst
-      ? myst.ready.then(async () => contentServer(myst.url, await this.assets), (err) => { if (err.message !== mystmdMissing) throw err; return null; })
-      : Promise.resolve(null);
-    this.preview = new PreviewController(this.host, server);
+    this.assets = vscode.env.asExternalUri(vscode.Uri.parse(myst.url)).then((u) => u.toString().replace(/\/$/, ''));
+    this.preview = new PreviewController(this.host, myst.ready.then(async () => contentServer(myst.url, await this.assets)));
     context.subscriptions.push(
       this.preview,
       vscode.window.onDidChangeActiveTextEditor((e) => {
@@ -75,7 +71,7 @@ export class MystPreview {
     const src = (file: string) => webview.asWebviewUri(vscode.Uri.joinPath(dist, file));
     const nonce = randomBytes(16).toString('base64');
     // Built pages load images from the content server, plus any remote images the author links to.
-    const csp = `default-src 'none'; img-src ${webview.cspSource} ${assets ? new URL(assets).origin : ''} https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
+    const csp = `default-src 'none'; img-src ${webview.cspSource} ${new URL(assets).origin} https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
     webview.html = `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">

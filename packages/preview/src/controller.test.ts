@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { mystmdMissing } from '@myst-author/mystmd/built';
 import { PreviewController, type PreviewHost } from './controller.ts';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve));
@@ -34,11 +35,16 @@ test('sends the build on start, on rebuilds, and on file changes until disposed'
   preview.dispose();
   assert.ok(stopped);
 
-  // A failed mystmd is reported, then treated like no mystmd.
+  // A failed mystmd is reported and its error posted; a missing one is only posted.
   calls.length = 0;
   new PreviewController(host(calls), Promise.reject(new Error('exited')));
+  new PreviewController(host(calls), Promise.reject(new Error(mystmdMissing)));
   await tick();
-  assert.deepEqual(calls, [['warn', "mystmd didn't start: exited"], ['post', { type: 'built', path: 'guide/a.md', page: null, error: 'mystmd not found' }]]);
+  assert.deepEqual(calls, [
+    ['warn', "mystmd didn't start: exited"],
+    ['post', { type: 'built', path: 'guide/a.md', page: null, error: 'exited' }],
+    ['post', { type: 'built', path: 'guide/a.md', page: null, error: mystmdMissing }],
+  ]);
 });
 
 test("drops a build that arrives after the host has moved to another file", async () => {
