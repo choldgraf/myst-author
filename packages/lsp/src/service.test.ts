@@ -20,7 +20,7 @@ function stubProject() {
 }
 
 test('a loaded project resolves built targets and flags unknown ones', () => {
-  const service = createService(root, stubProject(), () => {});
+  const service = createService(root, stubProject());
   service.update(uri, text);
 
   assert.deepEqual(service.diagnostics(uri).map((d) => d.message), ['Unknown reference target `missing`']);
@@ -34,7 +34,7 @@ test('a loaded project resolves built targets and flags unknown ones', () => {
 });
 
 test('labels match by text', () => {
-  const service = createService(root, stubProject(), () => {});
+  const service = createService(root, stubProject());
   assert.deepEqual(service.workspaceSymbols({ query: 'plot' }).map((s) => s.name), ['fig-built']);
 });
 
@@ -46,14 +46,14 @@ test('the outline nests sections by level, with numbered blocks under their sect
     at('fig-a', 5, { kind: 'figure', enumerator: '1' }),
     at('results', 7, { kind: 'heading', depth: 2 }),
   ];
-  const service = createService(root, { loaded: true, targets: () => targets, setOpen() {}, close() {} }, () => {});
+  const service = createService(root, { loaded: true, targets: () => targets, setOpen() {}, close() {} });
   service.update(uri, '# intro\n\n## methods\n\n:::{figure}\n:::\n## results\nlast line');
   const tree = (symbols: any[]): any[] => symbols.map((s) => [s.name, s.range.end.line, ...tree(s.children)]);
   assert.deepEqual(tree(service.documentSymbols({ textDocument: { uri } })), [['intro', 7, ['methods', 5, ['Figure 1 · fig-a', 4]], ['results', 7]]]);
 });
 
 test('references are label tokens with their target kind as a modifier', () => {
-  const service = createService(root, stubProject(), () => {});
+  const service = createService(root, stubProject());
   service.update(uri, text);
   const mod = (kind: string) => 1 << semanticTokensLegend.tokenModifiers.indexOf(kind);
   // Delta-encoded [line, start, length, type, modifiers]: `Fig-Built` (a figure), `missing` (unknown), `notes` (a heading).
@@ -62,7 +62,7 @@ test('references are label tokens with their target kind as a modifier', () => {
 
 test('edits reach the project once typing stops, as project-relative files', async () => {
   const project = stubProject();
-  const service = createService(root, project, () => {});
+  const service = createService(root, project);
   service.update(uri, 'a');
   service.update(uri, 'ab');
   service.update('file:///elsewhere/notes.md', 'c');
@@ -74,7 +74,7 @@ test('edits reach the project once typing stops, as project-relative files', asy
 test('`@key` and `{cite}` resolve to citations first, then labels', () => {
   const dir = mkdtempSync(join(tmpdir(), 'lsp-'));
   writeFileSync(join(dir, 'refs.bib'), '@article{nelson1977,\n  author = {Nelson, Ted and Smith, J.},\n  title = {{Computer} Lib},\n  year = 1977\n}\n');
-  const service = createService(dir, stubProject(), () => {});
+  const service = createService(dir, stubProject());
   const doc = pathToFileURL(join(dir, 'index.md')).href;
   service.update(doc, 'See @fig-built and [@nelson1977], {cite}`nelson1977, nope`.\n@');
   assert.deepEqual(service.inlayHints({ textDocument: { uri: doc } }).map((h) => h.label), ['Figure 2']);
@@ -90,7 +90,7 @@ test('`@key` and `{cite}` resolve to citations first, then labels', () => {
 test('a key that is both a citation and a label is a citation to `@`, and a label to `{ref}`', () => {
   const dir = mkdtempSync(join(tmpdir(), 'lsp-'));
   writeFileSync(join(dir, 'refs.bib'), '@misc{fig-built,\n  title = {Shadow}\n}\n');
-  const service = createService(dir, stubProject(), () => {});
+  const service = createService(dir, stubProject());
   const doc = pathToFileURL(join(dir, 'index.md')).href;
   service.update(doc, '@fig-built {ref}`fig-built`\n');
   const at = (character: number) => ({ textDocument: { uri: doc }, position: { line: 0, character } });
@@ -100,6 +100,20 @@ test('a key that is both a citation and a label is a citation to `@`, and a labe
   assert.deepEqual(service.inlayHints({ textDocument: { uri: doc } }).map((h) => h.label), ['Figure 2']);
   // Find references from the label skips the citation.
   assert.deepEqual(service.references({ ...at(20), context: { includeDeclaration: false } })?.map((l) => l.range.start.character), [17]);
+});
+
+test('xrefs resolve against loaded inventories, and only loaded ones are checked', () => {
+  const entry = { name: 'intro', kind: 'heading', title: 'Introduction', url: 'https://docs.example.org/guide#intro', page: '/guide' };
+  const xrefs = { docs: { url: 'https://docs.example.org', kind: 'myst' as const, entries: [entry] }, offline: { url: 'https://offline.example.org' } };
+  const service = createService(root, stubProject(), xrefs);
+  service.update(uri, '[](xref:docs/guide#intro) [](xref:docs/guide#nope) [](xref:nokey#x) [](xref:offline#x)\n');
+  assert.match(service.hover({ textDocument: { uri }, position: { line: 0, character: 10 } })!.contents.value, /^\*\*Introduction\*\* · heading\n\nhttps:\/\/docs\.example\.org\/guide#intro/);
+  assert.deepEqual(service.documentLinks({ textDocument: { uri } }).map((l) => l.target), [entry.url]);
+  assert.deepEqual(service.inlayHints({ textDocument: { uri } }).map((h) => h.label), ['Introduction']);
+  assert.deepEqual(service.diagnostics(uri).map((d) => d.message), [
+    '`docs/guide#nope` not found in docs (https://docs.example.org)',
+    'Unknown external project `nokey` (add it to `project.references` in myst.yml)',
+  ]);
 });
 
 // A workspace on disk: `a.md` defines the labels, `b.md` (also open, with unsaved edits) and `c.md` reference them.
@@ -114,7 +128,7 @@ function labelWorkspace() {
     { identifier: 'sec', kind: 'heading', text: 'Section', file: 'a.md', line: 2 },
     { identifier: 'fig-one', kind: 'figure', text: 'The caption', enumerator: '1', file: 'a.md', line: 7 },
   ];
-  const service = createService(dir, { loaded: true, targets: () => targets, setOpen() {}, close() {} }, () => {});
+  const service = createService(dir, { loaded: true, targets: () => targets, setOpen() {}, close() {} });
   const uri = (f: string) => pathToFileURL(join(dir, f)).href;
   service.update(uri('a.md'), a);
   service.update(uri('b.md'), 'See @FIG-ONE and {numref}`fig-one`.\n');
@@ -141,7 +155,7 @@ test('rename a label from its definition, and not citations or unknown labels', 
 });
 
 test('hover shows mystmd docs for directives, options and roles, but references come first', () => {
-  const service = createService(root, stubProject(), () => {});
+  const service = createService(root, stubProject());
   service.update(uri, '```{include} x.md\n:language: python\n```\n{kbd}`Ctrl` {numref}`fig-built`\n');
   const hover = (line: number, character: number) => service.hover({ textDocument: { uri }, position: { line, character } })?.contents.value;
   assert.match(hover(0, 5)!, /^\*\*\{include\}\*\*\n\nAllows you to include .*\n\n\*\*Argument\*\*: The file path/);
@@ -154,7 +168,7 @@ test('directive file arguments: links, completion, and a warning when missing', 
   const dir = mkdtempSync(join(tmpdir(), 'lsp-'));
   mkdirSync(join(dir, 'img'));
   writeFileSync(join(dir, 'img', 'plot.png'), '');
-  const service = createService(dir, stubProject(), () => {});
+  const service = createService(dir, stubProject());
   const doc = pathToFileURL(join(dir, 'index.md')).href;
   service.update(doc, '```{figure} img/plot.png\n```\n```{image} /img/plot.png\n```\n```{include} missing.md\n```\n```{figure} ');
   const png = pathToFileURL(join(dir, 'img', 'plot.png')).href;
@@ -166,7 +180,7 @@ test('directive file arguments: links, completion, and a warning when missing', 
 test('duplicate labels are flagged, but not implicit heading labels', () => {
   const heading = (file: string, line: number) => ({ identifier: 'examples', kind: 'heading', text: 'Examples', file, line, implicit: true });
   const targets = [{ ...built, file: 'index.md', line: 2 }, built, heading('index.md', 4), heading('other.md', 1)];
-  const service = createService(root, { loaded: true, targets: () => targets, setOpen() {}, close() {} }, () => {});
+  const service = createService(root, { loaded: true, targets: () => targets, setOpen() {}, close() {} });
   service.update(uri, '(fig-built)=\n# Built\n\n## Examples\n');
   assert.deepEqual(service.diagnostics(uri).map((d) => [d.message, d.range.start.line, d.range.start.character]), [['Duplicate label `fig-built`, also defined in chapter/plots.md', 0, 1]]);
 });
@@ -176,7 +190,7 @@ test('notebook cells are documents in their notebook file', async () => {
   mkdirSync(join(dir, 'nb'));
   writeFileSync(join(dir, 'nb', 'plot.png'), '');
   const project = createProject(undefined, () => {});
-  const service = createService(dir, project, () => {});
+  const service = createService(dir, project);
   // Cell URIs as JupyterLab sends them; VS Code's `vscode-notebook-cell:` URIs have the same path.
   const nb = pathToFileURL(join(dir, 'nb', 'analysis.ipynb')).href;
   service.update(`${nb}#a`, '(results)=\n# Results\n');
