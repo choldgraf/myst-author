@@ -54,17 +54,24 @@ export function contentServer(base: string, assets = base) {
     return result;
   }
 
+  /** The built page JSON for a project-relative path, or null if mystmd hasn't built it. */
+  async function page(path: string): Promise<BuiltPage | null> {
+    if (pageSlugs(await json('config.json')).join() !== slugList) await pages();
+    const slug = slugs.get('/' + path);
+    if (!slug) return null;
+    const result: BuiltPage = await json(`content/${slug}.json`);
+    rebaseImages(result.mdast, assets);
+    return result;
+  }
+
   return {
     pages,
 
-    /** The built page JSON for a project-relative path, or null if mystmd hasn't built it. */
-    async page(path: string): Promise<BuiltPage | null> {
-      if (pageSlugs(await json('config.json')).join() !== slugList) await pages();
-      const slug = slugs.get('/' + path);
-      if (!slug) return null;
-      const result: BuiltPage = await json(`content/${slug}.json`);
-      rebaseImages(result.mdast, assets);
-      return result;
+    page,
+
+    /** `page(path)` as a `Built`, with any failure as its `error`. */
+    built(path: string): Promise<Built> {
+      return page(path).then((p) => ({ path, page: p }), (err) => ({ path, page: null, error: err.message }));
     },
 
     /** The project-relative file for a page slug (`''` for the index page), as of the last `page()` or `pages()`. */

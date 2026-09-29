@@ -20,7 +20,7 @@ test('sends the build on start, on rebuilds, and on file changes until disposed'
   let reload = () => {};
   let stopped = false;
   const server = {
-    page: async (path: string) => ({ location: '/' + path }),
+    built: async (path: string) => ({ path, page: { location: '/' + path } }),
     watch: (onReload: () => void) => { reload = onReload; return () => { stopped = true; }; },
   };
   const preview = new PreviewController(host(calls), Promise.resolve(server as any));
@@ -46,7 +46,7 @@ test("drops a build that arrives after the host has moved to another file", asyn
   let path = 'a.md';
   let finishA = () => {};
   const server = {
-    page: (p: string) => new Promise((resolve) => (p === 'a.md' ? (finishA = () => resolve({ location: '/a' })) : resolve({ location: '/b' }))),
+    built: (path: string) => new Promise((resolve) => (path === 'a.md' ? (finishA = () => resolve({ path, page: { location: '/a' } })) : resolve({ path, page: { location: '/b' } }))),
     watch: () => () => {},
   };
   const preview = new PreviewController({ ...host(calls), current: () => ({ path, text: '', dirty: false }) }, Promise.resolve(server as any));
@@ -61,7 +61,7 @@ test("drops a build that arrives after the host has moved to another file", asyn
 
 test('follows preview links to files, labels, and slugs', async () => {
   const calls: unknown[][] = [];
-  const server = { fileForSlug: (slug: string) => ({ '': 'index.md', c: 'guide/c.md' })[slug], page: async () => null, watch: () => () => {} };
+  const server = { fileForSlug: (slug: string) => ({ '': 'index.md', c: 'guide/c.md' })[slug], built: async (path: string) => ({ path, page: null }), watch: () => () => {} };
   const preview = new PreviewController(host(calls), Promise.resolve(server as any));
   await tick();
   calls.length = 0;
