@@ -85,3 +85,41 @@ test('`@key` and `{cite}` resolve to citations first, then labels', () => {
   const items = service.completion({ textDocument: { uri: doc }, position: { line: 1, character: 1 } }) as any[];
   assert.deepEqual(items.map((i) => [i.label, i.detail]).slice(0, 2), [['nelson1977', 'Nelson et al. 1977 · Computer Lib'], ['fig-built', 'Figure 2 · chapter/plots.md']]);
 });
+
+// A workspace on disk: `a.md` defines the labels, `b.md` (also open, with unsaved edits) and `c.md` reference them.
+function labelWorkspace() {
+  const dir = mkdtempSync(join(tmpdir(), 'lsp-'));
+  const a = '(sec)=\n# Section\n\n:::{figure} x.png\n:label: Fig-One\n\nThe caption\n:::\n';
+  writeFileSync(join(dir, 'a.md'), a);
+  writeFileSync(join(dir, 'b.md'), 'See {ref}`sec`.\n');
+  writeFileSync(join(dir, 'c.md'), 'See <#fig-one>.\n');
+  // The built figure reports its caption's line, not the `:label:` line.
+  const targets = [
+    { identifier: 'sec', kind: 'heading', text: 'Section', file: 'a.md', line: 2 },
+    { identifier: 'fig-one', kind: 'figure', text: 'The caption', enumerator: '1', file: 'a.md', line: 7 },
+  ];
+  const service = createService(dir, { loaded: true, targets: () => targets, setOpen() {}, close() {} }, () => {});
+  const uri = (f: string) => pathToFileURL(join(dir, f)).href;
+  service.update(uri('a.md'), a);
+  service.update(uri('b.md'), 'See @FIG-ONE and {numref}`fig-one`.\n');
+  const spans = (locs: { uri: string; range: { start: { line: number; character: number } } }[]) =>
+    locs.map((l) => `${l.uri.split('/').at(-1)}:${l.range.start.line}:${l.range.start.character}`).sort();
+  return { service, uri, spans };
+}
+
+test('find references from a reference, across files, preferring unsaved text', () => {
+  const { service, uri, spans } = labelWorkspace();
+  const refs = service.references({ textDocument: { uri: uri('b.md') }, position: { line: 0, character: 6 }, context: { includeDeclaration: true } });
+  assert.deepEqual(spans(refs!), ['a.md:4:8', 'b.md:0:26', 'b.md:0:5', 'c.md:0:6']);
+});
+
+test('rename a label from its definition, and not citations or unknown labels', () => {
+  const { service, uri, spans } = labelWorkspace();
+  const at = { textDocument: { uri: uri('a.md') }, position: { line: 4, character: 10 } };
+  assert.deepEqual(service.prepareRename(at), { start: { line: 4, character: 8 }, end: { line: 4, character: 15 } });
+  const { changes } = service.rename({ ...at, newName: 'fig-plot' })!;
+  assert.deepEqual(spans(Object.entries(changes).flatMap(([u, edits]) => edits.map((e) => ({ uri: u, ...e })))), ['a.md:4:8', 'b.md:0:26', 'b.md:0:5', 'c.md:0:6']);
+  service.update(uri('b.md'), '{doc}`a.md` @nope');
+  assert.equal(service.prepareRename({ textDocument: { uri: uri('b.md') }, position: { line: 0, character: 7 } }), null);
+  assert.equal(service.prepareRename({ textDocument: { uri: uri('b.md') }, position: { line: 0, character: 14 } }), null);
+});

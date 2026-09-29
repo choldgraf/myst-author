@@ -31,6 +31,8 @@ connection.onInitialize(async (params) => {
       completionProvider: { triggerCharacters: ['`', '#', '{', '(', '/', ':', '@'] },
       hoverProvider: true,
       definitionProvider: true,
+      referencesProvider: true,
+      renameProvider: { prepareProvider: true },
       inlayHintProvider: true,
       workspaceSymbolProvider: true,
       documentSymbolProvider: true,
@@ -43,6 +45,9 @@ connection.onInitialize(async (params) => {
 connection.onCompletion((p) => service.completion(p));
 connection.onHover((p) => service.hover(p));
 connection.onDefinition((p) => service.definition(p));
+connection.onReferences((p) => service.references(p));
+connection.onPrepareRename((p) => service.prepareRename(p));
+connection.onRenameRequest((p) => service.rename(p));
 connection.languages.inlayHint.on((p) => service.inlayHints(p));
 connection.languages.semanticTokens.on((p) => service.semanticTokens(p));
 connection.onDocumentLinks((p) => service.documentLinks(p));

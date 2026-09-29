@@ -94,3 +94,16 @@ export function refsInText(text: string): Ref[] {
   });
   return refs.sort((a, b) => a.line - b.line || a.start - b.start);
 }
+
+// Where a label is defined: `(id)=`, `:label: id` / `:name: id` (or without colons in a directive's YAML options), and `$$ (id)` after display math.
+const labelPatterns = [/^\s*\(([^()\s]+)\)=\s*$/, /^\s*:?(?:label|name):\s*(\S+)\s*$/, /\$\$\s*\(([^()\s]+)\)\s*$/];
+
+/** The label defined on a line, if any, with the span of its name. */
+export function labelDefinition(line: string) {
+  for (const re of labelPatterns) {
+    const m = line.match(re);
+    if (!m) continue;
+    const start = m.index! + m[0].lastIndexOf(m[1]);
+    return { target: m[1], start, end: start + m[1].length };
+  }
+}
