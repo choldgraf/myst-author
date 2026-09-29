@@ -6,7 +6,6 @@ import { pathToFileURL } from 'node:url';
 import { createProxyServer } from 'http-proxy-3';
 import sirv from 'sirv';
 import { startMyst } from '@myst-author/lsp/myst';
-import { mystmdMissing } from '@myst-author/preview/built';
 import { listMarkdown, resolveInside } from './files.ts';
 import { lspBridge } from './lsp.ts';
 
@@ -18,7 +17,7 @@ const myst = await startMyst(root);
 let mystDown = 'myst starting';
 myst.ready.then(
   () => (mystDown = ''),
-  (err) => (mystDown = err.code === 'ENOENT' ? mystmdMissing : String(err)),
+  (err) => (mystDown = err.message),
 );
 const lsp = lspBridge(root, myst.url); // the LSP loads the project once myst is up; until then it knows open documents
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => process.exit()); // runs the 'exit' hook that stops myst
