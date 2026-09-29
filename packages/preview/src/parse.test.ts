@@ -40,6 +40,29 @@ test('embeds show a placeholder until mystmd builds them', () => {
   ]);
 });
 
+test('a built page marks embeds that mystmd could not resolve', () => {
+  const embed = { type: 'embed', key: 'e', source: { label: 'nope' } };
+  const { blocks } = fromBuiltPage({ sha256: '', location: '/index.md', mdast: { type: 'root', children: [embed] } } as any);
+  assert.equal(blocks[0].node.children[0].value, "Broken embed: mystmd couldn't find #nope");
+});
+
+test('references to other pages show their label until mystmd builds them', () => {
+  const { blocks } = parseMyst('See [](#a), {ref}`b` and @c.\n');
+  const refs = blocks[0].node.children.filter((c: any) => c.type === 'span');
+  assert.deepEqual(refs.map((c: any) => c.children[0].value), ['#a', '#b', '@c']);
+});
+
+test('a built page marks references that mystmd could not resolve', () => {
+  const para = { type: 'paragraph', children: [
+    { type: 'link', url: '#a', children: [] },
+    { type: 'crossReference', label: 'b', key: 'b' },
+    { type: 'cite', label: 'c', error: 'not found' },
+    { type: 'crossReference', label: 'ok', resolved: true, children: [{ type: 'text', value: 'OK' }] },
+  ] };
+  const { blocks } = fromBuiltPage({ sha256: '', location: '/index.md', mdast: { type: 'root', children: [para] } } as any);
+  assert.deepEqual(blocks[0].node.children.map((c: any) => [c.type, c.children[0].value]), [['span', '⚠ #a'], ['span', '⚠ #b'], ['span', '⚠ @c'], ['crossReference', 'OK']]);
+});
+
 test('a built page keeps its line ranges, using content positions for directive output', () => {
   const pos = (a: number, b: number) => ({ start: { line: a, column: 1 }, end: { line: b, column: 1 } });
   const text = (l: number) => ({ type: 'paragraph', position: pos(l, l), children: [{ type: 'text', value: 'x' }] });

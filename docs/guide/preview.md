@@ -12,9 +12,10 @@ There are two versions of the preview, shown in the same pane:
 
 - The **fast preview** renders the page in your browser as you type.
   It uses mystmd's parser, but some things only work in a full build, such as `{include}`, embeds, and notebook outputs.
-  Embeds show a placeholder until the build is ready.
+  Embeds, and references to other pages, show grey placeholders until the build is ready.
 - The **built preview** is mystmd's own output from `myst start`.
   It is exact.
+  Embeds and references whose label mystmd can't find show in red with a ⚠, instead of the blank mystmd leaves.
 
 The editor shows the built preview whenever mystmd's latest build matches the text in the editor, and the fast preview otherwise.
 The badge in the toolbar tells you which one you're looking at:
