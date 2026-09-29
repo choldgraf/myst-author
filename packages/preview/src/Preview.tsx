@@ -3,11 +3,8 @@ import { Theme } from '@myst-theme/common';
 import { ArticleProvider, ThemeProvider } from '@myst-theme/providers';
 import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, MyST } from 'myst-to-react';
-import { sha256, type BuiltPage } from './built.ts';
+import { sha256, type Built } from './built.ts';
 import { fromBuiltPage, parseMyst, type ParseResult } from './parse.ts';
-
-/** mystmd's latest build of a file, or why there is none. */
-export type Built = { path: string; page: BuiltPage | null; error?: string };
 
 /**
  * What to preview for a file's live text: mystmd's build when it matches the text exactly, otherwise the fast in-browser parse.

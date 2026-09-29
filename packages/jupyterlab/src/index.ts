@@ -98,16 +98,13 @@ class MystPreview extends Widget {
       return path != null ? { path: PathExt.relative(await this.project, path), line: s!.location.range.start.line } : undefined;
     },
     warn: (message) => console.warn(`MyST Author: ${message}`),
-  });
-  private myst = contentServer(server + 'myst');
-  private stopWatching = this.myst.watch(() => this.preview.sendBuilt());
+  }, Promise.resolve(contentServer(server + 'myst')));
 
   constructor(private tracker: IEditorTracker, private docs: IDocumentManager, private lsp: Promise<Lsp>) {
     super();
     this.title.label = 'MyST Preview';
     this.title.closable = true;
     this.project = lsp.then((l) => pathOf(l.root) ?? '', () => '');
-    this.preview.pages = this.myst;
     this.iframe.src = server + 'preview.html';
     this.iframe.style.cssText = 'width: 100%; height: 100%; border: 0';
     this.node.appendChild(this.iframe);
@@ -119,7 +116,7 @@ class MystPreview extends Widget {
   dispose() {
     window.removeEventListener('message', this.onMessage);
     this.editor && cm(this.editor).editor.scrollDOM.removeEventListener('scroll', this.onScroll);
-    this.stopWatching();
+    this.preview.dispose();
     Signal.clearData(this);
     super.dispose();
   }
@@ -137,8 +134,7 @@ class MystPreview extends Widget {
     w.content.model.sharedModel.changed.connect(this.sendText, this);
     w.context.model.stateChanged.connect(this.sendText, this); // the dirty flag
     cm(w).editor.scrollDOM.addEventListener('scroll', this.onScroll);
-    this.preview.sendText();
-    this.preview.sendBuilt();
+    this.preview.sendFile();
   }
 
   private sendText() {

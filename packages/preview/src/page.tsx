@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Preview, usePreview, type Built } from './Preview.tsx';
+import type { Built } from './built.ts';
+import type { FromPage, ToPage } from './controller.ts';
+import { Preview, usePreview } from './Preview.tsx';
 
-/**
- * A page that previews one file for a host editor (a VS Code webview, a JupyterLab iframe).
- * The host sends `text`, `built`, and `scroll` messages; the page sends `ready`, `reveal`, and `follow`.
- */
-type Host = { postMessage(message: unknown): void };
+/** A page that previews one file for a host editor (a VS Code webview, a JupyterLab iframe), driven by a `PreviewController`. */
+type Host = { postMessage(message: FromPage): void };
 
 type Doc = { path: string; text: string; dirty: boolean };
 
@@ -16,7 +15,7 @@ function App({ host }: { host: Host }) {
   const [topLine, setTopLine] = useState(1);
 
   useEffect(() => {
-    const onMessage = ({ data: m }: MessageEvent) => {
+    const onMessage = ({ data: m }: MessageEvent<ToPage>) => {
       if (m.type === 'text') setDoc(m);
       else if (m.type === 'built') setBuilt(m);
       else if (m.type === 'scroll') setTopLine(m.line);

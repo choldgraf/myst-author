@@ -9,6 +9,9 @@ export type BuiltPage = {
   references?: Record<string, any>;
 };
 
+/** mystmd's latest build of a file, or why there is none. */
+export type Built = { path: string; page: BuiltPage | null; error?: string };
+
 /** Slugs of every page in a `myst start` project, from its `/config.json`; the index page first. */
 function pageSlugs(config: any): string[] {
   const project = config.projects[0];

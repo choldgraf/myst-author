@@ -1,4 +1,16 @@
-import type { ContentServer } from './built.ts';
+import type { Built, ContentServer } from './built.ts';
+
+/** Messages from the host to the preview page (`./page`). */
+export type ToPage =
+  | { type: 'text'; path: string; text: string; dirty: boolean }
+  | ({ type: 'built' } & Built)
+  | { type: 'scroll'; line: number };
+
+/** Messages from the preview page to the host; lines are 1-based. */
+export type FromPage =
+  | { type: 'ready' }
+  | { type: 'reveal'; line: number }
+  | { type: 'follow'; href: string; line?: number };
 
 /** The file the preview follows. `line` is the (1-based) line at the top of the editor. */
 export type HostFile = { path: string; text: string; dirty: boolean; line?: number };
@@ -9,7 +21,7 @@ export type HostFile = { path: string; text: string; dirty: boolean; line?: numb
  */
 export type PreviewHost = {
   current(): HostFile | undefined | Promise<HostFile | undefined>;
-  post(message: object): void; // to the preview page
+  post(message: ToPage): void; // to the preview page
   open(path: string, line: number): void;
   openExternal(url: string): void;
   findLabel(id: string): Promise<{ path: string; line: number } | undefined>; // hosts ask their LSP client for `workspace/symbol`
@@ -18,12 +30,31 @@ export type PreviewHost = {
 
 /** The host side of the preview page (`./page`): sends it the current file and its build, and answers its messages. */
 export class PreviewController {
-  /** mystmd's built pages: undefined while mystmd starts, null if it isn't available. */
-  pages?: ContentServer | null;
   private host: PreviewHost;
+  private server?: ContentServer | null; // undefined while mystmd starts, null if it isn't available
+  private stop?: () => void;
+  private disposed = false;
 
-  constructor(host: PreviewHost) {
+  /** `server` resolves to mystmd's content server once it's up, or to null without mystmd. */
+  constructor(host: PreviewHost, server: Promise<ContentServer | null>) {
     this.host = host;
+    server
+      .catch((err) => {
+        host.warn(`mystmd didn't start: ${err.message}`);
+        return null;
+      })
+      .then((s) => {
+        if (this.disposed) return;
+        this.server = s;
+        this.stop = s?.watch(() => this.sendBuilt());
+        this.sendBuilt();
+      });
+  }
+
+  /** Send the current file and its build; call when the host follows another file. */
+  sendFile() {
+    this.sendText();
+    this.sendBuilt();
   }
 
   /** Call when the current file's text or dirty flag changes. */
@@ -32,35 +63,38 @@ export class PreviewController {
     if (file) this.host.post({ type: 'text', path: file.path, text: file.text, dirty: file.dirty });
   }
 
-  /** Call when mystmd rebuilds, and when the host follows another file. */
-  async sendBuilt() {
-    const path = (await this.host.current())?.path;
-    if (path === undefined || this.pages === undefined) return;
-    if (this.pages === null) return this.host.post({ type: 'built', path, page: null, error: 'mystmd not found' });
-    try {
-      this.host.post({ type: 'built', path, page: await this.pages.page(path) });
-    } catch (err) {
-      this.host.post({ type: 'built', path, page: null, error: (err as Error).message });
-    }
-  }
-
   /** Call when the editor scrolls, with its (1-based) top line. */
   scroll(line: number) {
     this.host.post({ type: 'scroll', line });
   }
 
   /** Answer a message from the preview page. */
-  async onMessage(m: { type: string; line?: number; href?: string }) {
+  async onMessage(m: FromPage) {
     const file = await this.host.current();
     if (!file) return;
     if (m.type === 'ready') {
-      this.sendText();
-      this.sendBuilt();
+      this.sendFile();
       if (file.line) this.scroll(file.line);
     } else if (m.type === 'reveal') {
-      this.host.open(file.path, m.line! - 1);
+      this.host.open(file.path, m.line - 1);
     } else if (m.type === 'follow') {
-      await followLink({ ...this.host, fileForSlug: (slug) => this.pages?.fileForSlug(slug) }, file.path, m.href!, m.line);
+      await followLink({ ...this.host, fileForSlug: (slug) => this.server?.fileForSlug(slug) }, file.path, m.href, m.line);
+    }
+  }
+
+  dispose() {
+    this.disposed = true;
+    this.stop?.();
+  }
+
+  private async sendBuilt() {
+    const path = (await this.host.current())?.path;
+    if (path === undefined || this.server === undefined) return;
+    if (this.server === null) return this.host.post({ type: 'built', path, page: null, error: 'mystmd not found' });
+    try {
+      this.host.post({ type: 'built', path, page: await this.server.page(path) });
+    } catch (err) {
+      this.host.post({ type: 'built', path, page: null, error: (err as Error).message });
     }
   }
 }
