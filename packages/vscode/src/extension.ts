@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
+import { stripVTControlCharacters } from 'node:util';
 import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
 import { lspArgs, startMyst } from '@myst-author/lsp/myst';
@@ -10,7 +11,9 @@ let myst: Awaited<ReturnType<typeof startMyst>> | undefined;
 
 export async function activate(context: vscode.ExtensionContext) {
   const root = projectRoot();
-  myst = root ? await startMyst(root) : undefined;
+  const output = vscode.window.createOutputChannel('MyST');
+  context.subscriptions.push(output);
+  myst = root ? await startMyst(root, (line) => output.appendLine(stripVTControlCharacters(line))) : undefined;
 
   const preview = new MystPreview(context, root, myst);
   context.subscriptions.push(vscode.commands.registerCommand('mystAuthor.openPreview', () => preview.open()));

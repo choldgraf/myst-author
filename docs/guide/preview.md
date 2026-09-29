@@ -27,6 +27,14 @@ The badge in the toolbar tells you which one you're looking at:
 | `built ✓` | You're looking at mystmd's build of exactly this text. |
 | `no mystmd` | mystmd isn't installed, so only the fast preview is available. |
 
+## mystmd's logs
+
+mystmd's build output, including its warnings, shows up as `[myst]` lines:
+
+- **Web editor:** the terminal that runs `npm start`.
+- **JupyterLab:** the Jupyter server's log.
+- **VS Code:** the **MyST** channel in the Output panel.
+
 ## Click to jump to the source
 
 Click a paragraph, heading, or other block in the preview and the editor moves to its first line.
