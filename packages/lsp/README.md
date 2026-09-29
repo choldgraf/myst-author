@@ -44,7 +44,9 @@ Directive options come from mystmd's directive specs.
 - **Semantic tokens**: each reference is a `label` token, with its target's kind as a modifier (`label.figure`, `label.table`, `label.equation`, `label.heading`, ...).
   The kinds are `semanticTokensLegend` in `src/service.ts`.
   To colour references to figures, in VS Code set `"editor.semanticTokenColorCustomizations": { "rules": { "label.figure": "#2a9d8f" } }`, or in Neovim `vim.api.nvim_set_hl(0, '@lsp.typemod.label.figure', { fg = '#2a9d8f' })`.
-- **Workspace symbols**: every label, so clients can search for and jump to them.
+- **Workspace symbols**: every label, searchable by label or text, so clients can jump to them.
+- **Document symbols**: the page outline, with headings nested by level and each section's labeled figures, tables, equations, ... under it.
+  See [Find your way around](https://choldgraf.github.io/myst-author/guide/navigate) for how it compares to VS Code's Markdown outline.
 - **External references** (`[](xref:key#target)`, `<xref:key/page#target>`): completion of keys, pages and targets, hover with the resolved URL, inlay hints with the remote title, diagnostics, and document links.
   Keys come from `project.references` in `myst.yml`.
   Each project's `myst.xref.json` (MyST) or `objects.inv` (Sphinx) is fetched on `initialize`.

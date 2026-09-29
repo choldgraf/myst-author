@@ -49,6 +49,11 @@ Put your cursor at the end of this sentence, type `` {numref}` ``, and pick `fig
 Hover over `fig-logo` in the reference above to see what it points to.
 :::
 
+:::{tip} Try this: jump around the page
+Press {kbd}`Cmd+P` and type `#` to see this page's outline, with the figure and equation under their section.
+In VS Code, open the **Outline** view instead.
+:::
+
 ## Next
 
 The next page, [](references.md), covers links between pages.

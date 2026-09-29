@@ -11,7 +11,7 @@ html, body, #root { height: 100%; margin: 0; }
 .files { width: 14rem; overflow: auto; border-right: 1px solid #ddd; padding: 0.5rem 0; font-size: 0.85rem; }
 .files button { display: block; width: 100%; text-align: left; padding: 0.15rem 0.75rem; }
 .files button[aria-current='true'] { background: #eef; }
-.files .dir { color: #999; }
+.files .dir, .switcher .dir { color: #999; }
 .editor { flex: 1; min-width: 0; overflow: hidden; }
 .editor .cm-editor { height: 100%; }
 .preview { flex: 1; min-width: 0; overflow: auto; padding: 1rem 2rem; border-left: 1px solid #ddd; }

@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { CompletionItemKind, DiagnosticSeverity, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type Position } from 'vscode-languageserver';
+import { CompletionItemKind, DiagnosticSeverity, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position } from 'vscode-languageserver';
 import { directives, roles } from '@myst-author/preview/parse';
 import type { createProject } from './project.ts';
 import { optionAt, refAt, refsInText, type Ref } from './syntax.ts';
@@ -148,7 +148,7 @@ export function createService(root: string | undefined, project: ReturnType<type
           return project
             .targets()
             .filter((t) => (ctx.trigger === 'numref' ? t.enumerator : ctx.trigger === 'eq' ? t.kind === 'equation' : true))
-            .map((t) => item(t.identifier, CompletionItemKind.Reference, { detail: `${title(t)} · ${t.file}`, documentation: t.text }));
+            .map((t) => item(t.identifier, CompletionItemKind.Reference, { detail: `${title(t)} · ${t.file}`, documentation: t.text, filterText: `${t.identifier} ${t.text}` }));
         case 'doc':
         case 'link-path': {
           // mystmd resolves both `{doc}` and `[](path)` relative to the current file.
@@ -164,10 +164,10 @@ export function createService(root: string | undefined, project: ReturnType<type
           const { key, page } = splitXref(ctx.key!);
           const q = ctx.prefix.toLowerCase();
           const has = (e: XrefEntry) => e.name && (page ? e.page === page : !e.implicit);
-          const all = (xrefs[key]?.entries ?? []).filter((e) => has(e) && e.name.toLowerCase().includes(q));
+          const all = (xrefs[key]?.entries ?? []).filter((e) => has(e) && `${e.name} ${e.title ?? ''}`.toLowerCase().includes(q));
           const matches = [...all.filter((e) => e.name.toLowerCase().startsWith(q)), ...all.filter((e) => !e.name.toLowerCase().startsWith(q))];
           // Sphinx inventories can have tens of thousands of entries: send the best 200 and ask the client to re-query as the user types.
-          const items = matches.slice(0, 200).map((e) => item(e.name, CompletionItemKind.Reference, { detail: e.title && e.title !== e.name ? `${e.title} · ${e.kind}` : e.kind }));
+          const items = matches.slice(0, 200).map((e) => item(e.name, CompletionItemKind.Reference, { detail: e.title && e.title !== e.name ? `${e.title} · ${e.kind}` : e.kind, filterText: `${e.name} ${e.title ?? ''}` }));
           return { isIncomplete: matches.length > 200, items };
         }
         case 'directive':
@@ -225,12 +225,42 @@ export function createService(root: string | undefined, project: ReturnType<type
       });
     },
 
-    // Labels as workspace symbols, exact matches first (hosts resolve preview `#id` links with this).
+    // Labels as workspace symbols, matched by label or text, exact matches first (hosts resolve preview `#id` links with this).
     workspaceSymbols({ query }: { query: string }) {
       const q = query.toLowerCase();
-      const matches = project.targets().filter((t) => t.identifier.toLowerCase().includes(q));
+      const matches = project.targets().filter((t) => `${t.identifier} ${t.text}`.toLowerCase().includes(q));
       matches.sort((a, b) => Number(b.identifier.toLowerCase() === q) - Number(a.identifier.toLowerCase() === q));
       return matches.map((t) => ({ name: t.identifier, kind: SymbolKind.Key, containerName: hint(t), location: locationOf(t) }));
+    },
+
+    // The page outline: headings nested by level, with labeled blocks (e.g. "Figure 1 · caption") under their section.
+    // A heading's range runs to the next heading at its level or above, so clients can show the section the cursor is in.
+    documentSymbols({ textDocument }: { textDocument: { uri: string } }) {
+      const text = texts.get(textDocument.uri);
+      if (text === undefined) return [];
+      const file = toFile(textDocument.uri);
+      const lines = text.split('\n');
+      const endOf = (line: number) => ({ line, character: lines[line]?.length ?? 0 });
+      const top: DocumentSymbol[] = [];
+      const open: { depth: number; children: DocumentSymbol[]; symbol?: DocumentSymbol }[] = [{ depth: 0, children: top }];
+      const close = (line: number) => { const { symbol } = open.pop()!; if (symbol) symbol.range.end = endOf(line); };
+      for (const t of project.targets().filter((t) => t.file === file)) {
+        const at = () => ({ line: t.line - 1, character: 0 });
+        const children: DocumentSymbol[] = [];
+        const symbol: DocumentSymbol = {
+          name: t.depth ? t.text : t.text ? `${title(t)} · ${t.text}` : title(t),
+          detail: t.depth ? undefined : t.identifier,
+          kind: t.depth ? SymbolKind.String : SymbolKind.Key,
+          range: { start: at(), end: at() },
+          selectionRange: { start: at(), end: at() },
+          children,
+        };
+        if (t.depth) while (open.at(-1)!.depth >= t.depth) close(t.line - 2);
+        open.at(-1)!.children.push(symbol);
+        if (t.depth) open.push({ depth: t.depth, children, symbol });
+      }
+      while (open.length > 1) close(lines.length - 1);
+      return top;
     },
 
     diagnostics(uri: string): Diagnostic[] {

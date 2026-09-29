@@ -28,6 +28,25 @@ test('a loaded project resolves built targets and flags unknown ones', () => {
   assert.equal(service.definition({ textDocument: { uri }, position: { line: 1, character: 7 } })?.uri, 'file:///elsewhere/notes.md');
 });
 
+test('labels match by text', () => {
+  const service = createService(root, stubProject(), () => {});
+  assert.deepEqual(service.workspaceSymbols({ query: 'plot' }).map((s) => s.name), ['fig-built']);
+});
+
+test('the outline nests sections by level, with numbered blocks under their section', () => {
+  const at = (identifier: string, line: number, extra: object) => ({ identifier, text: identifier, file: 'index.md', line, ...extra });
+  const targets = [
+    at('intro', 1, { kind: 'heading', depth: 1 }),
+    at('methods', 3, { kind: 'heading', depth: 2 }),
+    at('fig-a', 5, { kind: 'figure', enumerator: '1' }),
+    at('results', 7, { kind: 'heading', depth: 2 }),
+  ];
+  const service = createService(root, { loaded: true, targets: () => targets, setOpen() {}, close() {} }, () => {});
+  service.update(uri, '# intro\n\n## methods\n\n:::{figure}\n:::\n## results\nlast line');
+  const tree = (symbols: any[]): any[] => symbols.map((s) => [s.name, s.range.end.line, ...tree(s.children)]);
+  assert.deepEqual(tree(service.documentSymbols({ textDocument: { uri } })), [['intro', 7, ['methods', 5, ['Figure 1 · fig-a', 4]], ['results', 7]]]);
+});
+
 test('references are label tokens with their target kind as a modifier', () => {
   const service = createService(root, stubProject(), () => {});
   service.update(uri, text);

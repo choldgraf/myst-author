@@ -31,7 +31,7 @@ code --install-extension packages/vscode/myst-author.vsix
   Set `MYST_BIN` if `myst` isn't on your `PATH`.
 - Without mystmd the extension still runs.
   The language server only knows the open files, and the preview only shows the fast render.
-- Completion, hints, hover, go to definition, warnings, and workspace symbols for references in Markdown files.
+- Completion, hints, hover, go to definition, warnings, and workspace symbols for references in Markdown files, and a page outline (Outline view, breadcrumbs, Cmd+Shift+O).
   See the [LSP README](https://github.com/choldgraf/myst-author/tree/main/packages/lsp).
 - To open the preview, run **MyST: Open Preview to the Side** from the Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`).
   The preview follows the active Markdown editor.

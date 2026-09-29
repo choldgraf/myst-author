@@ -14,7 +14,7 @@ npm start -- docs/examples/tour
 
 The tour has three pages:
 
-- `index.md`: the preview, click-to-source, hints, completion, hover, and opening a file by name.
+- `index.md`: the preview, click-to-source, hints, completion, hover, the page outline, and opening a file by name.
 - `references.md`: go to definition, following links from the preview, fixing a broken reference, and external references.
 - `directives.md`: directive options, directive names, and nested directives.
 
