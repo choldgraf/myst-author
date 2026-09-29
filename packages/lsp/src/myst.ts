@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createServer, type AddressInfo } from 'node:net';
 import { createInterface } from 'node:readline';
+import { mystmdMissing } from '@myst-author/preview/built';
 
 /** A port that's free on 127.0.0.1 right now. */
 function freePort(): Promise<number> {
@@ -15,6 +16,7 @@ function freePort(): Promise<number> {
 /**
  * Run `myst start --headless` in `root`.
  * We pick the content server's port, so `url` is known before the first build; `ready` resolves once it's serving.
+ * `ready` rejects with the message `mystmdMissing` if mystmd isn't installed.
  */
 export async function startMyst(root: string) {
   const port = await freePort();
@@ -28,8 +30,9 @@ export async function startMyst(root: string) {
 
   const ready = new Promise<void>((resolve, reject) => {
     child.on('error', (err: NodeJS.ErrnoException) => {
-      if (err.code === 'ENOENT') console.log('mystmd not found; built preview disabled (install mystmd or set MYST_BIN)');
-      reject(err);
+      if (err.code !== 'ENOENT') return reject(err);
+      console.log('mystmd not found; built preview disabled (install mystmd or set MYST_BIN)');
+      reject(new Error(mystmdMissing));
     });
     child.on('exit', (code) => reject(new Error(`myst exited with code ${code}`)));
     for (const stream of [child.stdout, child.stderr]) {

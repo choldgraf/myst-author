@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
-import { contentServer } from '@myst-author/preview/built';
+import { contentServer, mystmdMissing } from '@myst-author/preview/built';
 import { PreviewController, type PreviewHost } from '@myst-author/preview/controller';
 import type { startMyst } from '@myst-author/lsp/myst';
 
@@ -39,7 +39,7 @@ export class MystPreview {
     this.assets = myst ? vscode.env.asExternalUri(vscode.Uri.parse(myst.url)).then((u) => u.toString().replace(/\/$/, '')) : Promise.resolve(undefined);
     // Without mystmd installed there's no built preview; the controller warns about any other failure.
     const server = myst
-      ? myst.ready.then(async () => contentServer(myst.url, await this.assets), (err) => { if (err.code !== 'ENOENT') throw err; return null; })
+      ? myst.ready.then(async () => contentServer(myst.url, await this.assets), (err) => { if (err.message !== mystmdMissing) throw err; return null; })
       : Promise.resolve(null);
     this.preview = new PreviewController(this.host, server);
     context.subscriptions.push(
