@@ -104,9 +104,7 @@ export function App() {
   const refreshBuilt = useCallback(() => {
     const path = latest.current.doc?.path;
     if (!path) return;
-    content.page(path)
-      .then((page): Built => ({ path, page }), (err): Built => ({ path, page: null, error: err.message }))
-      .then((b) => latest.current.doc?.path === path && setBuilt(b));
+    content.built(path).then((b) => latest.current.doc?.path === path && setBuilt(b));
   }, []);
   useEffect(refreshBuilt, [doc]);
   useEffect(() => content.watch(refreshBuilt), []);

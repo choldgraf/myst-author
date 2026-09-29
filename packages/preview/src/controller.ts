@@ -91,7 +91,7 @@ export class PreviewController {
     const path = (await this.host.current())?.path;
     if (path === undefined || this.server === undefined) return;
     if (this.server === null) return this.host.post({ type: 'built', path, page: null, error: mystmdMissing });
-    const built = await this.server.page(path).then((page): Built => ({ path, page }), (err): Built => ({ path, page: null, error: err.message }));
+    const built = await this.server.built(path);
     // A slow fetch for a file the host has since left must not replace the new file's build.
     if ((await this.host.current())?.path === path) this.host.post({ type: 'built', ...built });
   }
