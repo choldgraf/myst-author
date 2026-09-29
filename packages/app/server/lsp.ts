@@ -22,7 +22,10 @@ export function lspBridge(root: string, contentServer: string) {
 
     const writer = new StreamMessageWriter(child.stdin);
     new StreamMessageReader(child.stdout).listen((msg) => ws.send(JSON.stringify(msg)));
-    ws.on('message', (data) => writer.write(JSON.parse(String(data))));
+    ws.on('message', (data) => {
+      // One bad frame closes this connection, not the whole host server.
+      try { writer.write(JSON.parse(String(data))); } catch { ws.close(1007); }
+    });
   });
   return (req: IncomingMessage, socket: Duplex, head: Buffer) =>
     wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
