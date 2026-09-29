@@ -54,6 +54,7 @@ Open documents are re-parsed live with `@myst-author/preview/parse`, so unsaved 
 - `src/index-targets.ts`: collects reference targets from an mdast tree.
 - `src/project.ts`: the project index (content server pages plus open documents).
 - `src/xref.ts`: external project inventories and `xref:` resolution.
+- `src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
 - `src/server.ts`: the LSP wiring.
 - `src/client/`: the browser client (`@myst-author/lsp/client`), a `@codemirror/lsp-client` over a websocket, with inlay hints.
 - `src/myst.ts`: starts `myst start --headless` (`@myst-author/lsp/myst`).
