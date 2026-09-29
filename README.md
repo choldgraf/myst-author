@@ -13,6 +13,16 @@ Cross-references are completed and checked as you type, across the whole project
 > This is an early prototype.
 > Expect rough edges, and please open an issue when you find one.
 
+## Project goals
+
+The goals of this repository are to explore how much work we'd need to do in order to enable an editor-like experience with MyST.
+We want to identify the building blocks that could _enable_ this end result, and use this repository to build them out and see how complex it is.
+
+This organization is organized as a monorepo into subprojects, where the assumption is that each of those subprojects is probably _independently useful_.
+Most likely, individual packages will either be moved upstream, or moved into dedicated repositories / projects.
+
+So we should design with this in mind and not create too much local interdependence between the tools we build.
+
 ## Try it
 
 Click one of the badges above to open the [tour project](docs/examples/tour/) in your browser.
