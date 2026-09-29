@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createConnection, ProposedFeatures, TextDocuments, TextDocumentSyncKind } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
+import { startMyst } from './myst.ts';
 import { createProject } from './project.ts';
 import { createService } from './service.ts';
 
@@ -10,9 +11,9 @@ import { createService } from './service.ts';
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 let service: ReturnType<typeof createService>;
-const args = parseArgs({ strict: false, options: { 'content-server': { type: 'string' }, root: { type: 'string' } } }).values as { 'content-server'?: string; root?: string };
+const args = parseArgs({ strict: false, options: { 'content-server': { type: 'string' }, root: { type: 'string' }, myst: { type: 'boolean' } } }).values as { 'content-server'?: string; root?: string; myst?: boolean };
 
-connection.onInitialize((params) => {
+connection.onInitialize(async (params) => {
   const folder = params.workspaceFolders?.[0]?.uri ?? params.rootUri;
   const refreshHints = params.capabilities.workspace?.inlayHint?.refreshSupport;
   const refresh = () => {
@@ -20,7 +21,9 @@ connection.onInitialize((params) => {
     if (refreshHints) connection.languages.inlayHint.refresh();
   };
   const root = args.root ?? (folder ? fileURLToPath(folder) : undefined);
-  service = createService(root, createProject(args['content-server'], refresh), refresh);
+  // With --myst the server runs mystmd itself, for clients (like Neovim) that don't start it.
+  const url = args['content-server'] ?? (args.myst && root ? (await startMyst(root)).url : undefined);
+  service = createService(root, createProject(url, refresh), refresh);
   return {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
