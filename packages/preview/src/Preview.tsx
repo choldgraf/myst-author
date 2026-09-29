@@ -25,7 +25,8 @@ export function usePreview(path: string | undefined, text: string, dirty: boolea
   const result = useMemo(() => (page ? fromBuiltPage(page) : parseMyst(deferred)), [page, deferred]);
   const badge = current?.error === mystmdMissing ? 'no mystmd'
     : page ? 'built ✓'
-    : current?.page && !dirty ? 'building…'
+    : dirty ? 'fast preview · unsaved'
+    : current?.page ? 'building…'
     : 'fast preview';
   return { result, badge };
 }
