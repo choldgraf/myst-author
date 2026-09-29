@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { createProject } from './project.ts';
 import { createService, semanticTokensLegend } from './service.ts';
 
 const root = '/book';
@@ -153,4 +154,22 @@ test('duplicate labels are flagged, but not implicit heading labels', () => {
   const service = createService(root, { loaded: true, targets: () => targets, setOpen() {}, close() {} }, () => {});
   service.update(uri, '(fig-built)=\n# Built\n\n## Examples\n');
   assert.deepEqual(service.diagnostics(uri).map((d) => [d.message, d.range.start.line, d.range.start.character]), [['Duplicate label `fig-built`, also defined in chapter/plots.md', 0, 1]]);
+});
+
+test('notebook cells are documents in their notebook file', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'lsp-'));
+  mkdirSync(join(dir, 'nb'));
+  writeFileSync(join(dir, 'nb', 'plot.png'), '');
+  const project = createProject(undefined, () => {});
+  const service = createService(dir, project, () => {});
+  // Cell URIs as JupyterLab sends them; VS Code's `vscode-notebook-cell:` URIs have the same path.
+  const nb = pathToFileURL(join(dir, 'nb', 'analysis.ipynb')).href;
+  service.update(`${nb}#a`, '(results)=\n# Results\n');
+  service.update(`${nb}#b`, 'See {ref}`results`.\n```{figure} ');
+  await new Promise((r) => setTimeout(r, 200));
+
+  assert.deepEqual(project.targets().map((t) => [t.identifier, t.file]), [['results', 'nb/analysis.ipynb']]);
+  assert.deepEqual(service.definition({ textDocument: { uri: `${nb}#b` }, position: { line: 0, character: 12 } })?.uri, `${nb}#a`);
+  assert.deepEqual(service.documentSymbols({ textDocument: { uri: `${nb}#b` } }), []);
+  assert.deepEqual((service.completion({ textDocument: { uri: `${nb}#b` }, position: { line: 1, character: 12 } }) as any[]).map((i) => i.label), ['plot.png']);
 });

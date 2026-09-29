@@ -27,7 +27,8 @@ Rebuild and reload the page after changes.
 
 ## What works
 
-- Completion, hints, hover, go to definition, and warnings for references in Markdown files, as in the web editor.
+- Completion, hints, hover, go to definition, and warnings for references in Markdown files and notebooks' Markdown cells, as in the web editor.
+  The preview only follows Markdown files.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.
   It follows the current Markdown editor, scrolls with it, and clicking a block reveals its source line.
   Cmd-click (or Ctrl-click) a link to follow it.

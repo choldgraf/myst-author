@@ -33,12 +33,14 @@ export async function deactivate() {
   await client?.stop();
 }
 
-/** The folder of the nearest `myst.yml` above the Markdown file that activated us, if any. */
+/** The folder of the nearest `myst.yml` above the notebook or Markdown file that activated us, if any. */
 function projectRoot() {
-  const doc = vscode.window.activeTextEditor?.document ?? vscode.workspace.textDocuments.find((d) => d.languageId === 'markdown');
-  const top = doc && vscode.workspace.getWorkspaceFolder(doc.uri)?.uri.fsPath;
-  if (!doc || !top) return;
-  for (let dir = dirname(doc.uri.fsPath); ; dir = dirname(dir)) {
+  // In a notebook, the active text editor is a cell, whose URI isn't a file in the workspace.
+  const uri = vscode.window.activeNotebookEditor?.notebook.uri
+    ?? (vscode.window.activeTextEditor?.document ?? vscode.workspace.textDocuments.find((d) => d.languageId === 'markdown'))?.uri;
+  const top = uri && vscode.workspace.getWorkspaceFolder(uri)?.uri.fsPath;
+  if (!uri || !top) return;
+  for (let dir = dirname(uri.fsPath); ; dir = dirname(dir)) {
     if (existsSync(join(dir, 'myst.yml'))) return dir;
     if (dir === top) return;
   }

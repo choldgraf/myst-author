@@ -5,10 +5,11 @@ import { targetsFromTree, type Target } from './index-targets.ts';
 /**
  * The project's reference targets, keyed by file (project-relative path, e.g. `chapter.md`).
  * Built pages come from the `myst start` content server; open documents override their file with a live parse.
+ * Open documents are keyed by URI, since a notebook's Markdown cells are separate documents in one file.
  */
 export function createProject(url: string | undefined, onChange: () => void) {
   let built = new Map<string, Target[]>();
-  const open = new Map<string, Target[]>();
+  const open = new Map<string, { file: string; targets: Target[] }>();
   // Without a content server we only know the open documents, so we never claim a target is missing.
   let loaded = false;
 
@@ -28,15 +29,16 @@ export function createProject(url: string | undefined, onChange: () => void) {
       return loaded;
     },
     targets(): Target[] {
-      const files = new Set([...built.keys(), ...open.keys()]);
-      return [...files].flatMap((f) => open.get(f) ?? built.get(f)!);
+      const docs = [...open.values()];
+      const openFiles = new Set(docs.map((d) => d.file));
+      return [...[...built].filter(([f]) => !openFiles.has(f)).flatMap(([, t]) => t), ...docs.flatMap((d) => d.targets)];
     },
-    setOpen(file: string, text: string) {
-      open.set(file, targetsFromTree(parseMyst(text).tree, file));
+    setOpen(file: string, text: string, uri: string) {
+      open.set(uri, { file, targets: targetsFromTree(parseMyst(text).tree, file).map((t) => ({ ...t, uri })) });
       onChange();
     },
-    close(file: string) {
-      open.delete(file);
+    close(uri: string) {
+      open.delete(uri);
       onChange();
     },
   };

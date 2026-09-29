@@ -1,7 +1,10 @@
 import type { GenericNode } from 'myst-common';
 
-/** Something a reference can point at. `line` is 1-based, as in mdast positions. `depth` is a heading's level. `implicit` labels are made by mystmd, e.g. from a heading's text. */
-export type Target = { identifier: string; kind: string; text: string; enumerator?: string; file: string; line: number; depth?: number; implicit?: boolean };
+/**
+ * Something a reference can point at. `line` is 1-based, as in mdast positions. `depth` is a heading's level. `implicit` labels are made by mystmd, e.g. from a heading's text.
+ * `uri` is the open document it's in, which for a notebook cell isn't its file's URI.
+ */
+export type Target = { identifier: string; kind: string; text: string; enumerator?: string; file: string; line: number; depth?: number; implicit?: boolean; uri?: string };
 
 const targetTypes = new Set(['heading', 'container', 'math', 'code', 'table', 'paragraph', 'proof', 'exercise', 'admonition']);
 

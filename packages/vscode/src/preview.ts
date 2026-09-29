@@ -5,7 +5,8 @@ import { contentServer, mystmdMissing } from '@myst-author/preview/built';
 import { PreviewController, type PreviewHost } from '@myst-author/preview/controller';
 import type { startMyst } from '@myst-author/lsp/myst';
 
-const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.document.languageId === 'markdown';
+// Markdown files, not notebook cells (which are Markdown documents too).
+const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.document.languageId === 'markdown' && e.document.uri.scheme === 'file';
 
 /** A webview beside the editor that previews the active markdown file, like the web app's preview pane. */
 export class MystPreview {

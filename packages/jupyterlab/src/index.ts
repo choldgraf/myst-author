@@ -5,6 +5,7 @@ import { PageConfig, PathExt, URLExt } from '@jupyterlab/coreutils';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import type { IDocumentWidget } from '@jupyterlab/docregistry';
 import { IEditorTracker, type FileEditor } from '@jupyterlab/fileeditor';
+import { INotebookTracker, type NotebookPanel } from '@jupyterlab/notebook';
 import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { connectLsp } from '@myst-author/lsp/client';
@@ -31,34 +32,72 @@ function topLine(w: Editor) {
   return view.state.doc.lineAt(view.lineBlockAtHeight(view.scrollDOM.scrollTop).from).number;
 }
 
-/** Open `path` in Lab and put the cursor on (0-based) `line`. */
+/** Open the notebook at `path` and edit its cell `id`, returning the cell's CodeMirror view. */
+async function editCell(docs: IDocumentManager, path: string, id: string) {
+  const nb = docs.openOrReveal(path) as NotebookPanel | undefined;
+  await nb?.context.ready;
+  const i = nb?.content.widgets.findIndex((c) => c.model.id === id) ?? -1;
+  if (!nb || i < 0) return null;
+  nb.content.activeCellIndex = i;
+  nb.content.mode = 'edit'; // shows a Markdown cell's source
+  await nb.content.scrollToItem(i);
+  const cell = nb.content.widgets[i];
+  await cell.ready;
+  return (cell.editor as CodeMirrorEditor).editor;
+}
+
+/** Open `path` in Lab and put the cursor on (0-based) `line`. Notebooks just open. */
 async function show(docs: IDocumentManager, path: string, line: number) {
   const w = docs.openOrReveal(path) as Editor | undefined;
   await w?.context.ready;
-  w?.content.editor.setCursorPosition({ line, column: 0 });
-  w?.content.editor.revealPosition({ line, column: 0 });
-  w?.content.editor.focus();
+  w?.content.editor?.setCursorPosition({ line, column: 0 });
+  w?.content.editor?.revealPosition({ line, column: 0 });
+  w?.content.editor?.focus();
 }
 
 const plugin: JupyterFrontEndPlugin<void> = {
   id: '@myst-author/jupyterlab:plugin',
   description: 'MyST reference intelligence and live preview.',
   autoStart: true,
-  requires: [IEditorTracker, IDocumentManager],
+  requires: [IEditorTracker, IDocumentManager, INotebookTracker],
   optional: [ICommandPalette],
-  activate: (app: JupyterFrontEnd, tracker: IEditorTracker, docs: IDocumentManager, palette: ICommandPalette | null) => {
+  activate: (app: JupyterFrontEnd, tracker: IEditorTracker, docs: IDocumentManager, notebooks: INotebookTracker, palette: ICommandPalette | null) => {
     // Without rootUri, document URIs would be wrong, so skip the language features. The preview still works.
     const lsp = jupyterRoot ? connectLsp(server) : Promise.reject(new Error("jupyter-lsp didn't set rootUri"));
     lsp.then((l) => {
-      // Go to definition in another file: open it in Lab, then hand lsp-client its editor.
+      // Go to definition in another file or notebook cell: open it in Lab, then hand lsp-client its editor.
       l.client.workspace.displayFile = async (uri) => {
-        const w = pathOf(uri) ? (docs.openOrReveal(pathOf(uri)!) as Editor | undefined) : undefined;
+        const [file, cell] = uri.split('#');
+        const path = pathOf(file);
+        if (path == null) return null;
+        if (cell) return editCell(docs, path, cell);
+        const w = docs.openOrReveal(path) as Editor | undefined;
         await w?.context.ready;
         return w ? cm(w).editor : null;
       };
       const attach = (w: Editor) => isMarkdown(w) && cm(w).injectExtension(l.client.plugin(uriOf(w.context.path), 'markdown'));
       tracker.forEach(attach);
       tracker.widgetAdded.connect((_, w) => attach(w));
+
+      // Each Markdown cell is a document `<notebook URI>#<cell id>`.
+      // Attach to every cell, not just the one being edited: once a notebook has open cells, the server only knows their labels.
+      // ponytail: a cell is attached once it first renders, so with Lab's `full` windowing mode, off-screen cells wait until they're scrolled to.
+      const attached = new WeakSet<object>();
+      const attachCells = (nb: NotebookPanel) =>
+        nb.content.widgets.forEach(async (cell) => {
+          if (cell.model.type !== 'markdown' || attached.has(cell)) return;
+          attached.add(cell);
+          await cell.ready;
+          (cell.editor as CodeMirrorEditor).injectExtension(l.client.plugin(`${uriOf(nb.context.path)}#${cell.model.id}`, 'markdown'));
+        });
+      const watch = (nb: NotebookPanel) =>
+        nb.context.ready.then(() => {
+          attachCells(nb);
+          // Changing a cell's type replaces its widget, so this also catches cells that become Markdown.
+          nb.content.model?.cells.changed.connect(() => attachCells(nb));
+        });
+      notebooks.forEach(watch);
+      notebooks.widgetAdded.connect((_, nb) => watch(nb));
     }, (err) => console.warn(`MyST Author: no language features from ${server} (${err})`));
 
     let preview: MainAreaWidget<MystPreview> | undefined;
@@ -94,7 +133,7 @@ class MystPreview extends Widget {
       const l = await this.lsp;
       const symbols = await l.client.request<unknown, { name: string; location: { uri: string; range: { start: { line: number } } } }[] | null>('workspace/symbol', { query: id });
       const s = symbols?.find((s) => s.name === id.toLowerCase());
-      const path = s && pathOf(s.location.uri);
+      const path = s && pathOf(s.location.uri.split('#')[0]); // a label in a notebook cell has `#<cell id>`
       return path != null ? { path: PathExt.relative(await this.project, path), line: s!.location.range.start.line } : undefined;
     },
     warn: (message) => console.warn(`MyST Author: ${message}`),

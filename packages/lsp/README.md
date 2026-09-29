@@ -70,6 +70,12 @@ They're read on startup.
 
 Open documents are re-parsed live with `@myst-author/preview/parse`, so unsaved labels are available immediately.
 
+**Notebooks**: each Markdown cell is a document in its notebook's file, with all the features above.
+Clients with notebook sync (VS Code) send cells as they are; other clients (JupyterLab) open each cell as a document `file:///path/nb.ipynb#<cell id>`.
+Find references and rename search open cells, not notebooks on disk.
+
+**Progress**: with a content server, clients that support it show "Loading project" until mystmd's first build is indexed.
+
 **Limits**: references inside code (fenced blocks, `{code-block}`, inline code) get no diagnostics, hover, or inlay hints.
 
 ## Code
