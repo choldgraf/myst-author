@@ -4,23 +4,18 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { CompletionItemKind, DiagnosticSeverity, SymbolKind, type CompletionItem, type Diagnostic, type Position } from 'vscode-languageserver';
 import { defaultDirectives } from 'myst-directives';
 import { defaultRoles } from 'myst-roles';
-import { buttonRole } from 'myst-ext-button';
-import { cardDirective } from 'myst-ext-card';
-import { exerciseDirectives } from 'myst-ext-exercise';
-import { gridDirectives } from 'myst-ext-grid';
-import { proofDirective } from 'myst-ext-proof';
-import { tabDirectives } from 'myst-ext-tabs';
+import { directives as extDirectives, roles as extRoles } from '@myst-author/preview/parse';
 import type { createProject } from './project.ts';
 import { optionAt, refAt, refsInText, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
 import { loadProject, readReferences, resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
 
-// Same extensions as @myst-author/preview's parser (mystmd's defaults).
+// The same directives and roles as the preview's parser.
 const names = (specs: { name: string; alias?: string[] }[]) => specs.flatMap((s) => [s.name, ...(s.alias ?? [])]);
-const directives = [...defaultDirectives, cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
+const directives = [...defaultDirectives, ...extDirectives];
 const directiveNames = names(directives);
 const directiveSpecs = new Map(directives.flatMap((d) => names([d]).map((n) => [n, d])));
-const roleNames = names([...defaultRoles, buttonRole]);
+const roleNames = names([...defaultRoles, ...extRoles]);
 
 /** "Figure 1", "Equation (1)", "Section" */
 function title(t: Target) {
