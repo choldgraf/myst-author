@@ -81,6 +81,20 @@ export function parseMyst(md: string): ParseResult {
     .use(keysPlugin)
     .runSync(tree as any, vfile);
 
+  // mystmd fills in embeds (`![](#label)`, `{embed}`) from the whole project, so here we can only say one is coming.
+  visit(tree, (n: GenericNode) => {
+    const label = n.type === 'image' && n.url?.startsWith('#') ? n.url.slice(1)
+      : n.type === 'embed' && !n.children?.length ? n.source?.label
+      : undefined;
+    if (label === undefined) return;
+    Object.assign(n, {
+      type: 'span', // not a div: `![](#label)` can sit inside a paragraph
+      style: { display: 'block', padding: '0.5rem', border: '1px dashed #ccc', color: '#888', fontSize: '0.875rem' },
+      children: [{ type: 'text', value: `#${label} is embedded after mystmd builds` }],
+    });
+    return SKIP;
+  });
+
   return { tree, blocks: toBlocks(tree), messages: vfile.messages.map((m) => m.message), frontmatter };
 }
 

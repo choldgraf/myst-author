@@ -11,7 +11,8 @@ Use the **Preview** button in the toolbar to show or hide it.
 There are two versions of the preview, shown in the same pane:
 
 - The **fast preview** renders the page in your browser as you type.
-  It uses mystmd's parser, but some things only work in a full build, such as `{include}` and notebook outputs.
+  It uses mystmd's parser, but some things only work in a full build, such as `{include}`, embeds, and notebook outputs.
+  Embeds show a placeholder until the build is ready.
 - The **built preview** is mystmd's own output from `myst start`.
   It is exact.
 
