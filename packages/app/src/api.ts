@@ -7,6 +7,3 @@ export async function writeFile(path: string, text: string, keepalive = false) {
   const r = await fetch(url(path), { method: 'PUT', body: text, keepalive });
   if (!r.ok) throw new Error(await r.text());
 }
-
-/** The websocket URL for a path relative to the page. */
-export const wsUrl = (path: string) => new URL(path, location.href).href.replace(/^http/, 'ws');

@@ -8,7 +8,7 @@ import { IEditorTracker, type FileEditor } from '@jupyterlab/fileeditor';
 import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { connectLsp } from '@myst-author/lsp/client';
-import { builtPages, watchBuilds } from '@myst-author/preview/built';
+import { contentServer } from '@myst-author/preview/built';
 import { PreviewController } from '@myst-author/preview/controller';
 
 type Editor = IDocumentWidget<FileEditor>;
@@ -99,14 +99,15 @@ class MystPreview extends Widget {
     },
     warn: (message) => console.warn(`MyST Author: ${message}`),
   });
-  private stopWatching = watchBuilds(server.replace(/^http/, 'ws') + 'myst/socket', () => this.preview.sendBuilt());
+  private myst = contentServer(server + 'myst');
+  private stopWatching = this.myst.watch(() => this.preview.sendBuilt());
 
   constructor(private tracker: IEditorTracker, private docs: IDocumentManager, private lsp: Promise<Lsp>) {
     super();
     this.title.label = 'MyST Preview';
     this.title.closable = true;
     this.project = lsp.then((l) => pathOf(l.root) ?? '', () => '');
-    this.preview.pages = builtPages(server + 'myst');
+    this.preview.pages = this.myst;
     this.iframe.src = server + 'preview.html';
     this.iframe.style.cssText = 'width: 100%; height: 100%; border: 0';
     this.node.appendChild(this.iframe);

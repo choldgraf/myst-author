@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
-import { builtPages, watchBuilds } from '@myst-author/preview/built';
+import { contentServer } from '@myst-author/preview/built';
 import { PreviewController } from '@myst-author/preview/controller';
 import type { startMyst } from '@myst-author/lsp/myst';
 
@@ -38,8 +38,9 @@ export class MystPreview {
     this.assets = myst ? vscode.env.asExternalUri(vscode.Uri.parse(myst.url)).then((u) => u.toString().replace(/\/$/, '')) : Promise.resolve(undefined);
     const ready = myst ? myst.ready.then(() => myst.url, () => undefined) : Promise.resolve(undefined);
     ready.then(async (url) => {
-      this.preview.pages = url ? builtPages(url, await this.assets) : null;
-      if (url) context.subscriptions.push({ dispose: watchBuilds(`${url.replace(/^http/, 'ws')}/socket`, () => this.preview.sendBuilt()) });
+      const server = url ? contentServer(url, await this.assets) : null;
+      this.preview.pages = server;
+      if (server) context.subscriptions.push({ dispose: server.watch(() => this.preview.sendBuilt()) });
       this.preview.sendBuilt();
     });
     context.subscriptions.push(

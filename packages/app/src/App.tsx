@@ -3,8 +3,8 @@ import { EditorView } from 'codemirror';
 import type { SymbolInformation } from 'vscode-languageserver-protocol';
 import { connectLsp } from '@myst-author/lsp/client';
 import { type BuiltPage, fromBuiltPage, parseMyst, Preview } from '@myst-author/preview';
+import { contentServer, sha256 } from '@myst-author/preview/built';
 import { listFiles, readFile, writeFile } from './api.ts';
-import { builtPage, fileForSlug, sha256, watchBuilds } from './built.ts';
 import { Editor } from './Editor.tsx';
 import { myst } from 'codemirror-lang-myst';
 import { QuickSwitcher } from './QuickSwitcher.tsx';
@@ -12,6 +12,9 @@ import { QuickSwitcher } from './QuickSwitcher.tsx';
 type Doc = { path: string; text: string };
 type Built = { path: string; page: BuiltPage | null; error?: string };
 type Lsp = Awaited<ReturnType<typeof connectLsp>>;
+
+// The host server proxies the content server under myst/ (relative, like every app URL).
+const content = contentServer('myst');
 
 export function App() {
   const [files, setFiles] = useState<string[]>([]);
@@ -101,12 +104,12 @@ export function App() {
   const refreshBuilt = useCallback(() => {
     const path = latest.current.doc?.path;
     if (!path) return;
-    builtPage(path)
+    content.page(path)
       .then((page): Built => ({ path, page }), (err): Built => ({ path, page: null, error: err.message }))
       .then((b) => latest.current.doc?.path === path && setBuilt(b));
   }, []);
   useEffect(refreshBuilt, [doc]);
-  useEffect(() => watchBuilds(refreshBuilt), []);
+  useEffect(() => content.watch(refreshBuilt), []);
 
   const deferred = useDeferredValue(text);
   useEffect(() => {
@@ -153,7 +156,7 @@ export function App() {
     const [path, id] = href.split('#');
     // Built pages link to other pages by slug (`/slug`); the fast preview keeps the author's relative path.
     const file = !path ? doc?.path
-      : path.startsWith('/') ? fileForSlug(path.slice(1) || 'index')
+      : path.startsWith('/') ? content.fileForSlug(path.slice(1))
       : decodeURIComponent(new URL(path, `http://x/${doc?.path}`).pathname.slice(1));
     if (!file || !files.includes(file)) return setStatus(`can't follow ${href}`);
     if (id) {

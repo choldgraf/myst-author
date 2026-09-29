@@ -1,4 +1,4 @@
-import type { builtPages } from './built.ts';
+import type { ContentServer } from './built.ts';
 
 /** The file the preview follows. `line` is the (1-based) line at the top of the editor. */
 export type HostFile = { path: string; text: string; dirty: boolean; line?: number };
@@ -19,7 +19,7 @@ export type PreviewHost = {
 /** The host side of the preview page (`./page`): sends it the current file and its build, and answers its messages. */
 export class PreviewController {
   /** mystmd's built pages: undefined while mystmd starts, null if it isn't available. */
-  pages?: ReturnType<typeof builtPages> | null;
+  pages?: ContentServer | null;
   private host: PreviewHost;
 
   constructor(host: PreviewHost) {
@@ -76,10 +76,8 @@ export class PreviewController {
     }
     // Built pages link to other pages by slug (`/slug`); the fast preview keeps the author's relative path.
     // Relative paths are left unnormalized (`a/../b.md`); hosts resolve them.
-    const location = [...(this.pages?.slugs ?? [])].find(([, slug]) => '/' + slug === path)?.[0];
     const target = !path ? here
-      : location ? location.slice(1)
-      : path.startsWith('/') ? undefined
+      : path.startsWith('/') ? this.pages?.fileForSlug(path.slice(1))
       : here.slice(0, here.lastIndexOf('/') + 1) + decodeURIComponent(path);
     if (target === undefined) this.host.warn(`Can't follow ${href}`);
     else this.host.open(target, 0);
