@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createService } from './service.ts';
+import { createService, semanticTokensLegend } from './service.ts';
 
 const root = '/book';
 const uri = 'file:///book/index.md';
@@ -26,6 +26,14 @@ test('a loaded project resolves built targets and flags unknown ones', () => {
   });
   // Open files outside the workspace keep absolute paths.
   assert.equal(service.definition({ textDocument: { uri }, position: { line: 1, character: 7 } })?.uri, 'file:///elsewhere/notes.md');
+});
+
+test('references are label tokens with their target kind as a modifier', () => {
+  const service = createService(root, stubProject(), () => {});
+  service.update(uri, text);
+  const mod = (kind: string) => 1 << semanticTokensLegend.tokenModifiers.indexOf(kind);
+  // Delta-encoded [line, start, length, type, modifiers]: `Fig-Built` (a figure), `missing` (unknown), `notes` (a heading).
+  assert.deepEqual(service.semanticTokens({ textDocument: { uri } }).data, [0, 13, 9, 0, mod('figure'), 0, 21, 7, 0, 0, 1, 6, 5, 0, mod('heading')]);
 });
 
 test('edits reach the project once typing stops, as project-relative files', async () => {
