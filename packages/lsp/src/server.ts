@@ -6,6 +6,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { startMyst } from '@myst-author/mystmd/start';
 import { createProject } from './project.ts';
 import { createService, semanticTokensLegend } from './service.ts';
+import { loadProject, readReferences, type XrefProject } from './xref.ts';
 
 // The LSP wiring: features live in service.ts.
 const connection = createConnection(ProposedFeatures.all);
@@ -36,7 +37,10 @@ connection.onInitialize(async (params) => {
   const url = args['content-server'] ?? (args.myst && root ? (await startMyst(root)).url : undefined);
   loading = !!url;
   const project = createProject(url, refresh);
-  service = createService(root, project, refresh);
+  // External projects from myst.yml `project.references`, refreshed as their inventories load.
+  const xrefs: Record<string, XrefProject> = root ? Object.fromEntries(Object.entries(readReferences(root)).map(([key, href]) => [key, { url: href }])) : {};
+  for (const p of Object.values(xrefs)) loadProject(p).then(refresh, (e) => console.error(`[lsp] failed to load ${p.url}: ${e}`));
+  service = createService(root, project, xrefs);
   return {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,

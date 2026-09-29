@@ -7,7 +7,7 @@ import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import type { createProject } from './project.ts';
 import { labelDefinition, nameAt, optionAt, refAt, refsInText, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
-import { loadProject, readReferences, resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
+import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
 
 // The same directives and roles as the preview's parser.
 const names = (specs: { name: string; alias?: string[] }[]) => specs.flatMap((s) => [s.name, ...(s.alias ?? [])]);
@@ -54,16 +54,12 @@ type Resolved =
 /**
  * The language server's features, without an LSP connection.
  * `root` is the workspace folder path; `project` indexes the built pages and open files.
- * `onChange` runs when external references finish loading; pass the same callback to `project`, so diagnostics and hints can be refreshed.
+ * `xrefs` are the external projects from myst.yml `project.references`, by key; they're read on each request, so they can load later.
  * Each method takes and returns the LSP request's params and result.
  */
-export function createService(root: string | undefined, project: ReturnType<typeof createProject>, onChange: () => void) {
+export function createService(root: string | undefined, project: ReturnType<typeof createProject>, xrefs: Record<string, XrefProject> = {}) {
   const texts = new Map<string, string>(); // open documents by URI
   const timers = new Map<string, ReturnType<typeof setTimeout>>();
-
-  // External projects from myst.yml `project.references`.
-  const xrefs: Record<string, XrefProject> = root ? Object.fromEntries(Object.entries(readReferences(root)).map(([key, url]) => [key, { url }])) : {};
-  for (const p of Object.values(xrefs)) loadProject(p).then(onChange, (e) => console.error(`[lsp] failed to load ${p.url}: ${e}`));
 
   // A document's path. Notebook cells are documents with the notebook's path and a fragment for the cell:
   // `file:///nb.ipynb#<cell id>` from JupyterLab, `vscode-notebook-cell:/nb.ipynb#...` from VS Code.
