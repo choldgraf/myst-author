@@ -42,20 +42,18 @@ const definitionClick = EditorView.domEventHandlers({
 });
 
 /**
- * Connect to the `lsp` bridge of the MyST Author server at `base` (default: the page's own server).
- * Document URIs are built under the project's `file://` URI, which the server reports at `api/root`.
+ * Connect to the language server's websocket at `url` (relative to the page; http(s) means ws(s)).
+ * Document URIs are built under `root`, a `file://` URI chosen by the host.
  */
-export async function connectLsp(base = location.href) {
-  const { uri: root }: { uri: string } = await fetch(new URL('api/root', base)).then((r) => r.json());
+export function connectLsp(url: string, root: string) {
   const client = new LSPClient({
     rootUri: root,
     timeout: 20000, // the host starts a language server process per connection, which can take seconds on a busy host (e.g. Binder)
     extensions: [inlayHints(), ...languageServerExtensions(), { editorExtension: definitionClick }], // inlayHints first: serverDiagnostics consumes the notification
   });
-  keepConnected(client, new URL('lsp', base).href.replace(/^http/, 'ws'));
+  keepConnected(client, new URL(url, location.href).href.replace(/^http/, 'ws'));
   return {
     client,
-    root,
     uri: (path: string) => `${root}/${path.split('/').map(encodeURIComponent).join('/')}`,
     path: (uri: string) => (uri.startsWith(root + '/') ? decodeURIComponent(uri.slice(root.length + 1)) : null),
   };

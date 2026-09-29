@@ -3,6 +3,7 @@ import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
 import { contentServer, mystmdMissing } from '@myst-author/mystmd/built';
 import { PreviewController, type PreviewHost } from '@myst-author/preview/controller';
+import { findLabel, type Request } from '@myst-author/lsp/labels';
 import type { startMyst } from '@myst-author/mystmd/start';
 
 // Markdown files, not notebook cells (which are Markdown documents too).
@@ -24,9 +25,8 @@ export class MystPreview {
     open: (path, line) => this.show(vscode.Uri.file(resolve(this.root ?? '/', path)), line),
     openExternal: (url) => vscode.env.openExternal(vscode.Uri.parse(url)),
     findLabel: async (id) => {
-      const symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeWorkspaceSymbolProvider', id);
-      const s = symbols?.find((s) => s.name === id.toLowerCase());
-      return s && { path: this.path(s.location.uri), line: s.location.range.start.line };
+      const s = await findLabel(this.request, id);
+      return s && { path: this.path(vscode.Uri.parse(s.uri)), line: s.line };
     },
     warn: (message) => vscode.window.showWarningMessage(message),
   };
@@ -35,6 +35,7 @@ export class MystPreview {
     private context: vscode.ExtensionContext,
     private root: string | undefined,
     myst: Awaited<ReturnType<typeof startMyst>> | undefined,
+    private request: Request, // to the language server
   ) {
     // In Codespaces and code-server the webview runs in the browser, so images need the forwarded URL.
     this.assets = myst ? vscode.env.asExternalUri(vscode.Uri.parse(myst.url)).then((u) => u.toString().replace(/\/$/, '')) : Promise.resolve(undefined);

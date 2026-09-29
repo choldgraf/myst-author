@@ -26,6 +26,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
   It indexes mystmd's built pages plus the unsaved text of open files.
   It reads them from mystmd's content server.
   It also has the browser client for it (`@myst-author/lsp/client`), used by the web app and JupyterLab, and the arguments hosts start it with (`@myst-author/lsp/args`).
+  The client connects to whatever websocket URL its host gives it.
   See its [README](https://github.com/choldgraf/myst-author/tree/main/packages/lsp).
 
 `packages/codemirror-lang-myst`

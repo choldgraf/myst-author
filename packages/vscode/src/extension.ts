@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
     watch.forEach((w) => w.dispose());
     output.appendLine(`Starting mystmd in ${root}`);
     myst = await startMyst(root, (line) => output.appendLine(stripVTControlCharacters(line)));
-    preview = new MystPreview(context, root, myst);
+    preview = new MystPreview(context, root, myst, (method, params) => client!.sendRequest(method, params)); // `client` is set just below
 
     // The LSP loads the whole project once mystmd has built it; until then it knows the open files.
     client = new LanguageClient(

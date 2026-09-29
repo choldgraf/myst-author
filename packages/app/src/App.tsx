@@ -2,16 +2,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { EditorView } from 'codemirror';
 import type { DocumentSymbol, SymbolInformation } from 'vscode-languageserver-protocol';
 import { connectLsp } from '@myst-author/lsp/client';
+import { findLabel } from '@myst-author/lsp/labels';
 import { type Built, Preview, usePreview } from '@myst-author/preview';
 import { contentServer } from '@myst-author/mystmd/built';
 import { followLink } from '@myst-author/preview/controller';
-import { listFiles, readFile, writeFile } from './api.ts';
+import { listFiles, projectRoot, readFile, writeFile } from './api.ts';
 import { Editor } from './Editor.tsx';
 import { myst } from 'codemirror-lang-myst';
 import { type Item, QuickSwitcher } from './QuickSwitcher.tsx';
 
 type Doc = { path: string; text: string };
-type Lsp = Awaited<ReturnType<typeof connectLsp>>;
+type Lsp = ReturnType<typeof connectLsp>;
 
 // The host server proxies the content server under myst/ (relative, like every app URL).
 const content = contentServer('myst');
@@ -53,7 +54,8 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    Promise.all([listFiles(), connectLsp()]).then(([f, l]) => {
+    Promise.all([listFiles(), projectRoot()]).then(([f, root]) => {
+      const l = connectLsp('lsp', root);
       // Go to definition in another file: open it, then hand lsp-client the new editor (see the effect below).
       l.client.workspace.displayFile = (uri) => {
         const path = l.path(uri);
@@ -156,10 +158,10 @@ export function App() {
       open: (path, line) => (files.includes(path) ? openAt(path, line + 1) : setStatus(`can't open ${path}`)),
       openExternal: (url) => void window.open(url, '_blank'),
       findLabel: async (id) => {
-        const symbols = await lsp?.client.request<unknown, SymbolInformation[] | null>('workspace/symbol', { query: id });
-        const s = symbols?.find((s) => s.name === id.toLowerCase());
-        const path = s && lsp!.path(s.location.uri);
-        return path ? { path, line: s.location.range.start.line } : undefined;
+        if (!lsp) return undefined;
+        const s = await findLabel((method, params) => lsp.client.request(method, params), id);
+        const path = s && lsp.path(s.uri);
+        return path ? { path, line: s.line } : undefined;
       },
       warn: setStatus,
       fileForSlug: content.fileForSlug,
