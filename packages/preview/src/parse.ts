@@ -37,9 +37,9 @@ export type ParseResult = {
   references?: Record<string, any>; // extra ArticleProvider references from a built page (e.g. cite)
 };
 
-// The extensions mystmd enables by default, so the preview matches `myst build`.
-const directives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
-const roles = [buttonRole];
+// The extensions mystmd enables by default, so the preview matches `myst build`. myst-parser adds its own defaults.
+export const directives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
+export const roles = [buttonRole];
 
 /** Parse and transform a single MyST page in the browser. */
 export function parseMyst(md: string): ParseResult {
