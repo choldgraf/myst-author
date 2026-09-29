@@ -1,3 +1,1 @@
-const path = require('node:path');
-
-module.exports = { plugins: { tailwindcss: { config: path.join(__dirname, 'tailwind.config.cjs') } } };
+module.exports = { plugins: { tailwindcss: { config: require.resolve('@myst-author/preview/tailwind.config.cjs') } } };

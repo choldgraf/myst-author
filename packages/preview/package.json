@@ -8,7 +8,10 @@
   "dependencies": {
     "@myst-theme/common": "^1.4.1",
     "@myst-theme/providers": "^1.4.1",
+    "@myst-theme/styles": "^1.4.1",
+    "@tailwindcss/typography": "^0.5.20",
     "js-yaml": "^4.1.0",
+    "katex": "^0.15.6",
     "myst-common": "^1.10.1",
     "myst-directives": "^1.7.4",
     "myst-ext-button": "^0.0.2",
@@ -35,6 +38,7 @@
     "./built": "./src/built.ts",
     "./controller": "./src/controller.ts",
     "./page": "./src/page.tsx",
-    "./page.css": "./src/page.css"
+    "./page.css": "./src/page.css",
+    "./tailwind.config.cjs": "./tailwind.config.cjs"
   }
 }
