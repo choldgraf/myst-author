@@ -9,8 +9,8 @@ export type BuiltPage = {
   references?: Record<string, any>;
 };
 
-/** Slugs of every page in a `myst start` project, from its `/config.json`. */
-export function pageSlugs(config: any): string[] {
+/** Slugs of every page in a `myst start` project, from its `/config.json`; the index page first. */
+function pageSlugs(config: any): string[] {
   const project = config.projects[0];
   return [project.index, ...project.pages.map((p: { slug?: string }) => p.slug).filter(Boolean)];
 }
@@ -21,40 +21,65 @@ export async function sha256(text: string) {
   return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function json(url: string) {
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
-}
+export type ContentServer = ReturnType<typeof contentServer>;
 
 /**
- * Load built pages from a `myst start` content server at `base` (e.g. `myst` or `http://localhost:3100`).
+ * The `myst start` content server at `base`: an absolute URL (`http://127.0.0.1:3100`), or one relative to the page (`myst`) when a host proxies it.
  * Image URLs point at `assets`, for when whoever displays the page reaches the server by another URL.
  */
-export function builtPages(base: string, assets = base) {
+export function contentServer(base: string, assets = base) {
+  base = base.replace(/\/$/, '');
   // config.json lists slugs but not files, so map source location → slug by fetching each page once.
   let slugs = new Map<string, string>();
   let slugList = '';
 
-  /** The built page JSON for a project-relative path, or null if mystmd hasn't built it. */
-  async function page(path: string): Promise<BuiltPage | null> {
-    const all = pageSlugs(await json(`${base}/config.json`));
-    if (all.join() !== slugList) {
-      const pages: BuiltPage[] = await Promise.all(all.map((s) => json(`${base}/content/${s}.json`)));
-      slugs = new Map(pages.map((p, i) => [p.location, all[i]]));
-      slugList = all.join();
-    }
-    const slug = slugs.get('/' + path);
-    if (!slug) return null;
-    const result: BuiltPage = await json(`${base}/content/${slug}.json`);
-    rebaseImages(result.mdast, assets);
+  async function json(path: string) {
+    const r = await fetch(`${base}/${path}`);
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+  }
+
+  /** Every built page. */
+  async function pages(): Promise<BuiltPage[]> {
+    const all = pageSlugs(await json('config.json'));
+    const result: BuiltPage[] = await Promise.all(all.map((s) => json(`content/${s}.json`)));
+    slugs = new Map(result.map((p, i) => [p.location, all[i]]));
+    slugList = all.join();
     return result;
   }
+
   return {
-    page,
-    /** Source location (e.g. `/index.md`) → slug, as of the last `page()` call. */
-    get slugs() {
-      return slugs;
+    pages,
+
+    /** The built page JSON for a project-relative path, or null if mystmd hasn't built it. */
+    async page(path: string): Promise<BuiltPage | null> {
+      if (pageSlugs(await json('config.json')).join() !== slugList) await pages();
+      const slug = slugs.get('/' + path);
+      if (!slug) return null;
+      const result: BuiltPage = await json(`content/${slug}.json`);
+      rebaseImages(result.mdast, assets);
+      return result;
+    },
+
+    /** The project-relative file for a page slug (`''` for the index page), as of the last `page()` or `pages()`. */
+    fileForSlug(slug: string) {
+      for (const [location, s] of slugs) if (s === slug || !slug) return location.slice(1);
+    },
+
+    /** Call `onReload` whenever mystmd rebuilds (and on (re)connect); returns a function that stops watching. */
+    watch(onReload: () => void) {
+      const url = new URL(`${base}/socket`, globalThis.location?.href).href.replace(/^http/, 'ws');
+      let ws: WebSocket;
+      let timer: ReturnType<typeof setTimeout>;
+      let stopped = false;
+      const connect = () => {
+        ws = new WebSocket(url);
+        ws.onopen = onReload;
+        ws.onmessage = (e) => JSON.parse(String(e.data)).type === 'RELOAD' && onReload();
+        ws.onclose = () => { if (!stopped) timer = setTimeout(connect, 2000); };
+      };
+      connect();
+      return () => { stopped = true; clearTimeout(timer); ws.close(); };
     },
   };
 }
@@ -65,19 +90,4 @@ function rebaseImages(node: any, base: string) {
     for (const key of ['url', 'urlOptimized']) if (node[key]?.startsWith('/')) node[key] = base + node[key];
   }
   node.children?.forEach((c: any) => rebaseImages(c, base));
-}
-
-/** Call `onReload` whenever mystmd rebuilds (and on (re)connect) via its `/socket` URL; returns a cleanup function. */
-export function watchBuilds(socketUrl: string, onReload: () => void) {
-  let ws: WebSocket;
-  let timer: ReturnType<typeof setTimeout>;
-  let stopped = false;
-  const connect = () => {
-    ws = new WebSocket(socketUrl);
-    ws.onopen = onReload;
-    ws.onmessage = (e) => JSON.parse(String(e.data)).type === 'RELOAD' && onReload();
-    ws.onclose = () => { if (!stopped) timer = setTimeout(connect, 2000); };
-  };
-  connect();
-  return () => { stopped = true; clearTimeout(timer); ws.close(); };
 }
