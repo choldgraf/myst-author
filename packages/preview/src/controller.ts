@@ -60,26 +60,30 @@ export class PreviewController {
     } else if (m.type === 'reveal') {
       this.host.open(file.path, m.line! - 1);
     } else if (m.type === 'follow') {
-      this.follow(file.path, m.href!, m.line);
+      await followLink({ ...this.host, fileForSlug: (slug) => this.pages?.fileForSlug(slug) }, file.path, m.href!, m.line);
     }
   }
+}
 
-  /** Cmd/Ctrl-click on a link in the preview; `line` is where an in-page `#id` target renders, if found. */
-  private async follow(here: string, href: string, line?: number) {
-    if (/^[a-z][\w+.-]*:/i.test(href)) return this.host.openExternal(href); // http:, mailto:, …
-    const [path, id] = href.split('#');
-    if (id) {
-      // Labels are project-wide, so ask the LSP where it is.
-      const target = await this.host.findLabel(id).catch(() => undefined);
-      if (target) return this.host.open(target.path, target.line);
-      if (line && !path) return this.host.open(here, line - 1);
-    }
-    // Built pages link to other pages by slug (`/slug`); the fast preview keeps the author's relative path.
-    // Relative paths are left unnormalized (`a/../b.md`); hosts resolve them.
-    const target = !path ? here
-      : path.startsWith('/') ? this.pages?.fileForSlug(path.slice(1))
-      : here.slice(0, here.lastIndexOf('/') + 1) + decodeURIComponent(path);
-    if (target === undefined) this.host.warn(`Can't follow ${href}`);
-    else this.host.open(target, 0);
+/** What following a preview link needs from the host. */
+export type LinkHost = Pick<PreviewHost, 'open' | 'openExternal' | 'findLabel' | 'warn'> & {
+  fileForSlug(slug: string): string | undefined; // see `ContentServer`
+};
+
+/** Cmd/Ctrl-click on a preview link in file `here`; `line` is where an in-page `#id` target renders, if found. */
+export async function followLink(host: LinkHost, here: string, href: string, line?: number) {
+  if (/^[a-z][\w+.-]*:/i.test(href)) return host.openExternal(href); // http:, mailto:, …
+  const [path, id] = href.split('#');
+  if (id) {
+    // Labels are project-wide, so ask the LSP where it is.
+    const target = await host.findLabel(id).catch(() => undefined);
+    if (target) return host.open(target.path, target.line);
+    if (line && !path) return host.open(here, line - 1);
   }
+  // Built pages link to other pages by slug (`/slug`, `/` for the index); the fast preview keeps the author's relative path.
+  const target = !path ? here
+    : path.startsWith('/') ? host.fileForSlug(path.slice(1))
+    : decodeURIComponent(new URL(path, `http://x/${here}`).pathname.slice(1));
+  if (target === undefined) host.warn(`Can't follow ${href}`);
+  else host.open(target, 0);
 }

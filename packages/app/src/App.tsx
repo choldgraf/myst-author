@@ -1,16 +1,16 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { EditorView } from 'codemirror';
 import type { SymbolInformation } from 'vscode-languageserver-protocol';
 import { connectLsp } from '@myst-author/lsp/client';
-import { type BuiltPage, fromBuiltPage, parseMyst, Preview } from '@myst-author/preview';
-import { contentServer, sha256 } from '@myst-author/preview/built';
+import { type Built, Preview, usePreview } from '@myst-author/preview';
+import { contentServer } from '@myst-author/preview/built';
+import { followLink } from '@myst-author/preview/controller';
 import { listFiles, readFile, writeFile } from './api.ts';
 import { Editor } from './Editor.tsx';
 import { myst } from 'codemirror-lang-myst';
 import { QuickSwitcher } from './QuickSwitcher.tsx';
 
 type Doc = { path: string; text: string };
-type Built = { path: string; page: BuiltPage | null; error?: string };
 type Lsp = Awaited<ReturnType<typeof connectLsp>>;
 
 // The host server proxies the content server under myst/ (relative, like every app URL).
@@ -26,12 +26,10 @@ export function App() {
   const [switcher, setSwitcher] = useState(false);
   const [topLine, setTopLine] = useState(1);
   const [built, setBuilt] = useState<Built | null>(null); // mystmd's latest build of the open file
-  const [hash, setHash] = useState('');
   const [lsp, setLsp] = useState<Lsp | null>(null);
   const viewOpened = useRef<((view: EditorView | null) => void) | null>(null); // resolves a cross-file jump
   const saved = useRef(''); // last text known to be on disk
   const viewRef = useRef<EditorView | null>(null);
-  const previewRef = useRef<HTMLDivElement>(null);
   const latest = useRef({ doc, text });
   latest.current = { doc, text };
 
@@ -111,31 +109,7 @@ export function App() {
   useEffect(refreshBuilt, [doc]);
   useEffect(() => content.watch(refreshBuilt), []);
 
-  const deferred = useDeferredValue(text);
-  useEffect(() => {
-    let current = true;
-    sha256(deferred).then((h) => current && setHash(h));
-    return () => { current = false; };
-  }, [deferred]);
-
-  // Show mystmd's build when it matches the editor text exactly; otherwise the fast in-browser parse.
-  const current = built?.path === doc?.path ? built : null;
-  const page = current?.page?.sha256 === hash ? current.page : null;
-  // Parses on the main thread; `deferred` lets React keep typing responsive while it runs.
-  const parsed = useMemo(() => (page ? fromBuiltPage(page) : parseMyst(deferred)), [page, deferred]);
-  const badge = current?.error === 'mystmd not found' ? 'no mystmd'
-    : page ? 'built ✓'
-    : current?.page && text === saved.current ? 'building…'
-    : 'fast preview';
-
-  useEffect(() => {
-    const pane = previewRef.current;
-    if (!pane) return;
-    const blocks = [...pane.querySelectorAll<HTMLElement>('[data-line-start]')];
-    const el = blocks.findLast((b) => Number(b.dataset.lineStart) <= topLine);
-    if (el) el.scrollIntoView({ block: 'start' });
-    else pane.scrollTop = 0;
-  }, [topLine]);
+  const { result, badge } = usePreview(doc?.path, text, text !== saved.current, built);
 
   function gotoLine(line: number) {
     const view = viewRef.current;
@@ -151,24 +125,20 @@ export function App() {
   }
 
   // Cmd/Ctrl-click on a preview link: external links open a tab, internal ones open the file at the target.
-  async function followLink(href: string) {
-    if (/^[a-z][\w+.-]*:/i.test(href)) return void window.open(href, '_blank'); // http:, mailto:, …
-    const [path, id] = href.split('#');
-    // Built pages link to other pages by slug (`/slug`); the fast preview keeps the author's relative path.
-    const file = !path ? doc?.path
-      : path.startsWith('/') ? content.fileForSlug(path.slice(1))
-      : decodeURIComponent(new URL(path, `http://x/${doc?.path}`).pathname.slice(1));
-    if (!file || !files.includes(file)) return setStatus(`can't follow ${href}`);
-    if (id) {
-      // Labels are project-wide, so ask the LSP where it is; if it doesn't know, find the rendered anchor.
-      const symbols = await lsp?.client.request<unknown, SymbolInformation[] | null>('workspace/symbol', { query: id }).catch(() => null);
-      const s = symbols?.find((s) => s.name === id.toLowerCase());
-      const target = s && lsp!.path(s.location.uri);
-      if (target) return openAt(target, s.location.range.start.line + 1);
-      const block = previewRef.current?.querySelector(`[id="${CSS.escape(id)}"]`)?.closest<HTMLElement>('[data-line-start]');
-      if (block && file === doc?.path) return gotoLine(Number(block.dataset.lineStart));
-    }
-    openAt(file, 1);
+  function follow(href: string, line?: number) {
+    if (!doc) return;
+    followLink({
+      open: (path, line) => (files.includes(path) ? openAt(path, line + 1) : setStatus(`can't open ${path}`)),
+      openExternal: (url) => void window.open(url, '_blank'),
+      findLabel: async (id) => {
+        const symbols = await lsp?.client.request<unknown, SymbolInformation[] | null>('workspace/symbol', { query: id });
+        const s = symbols?.find((s) => s.name === id.toLowerCase());
+        const path = s && lsp!.path(s.location.uri);
+        return path ? { path, line: s.location.range.start.line } : undefined;
+      },
+      warn: setStatus,
+      fileForSlug: content.fileForSlug,
+    }, doc.path, href, line);
   }
 
   return (
@@ -196,8 +166,8 @@ export function App() {
         {doc && <Editor key={doc.path} initial={doc.text} onChange={setText} onTopLine={setTopLine} viewRef={viewRef}
           extensions={lsp ? [lsp.client.plugin(lsp.uri(doc.path), 'markdown'), myst()] : myst()} />}
         {showPreview && (
-          <div className="preview" ref={previewRef}>
-            <Preview result={parsed} onLineClick={gotoLine} onFollowLink={followLink} />
+          <div className="preview">
+            <Preview result={result} topLine={topLine} onLineClick={gotoLine} onFollowLink={follow} />
           </div>
         )}
       </div>
