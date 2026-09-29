@@ -87,6 +87,21 @@ test('`@key` and `{cite}` resolve to citations first, then labels', () => {
   assert.deepEqual(items.map((i) => [i.label, i.detail]).slice(0, 2), [['nelson1977', 'Nelson et al. 1977 · Computer Lib'], ['fig-built', 'Figure 2 · chapter/plots.md']]);
 });
 
+test('a key that is both a citation and a label is a citation to `@`, and a label to `{ref}`', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'lsp-'));
+  writeFileSync(join(dir, 'refs.bib'), '@misc{fig-built,\n  title = {Shadow}\n}\n');
+  const service = createService(dir, stubProject(), () => {});
+  const doc = pathToFileURL(join(dir, 'index.md')).href;
+  service.update(doc, '@fig-built {ref}`fig-built`\n');
+  const at = (character: number) => ({ textDocument: { uri: doc }, position: { line: 0, character } });
+  const mod = (kind: string) => 1 << semanticTokensLegend.tokenModifiers.indexOf(kind);
+  assert.match(service.hover(at(3))!.contents.value, /^\*\*fig-built\*\* · refs\.bib\n\nShadow/);
+  assert.deepEqual(service.semanticTokens({ textDocument: { uri: doc } }).data, [0, 1, 9, 0, mod('citation'), 0, 16, 9, 0, mod('figure')]);
+  assert.deepEqual(service.inlayHints({ textDocument: { uri: doc } }).map((h) => h.label), ['Figure 2']);
+  // Find references from the label skips the citation.
+  assert.deepEqual(service.references({ ...at(20), context: { includeDeclaration: false } })?.map((l) => l.range.start.character), [17]);
+});
+
 // A workspace on disk: `a.md` defines the labels, `b.md` (also open, with unsaved edits) and `c.md` reference them.
 function labelWorkspace() {
   const dir = mkdtempSync(join(tmpdir(), 'lsp-'));

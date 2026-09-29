@@ -43,6 +43,14 @@ const rangeOf = (ref: Pick<Ref, 'line' | 'start' | 'end'>) => ({ start: { line: 
 
 type At = { textDocument: { uri: string }; position: Position };
 
+/** What a reference points to. `problem` is a warning for a `missing` target, set only when we're sure it doesn't exist. */
+type Resolved =
+  | { kind: 'label'; target: Target }
+  | { kind: 'citation'; entry: BibEntry }
+  | { kind: 'xref'; entry: XrefEntry }
+  | { kind: 'file'; path: string }
+  | { kind: 'missing'; problem?: string };
+
 /**
  * The language server's features, without an LSP connection.
  * `root` is the workspace folder path; `project` indexes the built pages and open files.
@@ -90,22 +98,32 @@ export function createService(root: string | undefined, project: ReturnType<type
   }
 
   const lookup = () => new Map(project.targets().map((t) => [t.identifier, t]));
-  const find = (targets: Map<string, Target>, ref: Ref) => targets.get(ref.target.trim().toLowerCase());
-  // mystmd reads `@key` and `{cite}` keys as citations first, and only falls back to labels when there's no such citation.
-  const citation = (ref: Ref) => (ref.kind === 'cite' ? citations.get(ref.target) : undefined);
 
-  function xrefEntry(ref: Ref): XrefEntry | undefined {
-    const { key, page, hash } = splitXref(ref.target);
-    const p = xrefs[key];
-    return p?.entries && resolveXref(p, page, hash);
-  }
-
-  function xrefProblem(ref: Ref): string | undefined {
-    const { key, page, hash } = splitXref(ref.target);
-    const p = xrefs[key];
-    if (!p) return `Unknown external project \`${key}\` (add it to \`project.references\` in myst.yml)`;
-    // Only once the inventory has loaded: offline or unreachable projects must not produce false errors.
-    if (p.entries && !resolveXref(p, page, hash)) return `\`${ref.target}\` not found in ${key} (${p.url})`;
+  /** What a reference in document `uri` points to. Callers resolving many references pass `targets` from one `lookup()`. */
+  function resolveRef(ref: Ref, uri: string, targets = lookup()): Resolved {
+    if (ref.kind === 'xref') {
+      const { key, page, hash } = splitXref(ref.target);
+      const p = xrefs[key];
+      if (!p) return { kind: 'missing', problem: `Unknown external project \`${key}\` (add it to \`project.references\` in myst.yml)` };
+      const entry = p.entries && resolveXref(p, page, hash);
+      if (entry) return { kind: 'xref', entry };
+      // Only once the inventory has loaded: offline or unreachable projects must not produce false errors.
+      return { kind: 'missing', problem: p.entries ? `\`${ref.target}\` not found in ${key} (${p.url})` : undefined };
+    }
+    if (ref.kind === 'doc' || ref.kind === 'path') {
+      const path = fileOf(uri, ref.target);
+      if (existsSync(path)) return { kind: 'file', path };
+      return { kind: 'missing', problem: ref.kind === 'path' ? `File not found: \`${ref.target}\`` : undefined };
+    }
+    // mystmd reads `@key` and `{cite}` keys as citations first, and only falls back to labels when there's no such citation.
+    const entry = ref.kind === 'cite' ? citations.get(ref.target) : undefined;
+    if (entry) return { kind: 'citation', entry };
+    const target = targets.get(ref.target.trim().toLowerCase());
+    if (target) return { kind: 'label', target };
+    if (!project.loaded) return { kind: 'missing' };
+    if (ref.kind !== 'cite') return { kind: 'missing', problem: `Unknown reference target \`${ref.target}\`` };
+    // Citation keys are only checked when every .bib file was read, and DOIs (`@10.1234/x`) resolve without one.
+    return { kind: 'missing', problem: bib.complete && !/^10\.\d+\//.test(ref.target) ? `Unknown citation or reference target \`${ref.target}\`` : undefined };
   }
 
   const refs = (uri: string) => refsInText(texts.get(uri) ?? '');
@@ -120,19 +138,19 @@ export function createService(root: string | undefined, project: ReturnType<type
       return '';
     }
   };
-  const isLabel = (ref: Ref) => ref.kind !== 'doc' && ref.kind !== 'path' && ref.kind !== 'xref' && !citation(ref);
 
   /** The project label under the cursor, on a reference or where it's defined, and the span of its name there. */
   function labelAtCursor(at: At) {
     const { line, character } = at.position;
     const ref = refAtCursor(at);
+    if (ref) {
+      const r = resolveRef(ref, at.textDocument.uri);
+      return r.kind === 'label' ? { target: r.target, range: rangeOf(ref) } : undefined;
+    }
     const def = labelDefinition(texts.get(at.textDocument.uri)?.split('\n')[line] ?? '');
-    let hit;
-    if (ref) hit = isLabel(ref) ? ref : undefined;
-    else if (def && def.start <= character && character <= def.end) hit = { ...def, line };
-    if (!hit) return;
-    const target = lookup().get(hit.target.trim().toLowerCase());
-    return target && { target, range: rangeOf(hit) };
+    if (!def || character < def.start || def.end < character) return;
+    const target = lookup().get(def.target.toLowerCase());
+    return target && { target, range: rangeOf({ ...def, line }) };
   }
 
   /** Where a label is written. The definition closest to the target's line, since built directives can report a line inside them. */
@@ -149,9 +167,9 @@ export function createService(root: string | undefined, project: ReturnType<type
   function labelRefs(identifier: string) {
     const files = root && existsSync(root) ? workspaceFiles(root, /\.md$/) : [];
     const uris = new Set([...files.map((f) => pathToFileURL(f).href), ...texts.keys()]);
-    return [...uris].flatMap((uri) =>
-      refsInText(source(uri)).filter((r) => isLabel(r) && r.target.trim().toLowerCase() === identifier).map((r) => ({ uri, range: rangeOf(r) })),
-    );
+    const targets = lookup();
+    const isRef = (r: Resolved) => r.kind === 'label' && r.target.identifier === identifier;
+    return [...uris].flatMap((uri) => refsInText(source(uri)).filter((r) => isRef(resolveRef(r, uri, targets))).map((r) => ({ uri, range: rangeOf(r) })));
   }
 
   /** mystmd's docs for the directive, directive option, or role name under the cursor. */
@@ -261,25 +279,21 @@ export function createService(root: string | undefined, project: ReturnType<type
     hover(at: At) {
       const ref = refAtCursor(at);
       if (!ref) return specHover(at);
-      if (ref.kind === 'xref') {
-        const e = xrefEntry(ref);
-        return e ? { contents: { kind: 'markdown' as const, value: `**${e.title || e.name || e.page || e.url}** · ${e.kind}\n\n${e.url}` } } : null;
-      }
-      const c = citation(ref);
-      if (c) return { contents: { kind: 'markdown' as const, value: `**${authorYear(c) || c.key}** · ${relative(root ?? '', c.file)}\n\n${c.title ?? ''}` } };
-      const t = find(lookup(), ref);
-      if (!t) return null;
-      return { contents: { kind: 'markdown' as const, value: `**${title(t)}** · ${t.file}\n\n${t.text}` } };
+      const r = resolveRef(ref, at.textDocument.uri);
+      const value =
+        r.kind === 'xref' ? `**${r.entry.title || r.entry.name || r.entry.page || r.entry.url}** · ${r.entry.kind}\n\n${r.entry.url}`
+        : r.kind === 'citation' ? `**${authorYear(r.entry) || r.entry.key}** · ${relative(root ?? '', r.entry.file)}\n\n${r.entry.title ?? ''}`
+        : r.kind === 'label' ? `**${title(r.target)}** · ${r.target.file}\n\n${r.target.text}`
+        : undefined;
+      return value ? { contents: { kind: 'markdown' as const, value } } : null;
     },
 
     definition(at: At) {
       const ref = refAtCursor(at);
-      if (!ref) return null;
-      if (ref.kind === 'doc' || ref.kind === 'path') return { uri: pathToFileURL(fileOf(at.textDocument.uri, ref.target)).href, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } };
-      const c = citation(ref);
-      if (c) return bibLocation(c);
-      const t = find(lookup(), ref);
-      return t ? locationOf(t) : null;
+      const r = ref && resolveRef(ref, at.textDocument.uri);
+      if (r?.kind === 'file') return { uri: pathToFileURL(r.path).href, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } };
+      if (r?.kind === 'citation') return bibLocation(r.entry);
+      return r?.kind === 'label' ? locationOf(r.target) : null;
     },
 
     references(at: At & { context: { includeDeclaration: boolean } }) {
@@ -308,9 +322,9 @@ export function createService(root: string | undefined, project: ReturnType<type
     inlayHints({ textDocument }: { textDocument: { uri: string } }) {
       const targets = lookup();
       return refs(textDocument.uri).flatMap((ref) => {
-        const t = isLabel(ref) && find(targets, ref);
+        const r = resolveRef(ref, textDocument.uri, targets);
         // An xref link without text renders with the remote title, so show that.
-        const label = t ? hint(t) : ref.kind === 'xref' && !ref.text && xrefEntry(ref)?.title;
+        const label = r.kind === 'label' ? hint(r.target) : r.kind === 'xref' && !ref.text && r.entry.title;
         return label ? [{ position: { line: ref.line, character: ref.after }, label, paddingLeft: true }] : [];
       });
     },
@@ -320,19 +334,20 @@ export function createService(root: string | undefined, project: ReturnType<type
       const builder = new SemanticTokensBuilder();
       for (const ref of refs(textDocument.uri)) {
         if (ref.kind === 'doc' || ref.kind === 'path') continue; // a file path, not a label
-        const kind = ref.kind === 'xref' ? xrefEntry(ref)?.kind : citation(ref) ? 'citation' : find(targets, ref)?.kind;
-        const i = semanticTokensLegend.tokenModifiers.indexOf(kind ?? '');
+        const r = resolveRef(ref, textDocument.uri, targets);
+        const kind = r.kind === 'label' ? r.target.kind : r.kind === 'xref' ? r.entry.kind : r.kind === 'citation' ? 'citation' : '';
+        const i = semanticTokensLegend.tokenModifiers.indexOf(kind);
         builder.push(ref.line, ref.start, ref.end - ref.start, 0, i < 0 ? 0 : 1 << i);
       }
       return builder.build();
     },
 
     documentLinks({ textDocument }: { textDocument: { uri: string } }) {
+      const targets = lookup();
       return refs(textDocument.uri).flatMap((ref) => {
-        const file = ref.kind === 'path' && fileOf(textDocument.uri, ref.target);
-        if (file && existsSync(file)) return [{ range: rangeOf(ref), target: pathToFileURL(file).href }];
-        const e = ref.kind === 'xref' && xrefEntry(ref);
-        return e ? [{ range: rangeOf(ref), target: e.url }] : [];
+        const r = resolveRef(ref, textDocument.uri, targets);
+        const target = r.kind === 'file' ? pathToFileURL(r.path).href : r.kind === 'xref' ? r.entry.url : undefined;
+        return target ? [{ range: rangeOf(ref), target }] : [];
       });
     },
 
@@ -376,13 +391,8 @@ export function createService(root: string | undefined, project: ReturnType<type
     diagnostics(uri: string): Diagnostic[] {
       const targets = lookup();
       const problems = refs(uri).flatMap((ref) => {
-        const message = ref.kind === 'xref' ? xrefProblem(ref)
-          : ref.kind === 'path' ? (existsSync(fileOf(uri, ref.target)) ? undefined : `File not found: \`${ref.target}\``)
-          // Citation keys are only checked when every .bib file was read, and DOIs (`@10.1234/x`) resolve without one.
-          : ref.kind === 'cite' ? (project.loaded && bib.complete && !citation(ref) && !find(targets, ref) && !/^10\.\d+\//.test(ref.target) ? `Unknown citation or reference target \`${ref.target}\`` : undefined)
-          : ref.kind !== 'doc' && project.loaded && !find(targets, ref) ? `Unknown reference target \`${ref.target}\``
-          : undefined;
-        return message ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message, source: 'myst' }] : [];
+        const r = resolveRef(ref, uri, targets);
+        return r.kind === 'missing' && r.problem ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message: r.problem, source: 'myst' }] : [];
       });
       // Labels in this file that are defined more than once in the project. Like mystmd, not implicit heading labels.
       const explicit = project.loaded ? project.targets().filter((t) => !t.implicit) : [];

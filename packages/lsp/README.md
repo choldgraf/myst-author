@@ -47,6 +47,7 @@ They're read on startup.
 - **File arguments** of `figure`, `image`, `include`, and `literalinclude`: document links, go to definition, and a warning when the file doesn't exist.
   Like mystmd, paths are relative to the current file, or to the project root when they start with `/`.
   URLs, notebook cells (`#id`), and `.*` wildcards aren't checked.
+- **`{doc}` references**: document links and go to definition, when the file exists.
 - **Find references** and **rename** for labels, from a reference or from the label's definition (`(label)=`, `:label:`, `$$ (label)`).
   Both search the project's `.md` files on disk, using unsaved text for open documents.
   Rename edits every reference and the definition; it isn't offered for citations, external references, notebooks, or headings without an explicit label.
