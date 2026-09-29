@@ -6,12 +6,14 @@ It speaks the [Language Server Protocol](https://microsoft.github.io/language-se
 ## Run
 
 ```sh
-node src/server.ts --stdio [--content-server=http://127.0.0.1:3100] [--root=path/to/project]
+node src/server.ts --stdio [--myst | --content-server=http://127.0.0.1:3100] [--root=path/to/project]
 ```
 
 - `--content-server` (optional): URL of a `myst start --headless` content server.
   The server indexes every built page and reloads when the content server sends `RELOAD`.
   Without it, only open documents are indexed, and unknown targets aren't reported.
+- `--myst` (optional): start `myst start --headless` in the project folder and use it as the content server.
+  Use it with editors that don't start mystmd themselves, like Neovim.
 - `--root` (optional): the project folder.
   It overrides the client's, so a host that bridges untrusted clients (like the web app's `/lsp`) decides which folder the server reads.
 - Hosts that start mystmd and the server get these arguments from `lspArgs(url, root)` in `@myst-author/lsp/myst`.

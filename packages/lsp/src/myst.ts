@@ -42,6 +42,7 @@ export async function startMyst(root: string) {
       });
     }
   });
+  ready.catch(() => {}); // callers that don't wait for mystmd mustn't crash when it's missing
   return { url: `http://127.0.0.1:${port}`, ready, stop };
 }
 
