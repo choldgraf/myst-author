@@ -64,7 +64,7 @@ export function App() {
       setFiles(f);
       const first = f.includes('index.md') ? 'index.md' : f[0];
       if (first) open(first);
-    });
+    }, (err) => setStatus(`couldn't load the project: ${err.message}`));
   }, []);
 
   useEffect(() => {
