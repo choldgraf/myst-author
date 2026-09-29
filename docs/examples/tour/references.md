@@ -19,7 +19,10 @@ Cmd-click (or Ctrl-click) the link instead to open the page it points to.
 
 ## A broken reference
 
-This reference points at a label that doesn't exist: {ref}`tour-missing`.
+The following references point to labels that don't exist:
+
+- {ref}`foo`
+- An embed: ![](#foo)
 
 :::{tip} Try this: fix it
 The reference above has a squiggle.

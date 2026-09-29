@@ -81,21 +81,48 @@ export function parseMyst(md: string): ParseResult {
     .use(keysPlugin)
     .runSync(tree as any, vfile);
 
-  // mystmd fills in embeds (`![](#label)`, `{embed}`) from the whole project, so here we can only say one is coming.
+  // mystmd resolves embeds and references to other pages from the whole project, so here we can only say they're coming.
+  markUnresolved(tree, false);
+
+  return { tree, blocks: toBlocks(tree), messages: vfile.messages.map((m) => m.message), frontmatter };
+}
+
+/**
+ * Make embeds (`![](#label)`, `{embed}`) and references (`[](#label)`, `@label`, `{ref}`…) that mystmd left unresolved visible, instead of blank:
+ * grey while the fast preview waits for a build, red in a built page, where they're broken.
+ */
+function markUnresolved(tree: GenericParent, built: boolean) {
+  const color = built ? '#dc2626' : '#888';
+  const text = (n: GenericNode, value: string) => [{ type: 'text', key: `${n.key}-text`, value }];
   visit(tree, (n: GenericNode) => {
-    const label = n.type === 'image' && n.url?.startsWith('#') ? n.url.slice(1)
+    const embed = n.type === 'image' && n.url?.startsWith('#') ? n.url.slice(1)
       : n.type === 'embed' && !n.children?.length ? n.source?.label
       : undefined;
-    if (label === undefined) return;
+    if (embed !== undefined) {
+      Object.assign(n, {
+        type: 'span', // not a div: `![](#label)` can sit inside a paragraph
+        style: { display: 'block', padding: '0.5rem', border: `1px dashed ${color}`, color, fontSize: '0.875rem' },
+        children: text(n, built ? `Broken embed: mystmd couldn't find #${embed}` : `#${embed} is embedded after mystmd builds`),
+      });
+      return SKIP;
+    }
+    // A resolved `[](#label)` becomes a crossReference, so a `#` link is one mystmd couldn't find.
+    // `@label` is a citation until mystmd finds the label or the bibliography entry, and has an `error` if it finds neither.
+    const ref = n.type === 'crossReference' && !n.resolved ? `#${n.label}`
+      : n.type === 'link' && n.url?.startsWith('#') ? n.url
+      : n.type === 'cite' && (n.error || !built) ? `@${n.label}`
+      : undefined;
+    // The fast preview only knows this page's labels, so only fill in references that would otherwise be blank.
+    if (ref === undefined || (!built && n.children?.length)) return;
     Object.assign(n, {
-      type: 'span', // not a div: `![](#label)` can sit inside a paragraph
-      style: { display: 'block', padding: '0.5rem', border: '1px dashed #ccc', color: '#888', fontSize: '0.875rem' },
-      children: [{ type: 'text', value: `#${label} is embedded after mystmd builds` }],
+      type: 'span',
+      style: { color },
+      children: !built ? text(n, ref)
+        : n.children?.length ? [...text(n, '⚠ '), ...n.children]
+        : text(n, `⚠ ${ref}`),
     });
     return SKIP;
   });
-
-  return { tree, blocks: toBlocks(tree), messages: vfile.messages.map((m) => m.message), frontmatter };
 }
 
 export function toBlocks(tree: GenericParent): Block[] {
@@ -125,6 +152,8 @@ function firstPosition(node: GenericNode) {
 
 /** Render a page built by mystmd the same way as the fast in-browser parse. */
 export function fromBuiltPage(page: BuiltPage): ParseResult {
+  // mystmd leaves embeds and references it can't find blank.
+  markUnresolved(page.mdast, true);
   return {
     tree: page.mdast,
     blocks: toBlocks(page.mdast),
