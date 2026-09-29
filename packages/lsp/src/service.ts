@@ -57,9 +57,12 @@ export function createService(root: string | undefined, project: ReturnType<type
   const xrefs: Record<string, XrefProject> = root ? Object.fromEntries(Object.entries(readReferences(root)).map(([key, url]) => [key, { url }])) : {};
   for (const p of Object.values(xrefs)) loadProject(p).then(onChange, (e) => console.error(`[lsp] failed to load ${p.url}: ${e}`));
 
+  // A document's path. Notebook cells are documents with the notebook's path and a fragment for the cell:
+  // `file:///nb.ipynb#<cell id>` from JupyterLab, `vscode-notebook-cell:/nb.ipynb#...` from VS Code.
+  const pathOf = (uri: string) => fileURLToPath('file:' + uri.slice(uri.indexOf(':') + 1));
   // Files are project-relative when inside the workspace (matching the content server's `location`), else absolute paths.
   const toFile = (uri: string) => {
-    const path = fileURLToPath(uri);
+    const path = pathOf(uri);
     return root && !relative(root, path).startsWith('..') ? relative(root, path) : path;
   };
   // Citations from the project's .bib files, read once on startup.
@@ -69,11 +72,13 @@ export function createService(root: string | undefined, project: ReturnType<type
 
   const toUri = (file: string) => pathToFileURL(root ? resolve(root, file) : file).href;
   // mystmd resolves file paths relative to the current file, or to the project root when they start with `/`.
-  const fileOf = (uri: string, path: string) => (path.startsWith('/') && root ? join(root, path) : join(dirname(fileURLToPath(uri)), path));
+  const fileOf = (uri: string, path: string) => (path.startsWith('/') && root ? join(root, path) : join(dirname(pathOf(uri)), path));
   const locationOf = (t: Target) => {
     const start = { line: t.line - 1, character: 0 };
-    return { uri: toUri(t.file), range: { start, end: start } };
+    return { uri: t.uri ?? toUri(t.file), range: { start, end: start } };
   };
+  // Targets in an open document: its own live parse, or its file's built targets until that's ready.
+  const inDocument = (t: Target, uri: string) => (t.uri ? t.uri === uri : t.file === toFile(uri));
 
   function workspaceFiles(dir = root, pattern = /\.(md|ipynb)$/): string[] {
     if (!dir) return [];
@@ -131,7 +136,7 @@ export function createService(root: string | undefined, project: ReturnType<type
   }
 
   /** Where a label is written. The definition closest to the target's line, since built directives can report a line inside them. */
-  function definitionOf(t: Target, uri = toUri(t.file)) {
+  function definitionOf(t: Target, uri = t.uri ?? toUri(t.file)) {
     const defs = source(uri).split('\n').flatMap((text, line) => {
       const d = labelDefinition(text);
       return d?.target.toLowerCase() === t.identifier ? [{ ...d, line }] : [];
@@ -182,13 +187,13 @@ export function createService(root: string | undefined, project: ReturnType<type
     update(uri: string, text: string) {
       texts.set(uri, text);
       clearTimeout(timers.get(uri));
-      timers.set(uri, setTimeout(() => project.setOpen(toFile(uri), text), 150));
+      timers.set(uri, setTimeout(() => project.setOpen(toFile(uri), text, uri), 150));
     },
 
     close(uri: string) {
       texts.delete(uri);
       clearTimeout(timers.get(uri));
-      project.close(toFile(uri));
+      project.close(uri);
     },
 
     completion({ textDocument, position }: At) {
@@ -228,7 +233,7 @@ export function createService(root: string | undefined, project: ReturnType<type
         case 'link-path':
         case 'path': {
           // mystmd resolves `{doc}`, `[](path)` and directive file arguments relative to the current file. Directives take any file.
-          const here = dirname(fileURLToPath(textDocument.uri));
+          const here = dirname(pathOf(textDocument.uri));
           return workspaceFiles(root, ctx.trigger === 'path' ? /./ : undefined).map((f) => item(relative(here, f), CompletionItemKind.File));
         }
         case 'xref-key':
@@ -284,7 +289,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       return at.context.includeDeclaration ? [definitionOf(t) ?? locationOf(t), ...refs] : refs;
     },
 
-    // Only labels whose definition we can find in the source can be renamed: not implicit heading labels, notebooks, citations or xrefs.
+    // Only labels whose definition we can find in the source can be renamed: not implicit heading labels, closed notebooks, citations or xrefs.
     prepareRename(at: At) {
       const hit = labelAtCursor(at);
       return hit && definitionOf(hit.target) ? hit.range : null;
@@ -344,13 +349,12 @@ export function createService(root: string | undefined, project: ReturnType<type
     documentSymbols({ textDocument }: { textDocument: { uri: string } }) {
       const text = texts.get(textDocument.uri);
       if (text === undefined) return [];
-      const file = toFile(textDocument.uri);
       const lines = text.split('\n');
       const endOf = (line: number) => ({ line, character: lines[line]?.length ?? 0 });
       const top: DocumentSymbol[] = [];
       const open: { depth: number; children: DocumentSymbol[]; symbol?: DocumentSymbol }[] = [{ depth: 0, children: top }];
       const close = (line: number) => { const { symbol } = open.pop()!; if (symbol) symbol.range.end = endOf(line); };
-      for (const t of project.targets().filter((t) => t.file === file)) {
+      for (const t of project.targets().filter((t) => inDocument(t, textDocument.uri))) {
         const at = () => ({ line: t.line - 1, character: 0 });
         const children: DocumentSymbol[] = [];
         const symbol: DocumentSymbol = {
@@ -381,9 +385,8 @@ export function createService(root: string | undefined, project: ReturnType<type
         return message ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message, source: 'myst' }] : [];
       });
       // Labels in this file that are defined more than once in the project. Like mystmd, not implicit heading labels.
-      const file = toFile(uri);
       const explicit = project.loaded ? project.targets().filter((t) => !t.implicit) : [];
-      const duplicates = explicit.filter((t) => t.file === file).flatMap((t) => {
+      const duplicates = explicit.filter((t) => inDocument(t, uri)).flatMap((t) => {
         const others = explicit.filter((o) => o !== t && o.identifier === t.identifier);
         if (!others.length) return [];
         const range = definitionOf(t, uri)?.range ?? rangeOf({ line: t.line - 1, start: 0, end: (texts.get(uri)?.split('\n')[t.line - 1] ?? '').length });

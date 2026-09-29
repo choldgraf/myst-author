@@ -26,6 +26,7 @@
     "@jupyterlab/coreutils": "^6.5.0",
     "@jupyterlab/docmanager": "^4.5.0",
     "@jupyterlab/fileeditor": "^4.5.0",
+    "@jupyterlab/notebook": "^4.5.11",
     "@lezer/highlight": "^1.2.1",
     "@lumino/signaling": "^2.1.0",
     "@lumino/widgets": "^2.7.0",

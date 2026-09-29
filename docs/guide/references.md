@@ -36,7 +36,7 @@ This works for `{doc}` references too.
 
 Put the cursor on a reference or on a label's definition, such as `(my-label)=` or `:label: my-label`, and press {kbd}`Shift+F12` to list every reference to that label in the project.
 Press {kbd}`F2` to rename the label and every reference to it at once.
-Rename only works for labels you wrote yourself, and not for citations, external references, or labels in notebooks.
+Rename only works for labels you wrote yourself, and not for citations, external references, or labels in notebooks that aren't open.
 In the web editor, rename only changes the file you have open; use VS Code to rename across files.
 
 ## Warnings

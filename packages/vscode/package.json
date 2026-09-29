@@ -17,7 +17,8 @@
     "dist"
   ],
   "activationEvents": [
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onNotebook:jupyter-notebook"
   ],
   "contributes": {
     "commands": [
