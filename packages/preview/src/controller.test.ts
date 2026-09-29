@@ -41,6 +41,24 @@ test('sends the build on start, on rebuilds, and on file changes until disposed'
   assert.deepEqual(calls, [['warn', "mystmd didn't start: exited"], ['post', { type: 'built', path: 'guide/a.md', page: null, error: 'mystmd not found' }]]);
 });
 
+test("drops a build that arrives after the host has moved to another file", async () => {
+  const calls: unknown[][] = [];
+  let path = 'a.md';
+  let finishA = () => {};
+  const server = {
+    page: (p: string) => new Promise((resolve) => (p === 'a.md' ? (finishA = () => resolve({ location: '/a' })) : resolve({ location: '/b' }))),
+    watch: () => () => {},
+  };
+  const preview = new PreviewController({ ...host(calls), current: () => ({ path, text: '', dirty: false }) }, Promise.resolve(server as any));
+  await tick();
+  path = 'b.md';
+  preview.sendFile();
+  await tick();
+  finishA();
+  await tick();
+  assert.deepEqual(calls.filter((c: any) => c[1].type === 'built').at(-1), ['post', { type: 'built', path: 'b.md', page: { location: '/b' } }]);
+});
+
 test('follows preview links to files, labels, and slugs', async () => {
   const calls: unknown[][] = [];
   const server = { fileForSlug: (slug: string) => ({ '': 'index.md', c: 'guide/c.md' })[slug], page: async () => null, watch: () => () => {} };
