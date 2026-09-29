@@ -42,6 +42,9 @@ They're read on startup.
 **Other features**
 
 - **Hover** and **go to definition** on references.
+- **Find references** and **rename** for labels, from a reference or from the label's definition (`(label)=`, `:label:`, `$$ (label)`).
+  Both search the project's `.md` files on disk, using unsaved text for open documents.
+  Rename edits every reference and the definition; it isn't offered for citations, external references, notebooks, or headings without an explicit label.
 - **Diagnostics**: warns about references to unknown targets.
   These are only reported with a content server, once the project has loaded.
 - **Inlay hints**: the resolved text after each reference, e.g. `Figure 1` or `(1)`.

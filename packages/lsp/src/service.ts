@@ -1,11 +1,11 @@
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { CompletionItemKind, DiagnosticSeverity, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position } from 'vscode-languageserver';
+import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
 import { directives, roles } from '@myst-author/preview/parse';
 import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import type { createProject } from './project.ts';
-import { optionAt, refAt, refsInText, type Ref } from './syntax.ts';
+import { labelDefinition, optionAt, refAt, refsInText, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
 import { loadProject, readReferences, resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
 
@@ -37,7 +37,7 @@ export const semanticTokensLegend = {
   tokenModifiers: ['heading', 'figure', 'table', 'equation', 'code', 'quote', 'paragraph', 'proof', 'exercise', 'admonition', 'page', 'citation'],
 };
 
-const rangeOf = (ref: Ref) => ({ start: { line: ref.line, character: ref.start }, end: { line: ref.line, character: ref.end } });
+const rangeOf = (ref: Pick<Ref, 'line' | 'start' | 'end'>) => ({ start: { line: ref.line, character: ref.start }, end: { line: ref.line, character: ref.end } });
 
 type At = { textDocument: { uri: string }; position: Position };
 
@@ -102,6 +102,49 @@ export function createService(root: string | undefined, project: ReturnType<type
   const refs = (uri: string) => refsInText(texts.get(uri) ?? '');
   const refAtCursor = ({ textDocument, position: { line, character } }: At) =>
     refs(textDocument.uri).find((r) => r.line === line && r.start <= character && character <= r.end);
+
+  // Open documents' unsaved text, else the file on disk.
+  const source = (uri: string) => {
+    try {
+      return texts.get(uri) ?? readFileSync(fileURLToPath(uri), 'utf8');
+    } catch {
+      return '';
+    }
+  };
+  const isLabel = (ref: Ref) => ref.kind !== 'doc' && ref.kind !== 'xref' && !citation(ref);
+
+  /** The project label under the cursor, on a reference or where it's defined, and the span of its name there. */
+  function labelAtCursor(at: At) {
+    const { line, character } = at.position;
+    const ref = refAtCursor(at);
+    const def = labelDefinition(texts.get(at.textDocument.uri)?.split('\n')[line] ?? '');
+    let hit;
+    if (ref) hit = isLabel(ref) ? ref : undefined;
+    else if (def && def.start <= character && character <= def.end) hit = { ...def, line };
+    if (!hit) return;
+    const target = lookup().get(hit.target.trim().toLowerCase());
+    return target && { target, range: rangeOf(hit) };
+  }
+
+  /** Where a label is written. The definition closest to the target's line, since built directives can report a line inside them. */
+  function definitionOf(t: Target) {
+    const uri = toUri(t.file);
+    const defs = source(uri).split('\n').flatMap((text, line) => {
+      const d = labelDefinition(text);
+      return d?.target.toLowerCase() === t.identifier ? [{ ...d, line }] : [];
+    });
+    const d = defs.sort((a, b) => Math.abs(a.line - t.line + 1) - Math.abs(b.line - t.line + 1))[0];
+    return d && { uri, range: rangeOf(d) };
+  }
+
+  /** Every reference to a label in the workspace's Markdown files and open documents. */
+  function labelRefs(identifier: string) {
+    const files = root && existsSync(root) ? workspaceFiles(root, /\.md$/) : [];
+    const uris = new Set([...files.map((f) => pathToFileURL(f).href), ...texts.keys()]);
+    return [...uris].flatMap((uri) =>
+      refsInText(source(uri)).filter((r) => isLabel(r) && r.target.trim().toLowerCase() === identifier).map((r) => ({ uri, range: rangeOf(r) })),
+    );
+  }
 
   /** Options of the enclosing directive (from its mystmd spec), minus ones already set. */
   function optionItems(opt: NonNullable<ReturnType<typeof optionAt>>, line: number): CompletionItem[] {
@@ -216,10 +259,33 @@ export function createService(root: string | undefined, project: ReturnType<type
       return t ? locationOf(t) : null;
     },
 
+    references(at: At & { context: { includeDeclaration: boolean } }) {
+      const t = labelAtCursor(at)?.target;
+      if (!t) return null;
+      const refs = labelRefs(t.identifier);
+      return at.context.includeDeclaration ? [definitionOf(t) ?? locationOf(t), ...refs] : refs;
+    },
+
+    // Only labels whose definition we can find in the source can be renamed: not implicit heading labels, notebooks, citations or xrefs.
+    prepareRename(at: At) {
+      const hit = labelAtCursor(at);
+      return hit && definitionOf(hit.target) ? hit.range : null;
+    },
+
+    rename(at: At & { newName: string }) {
+      const hit = labelAtCursor(at);
+      const def = hit && definitionOf(hit.target);
+      if (!def) return null;
+      if (!/^[^\s()<>`{}[\]]+$/.test(at.newName)) throw new ResponseError(ErrorCodes.InvalidParams, `\`${at.newName}\` isn't a valid label`);
+      const changes: Record<string, TextEdit[]> = {};
+      for (const { uri, range } of [def, ...labelRefs(hit.target.identifier)]) (changes[uri] ??= []).push({ range, newText: at.newName });
+      return { changes };
+    },
+
     inlayHints({ textDocument }: { textDocument: { uri: string } }) {
       const targets = lookup();
       return refs(textDocument.uri).flatMap((ref) => {
-        const t = ref.kind !== 'doc' && ref.kind !== 'xref' && !citation(ref) && find(targets, ref);
+        const t = isLabel(ref) && find(targets, ref);
         // An xref link without text renders with the remote title, so show that.
         const label = t ? hint(t) : ref.kind === 'xref' && !ref.text && xrefEntry(ref)?.title;
         return label ? [{ position: { line: ref.line, character: ref.after }, label, paddingLeft: true }] : [];
