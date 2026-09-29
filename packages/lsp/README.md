@@ -31,6 +31,7 @@ It's used to list files for path completion and to read `myst.yml` for external 
 | `@`, `[@` | citation keys and reference targets |
 | `` {cite}` `` | citation keys |
 | `` {doc}` ``, `[](` | files, relative to the current file |
+| ```` ```{figure} ````, `{image}`, `{include}`, `{literalinclude}` argument | any file, relative to the current file |
 | ```` ```{ ````, `:::{` | directive names |
 | `{` | role names |
 | `:` on a line inside a directive's options | that directive's options, skipping ones already set |
@@ -42,11 +43,16 @@ They're read on startup.
 **Other features**
 
 - **Hover** and **go to definition** on references.
+- **Hover** on directive names, directive options, and role names: the docs from mystmd's specs.
+- **File arguments** of `figure`, `image`, `include`, and `literalinclude`: document links, go to definition, and a warning when the file doesn't exist.
+  Like mystmd, paths are relative to the current file, or to the project root when they start with `/`.
+  URLs, notebook cells (`#id`), and `.*` wildcards aren't checked.
 - **Find references** and **rename** for labels, from a reference or from the label's definition (`(label)=`, `:label:`, `$$ (label)`).
   Both search the project's `.md` files on disk, using unsaved text for open documents.
   Rename edits every reference and the definition; it isn't offered for citations, external references, notebooks, or headings without an explicit label.
-- **Diagnostics**: warns about references to unknown targets.
+- **Diagnostics**: warns about references to unknown targets, and labels defined more than once in the project.
   These are only reported with a content server, once the project has loaded.
+  Like mystmd, headings without an explicit label can share a name.
 - **Inlay hints**: the resolved text after each reference, e.g. `Figure 1` or `(1)`.
 - **Semantic tokens**: each reference is a `label` token, with its target's kind as a modifier (`label.figure`, `label.table`, `label.equation`, `label.heading`, ...), or `label.citation` for citations.
   The kinds are `semanticTokensLegend` in `src/service.ts`.

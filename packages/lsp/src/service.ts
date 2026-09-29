@@ -5,15 +5,17 @@ import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, ResponseError, Sema
 import { directives, roles } from '@myst-author/preview/parse';
 import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import type { createProject } from './project.ts';
-import { labelDefinition, optionAt, refAt, refsInText, type Ref } from './syntax.ts';
+import { labelDefinition, nameAt, optionAt, refAt, refsInText, type Ref } from './syntax.ts';
 import type { Target } from './index-targets.ts';
 import { loadProject, readReferences, resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
 
 // The same directives and roles as the preview's parser.
 const names = (specs: { name: string; alias?: string[] }[]) => specs.flatMap((s) => [s.name, ...(s.alias ?? [])]);
+const byName = <T extends { name: string; alias?: string[] }>(specs: T[]) => new Map(specs.flatMap((s) => names([s]).map((n) => [n, s])));
 const directiveNames = names(directives);
-const directiveSpecs = new Map(directives.flatMap((d) => names([d]).map((n) => [n, d])));
+const directiveSpecs = byName(directives);
 const roleNames = names(roles);
+const roleSpecs = byName(roles);
 
 /** "Figure 1", "Equation (1)", "Section" */
 function title(t: Target) {
@@ -66,6 +68,8 @@ export function createService(root: string | undefined, project: ReturnType<type
   const bibLocation = (e: BibEntry) => ({ uri: pathToFileURL(e.file).href, range: { start: { line: e.line, character: 0 }, end: { line: e.line, character: 0 } } });
 
   const toUri = (file: string) => pathToFileURL(root ? resolve(root, file) : file).href;
+  // mystmd resolves file paths relative to the current file, or to the project root when they start with `/`.
+  const fileOf = (uri: string, path: string) => (path.startsWith('/') && root ? join(root, path) : join(dirname(fileURLToPath(uri)), path));
   const locationOf = (t: Target) => {
     const start = { line: t.line - 1, character: 0 };
     return { uri: toUri(t.file), range: { start, end: start } };
@@ -111,7 +115,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       return '';
     }
   };
-  const isLabel = (ref: Ref) => ref.kind !== 'doc' && ref.kind !== 'xref' && !citation(ref);
+  const isLabel = (ref: Ref) => ref.kind !== 'doc' && ref.kind !== 'path' && ref.kind !== 'xref' && !citation(ref);
 
   /** The project label under the cursor, on a reference or where it's defined, and the span of its name there. */
   function labelAtCursor(at: At) {
@@ -127,8 +131,7 @@ export function createService(root: string | undefined, project: ReturnType<type
   }
 
   /** Where a label is written. The definition closest to the target's line, since built directives can report a line inside them. */
-  function definitionOf(t: Target) {
-    const uri = toUri(t.file);
+  function definitionOf(t: Target, uri = toUri(t.file)) {
     const defs = source(uri).split('\n').flatMap((text, line) => {
       const d = labelDefinition(text);
       return d?.target.toLowerCase() === t.identifier ? [{ ...d, line }] : [];
@@ -144,6 +147,19 @@ export function createService(root: string | undefined, project: ReturnType<type
     return [...uris].flatMap((uri) =>
       refsInText(source(uri)).filter((r) => isLabel(r) && r.target.trim().toLowerCase() === identifier).map((r) => ({ uri, range: rangeOf(r) })),
     );
+  }
+
+  /** mystmd's docs for the directive, directive option, or role name under the cursor. */
+  function specHover({ textDocument, position }: At) {
+    const n = nameAt((texts.get(textDocument.uri) ?? '').split('\n'), position.line, position.character);
+    if (!n) return null;
+    const spec: { doc?: string; arg?: { doc?: string } } | undefined =
+      n.kind === 'option'
+        ? Object.entries(directiveSpecs.get(n.directive)?.options ?? {}).find(([k, o]) => k === n.name || o.alias?.includes(n.name))?.[1]
+        : (n.kind === 'directive' ? directiveSpecs : roleSpecs).get(n.name);
+    const doc = [spec?.doc, spec?.arg?.doc && `**Argument**: ${spec.arg.doc}`].filter(Boolean).join('\n\n');
+    const name = n.kind === 'option' ? `:${n.name}:` : `{${n.name}}`;
+    return doc ? { contents: { kind: 'markdown' as const, value: `**${name}**\n\n${doc}` } } : null;
   }
 
   /** Options of the enclosing directive (from its mystmd spec), minus ones already set. */
@@ -209,10 +225,11 @@ export function createService(root: string | undefined, project: ReturnType<type
             .filter((t) => (ctx.trigger === 'numref' ? t.enumerator : ctx.trigger === 'eq' ? t.kind === 'equation' : true))
             .map(labelItem);
         case 'doc':
-        case 'link-path': {
-          // mystmd resolves both `{doc}` and `[](path)` relative to the current file.
+        case 'link-path':
+        case 'path': {
+          // mystmd resolves `{doc}`, `[](path)` and directive file arguments relative to the current file. Directives take any file.
           const here = dirname(fileURLToPath(textDocument.uri));
-          return workspaceFiles().map((f) => item(relative(here, f), CompletionItemKind.File));
+          return workspaceFiles(root, ctx.trigger === 'path' ? /./ : undefined).map((f) => item(relative(here, f), CompletionItemKind.File));
         }
         case 'xref-key':
           return Object.entries(xrefs).flatMap(([key, p]) => [
@@ -238,13 +255,14 @@ export function createService(root: string | undefined, project: ReturnType<type
 
     hover(at: At) {
       const ref = refAtCursor(at);
-      if (ref?.kind === 'xref') {
+      if (!ref) return specHover(at);
+      if (ref.kind === 'xref') {
         const e = xrefEntry(ref);
         return e ? { contents: { kind: 'markdown' as const, value: `**${e.title || e.name || e.page || e.url}** · ${e.kind}\n\n${e.url}` } } : null;
       }
-      const c = ref && citation(ref);
+      const c = citation(ref);
       if (c) return { contents: { kind: 'markdown' as const, value: `**${authorYear(c) || c.key}** · ${relative(root ?? '', c.file)}\n\n${c.title ?? ''}` } };
-      const t = ref && find(lookup(), ref);
+      const t = find(lookup(), ref);
       if (!t) return null;
       return { contents: { kind: 'markdown' as const, value: `**${title(t)}** · ${t.file}\n\n${t.text}` } };
     },
@@ -252,7 +270,7 @@ export function createService(root: string | undefined, project: ReturnType<type
     definition(at: At) {
       const ref = refAtCursor(at);
       if (!ref) return null;
-      if (ref.kind === 'doc') return { uri: pathToFileURL(join(dirname(fileURLToPath(at.textDocument.uri)), ref.target)).href, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } };
+      if (ref.kind === 'doc' || ref.kind === 'path') return { uri: pathToFileURL(fileOf(at.textDocument.uri, ref.target)).href, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } };
       const c = citation(ref);
       if (c) return bibLocation(c);
       const t = find(lookup(), ref);
@@ -296,7 +314,7 @@ export function createService(root: string | undefined, project: ReturnType<type
       const targets = lookup();
       const builder = new SemanticTokensBuilder();
       for (const ref of refs(textDocument.uri)) {
-        if (ref.kind === 'doc') continue; // a file path, not a label
+        if (ref.kind === 'doc' || ref.kind === 'path') continue; // a file path, not a label
         const kind = ref.kind === 'xref' ? xrefEntry(ref)?.kind : citation(ref) ? 'citation' : find(targets, ref)?.kind;
         const i = semanticTokensLegend.tokenModifiers.indexOf(kind ?? '');
         builder.push(ref.line, ref.start, ref.end - ref.start, 0, i < 0 ? 0 : 1 << i);
@@ -306,6 +324,8 @@ export function createService(root: string | undefined, project: ReturnType<type
 
     documentLinks({ textDocument }: { textDocument: { uri: string } }) {
       return refs(textDocument.uri).flatMap((ref) => {
+        const file = ref.kind === 'path' && fileOf(textDocument.uri, ref.target);
+        if (file && existsSync(file)) return [{ range: rangeOf(ref), target: pathToFileURL(file).href }];
         const e = ref.kind === 'xref' && xrefEntry(ref);
         return e ? [{ range: rangeOf(ref), target: e.url }] : [];
       });
@@ -351,14 +371,26 @@ export function createService(root: string | undefined, project: ReturnType<type
 
     diagnostics(uri: string): Diagnostic[] {
       const targets = lookup();
-      return refs(uri).flatMap((ref) => {
+      const problems = refs(uri).flatMap((ref) => {
         const message = ref.kind === 'xref' ? xrefProblem(ref)
+          : ref.kind === 'path' ? (existsSync(fileOf(uri, ref.target)) ? undefined : `File not found: \`${ref.target}\``)
           // Citation keys are only checked when every .bib file was read, and DOIs (`@10.1234/x`) resolve without one.
           : ref.kind === 'cite' ? (project.loaded && bib.complete && !citation(ref) && !find(targets, ref) && !/^10\.\d+\//.test(ref.target) ? `Unknown citation or reference target \`${ref.target}\`` : undefined)
           : ref.kind !== 'doc' && project.loaded && !find(targets, ref) ? `Unknown reference target \`${ref.target}\``
           : undefined;
         return message ? [{ severity: DiagnosticSeverity.Warning, range: rangeOf(ref), message, source: 'myst' }] : [];
       });
+      // Labels in this file that are defined more than once in the project. Like mystmd, not implicit heading labels.
+      const file = toFile(uri);
+      const explicit = project.loaded ? project.targets().filter((t) => !t.implicit) : [];
+      const duplicates = explicit.filter((t) => t.file === file).flatMap((t) => {
+        const others = explicit.filter((o) => o !== t && o.identifier === t.identifier);
+        if (!others.length) return [];
+        const range = definitionOf(t, uri)?.range ?? rangeOf({ line: t.line - 1, start: 0, end: (texts.get(uri)?.split('\n')[t.line - 1] ?? '').length });
+        const message = `Duplicate label \`${t.identifier}\`, also defined in ${[...new Set(others.map((o) => o.file))].join(', ')}`;
+        return [{ severity: DiagnosticSeverity.Warning, range, message, source: 'myst' }];
+      });
+      return [...problems, ...duplicates];
     },
   };
 }

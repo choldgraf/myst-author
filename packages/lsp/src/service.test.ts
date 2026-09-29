@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -122,4 +122,35 @@ test('rename a label from its definition, and not citations or unknown labels', 
   service.update(uri('b.md'), '{doc}`a.md` @nope');
   assert.equal(service.prepareRename({ textDocument: { uri: uri('b.md') }, position: { line: 0, character: 7 } }), null);
   assert.equal(service.prepareRename({ textDocument: { uri: uri('b.md') }, position: { line: 0, character: 14 } }), null);
+});
+
+test('hover shows mystmd docs for directives, options and roles, but references come first', () => {
+  const service = createService(root, stubProject(), () => {});
+  service.update(uri, '```{include} x.md\n:language: python\n```\n{kbd}`Ctrl` {numref}`fig-built`\n');
+  const hover = (line: number, character: number) => service.hover({ textDocument: { uri }, position: { line, character } })?.contents.value;
+  assert.match(hover(0, 5)!, /^\*\*\{include\}\*\*\n\nAllows you to include .*\n\n\*\*Argument\*\*: The file path/);
+  assert.match(hover(1, 3)!, /^\*\*:language:\*\*\n\nThe language of the code/);
+  assert.match(hover(3, 2)!, /^\*\*\{kbd\}\*\*/);
+  assert.match(hover(3, 26)!, /^\*\*Figure 2\*\*/);
+});
+
+test('directive file arguments: links, completion, and a warning when missing', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'lsp-'));
+  mkdirSync(join(dir, 'img'));
+  writeFileSync(join(dir, 'img', 'plot.png'), '');
+  const service = createService(dir, stubProject(), () => {});
+  const doc = pathToFileURL(join(dir, 'index.md')).href;
+  service.update(doc, '```{figure} img/plot.png\n```\n```{image} /img/plot.png\n```\n```{include} missing.md\n```\n```{figure} ');
+  const png = pathToFileURL(join(dir, 'img', 'plot.png')).href;
+  assert.deepEqual(service.documentLinks({ textDocument: { uri: doc } }).map((l) => l.target), [png, png]);
+  assert.deepEqual(service.diagnostics(doc).map((d) => d.message), ['File not found: `missing.md`']);
+  assert.deepEqual((service.completion({ textDocument: { uri: doc }, position: { line: 6, character: 12 } }) as any[]).map((i) => i.label), ['img/plot.png']);
+});
+
+test('duplicate labels are flagged, but not implicit heading labels', () => {
+  const heading = (file: string, line: number) => ({ identifier: 'examples', kind: 'heading', text: 'Examples', file, line, implicit: true });
+  const targets = [{ ...built, file: 'index.md', line: 2 }, built, heading('index.md', 4), heading('other.md', 1)];
+  const service = createService(root, { loaded: true, targets: () => targets, setOpen() {}, close() {} }, () => {});
+  service.update(uri, '(fig-built)=\n# Built\n\n## Examples\n');
+  assert.deepEqual(service.diagnostics(uri).map((d) => [d.message, d.range.start.line, d.range.start.character]), [['Duplicate label `fig-built`, also defined in chapter/plots.md', 0, 1]]);
 });

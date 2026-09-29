@@ -25,6 +25,7 @@ See {numref}\`fig-logo\` and {ref}\`missing\`.
 test('server completes, hints and diagnoses over stdio', async (t) => {
   const root = mkdtempSync(join(tmpdir(), 'lsp-'));
   writeFileSync(join(root, 'other.md'), '# Other\n');
+  writeFileSync(join(root, 'a.png'), '');
   const uri = pathToFileURL(join(root, 'index.md')).href;
 
   const child = spawn(process.execPath, [new URL('server.ts', import.meta.url).pathname, '--stdio']);

@@ -1,6 +1,6 @@
 // Pure, line-based recognition of MyST reference syntax. Character offsets are 0-based.
 
-export type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'link-hash' | 'link-path' | 'xref-key' | 'xref-target' | 'directive' | 'role' | 'cite' | 'at';
+export type Trigger = 'ref' | 'numref' | 'eq' | 'doc' | 'link-hash' | 'link-path' | 'xref-key' | 'xref-target' | 'directive' | 'role' | 'cite' | 'at' | 'path';
 
 /**
  * What the cursor is inside: `prefix` is the text typed so far, `start`/`end` the span a completion replaces.
@@ -12,8 +12,12 @@ export type RefContext = { trigger: Trigger; prefix: string; start: number; end:
  * A reference in the text. `start`/`end` span the target; `after` is just past the closing delimiter.
  * `text` is the link text of an `xref:` link (undefined for autolinks).
  * `cite` is a `{cite}` key or an `@key`, which may be a citation or a label.
+ * `path` is the file argument of a `figure`, `image`, `include` or `literalinclude` directive (not URLs, `#cell` ids, or `.*` wildcards).
  */
-export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'link' | 'xref' | 'cite'; target: string; line: number; start: number; end: number; after: number; text?: string };
+export type Ref = { kind: 'ref' | 'numref' | 'eq' | 'doc' | 'link' | 'xref' | 'cite' | 'path'; target: string; line: number; start: number; end: number; after: number; text?: string };
+
+// The start of a directive whose argument is a file path.
+const fileDirective = /^(\s*(?:`{3,}|:{3,})\{(?:figure|image|include|literalinclude)\}\s+)/;
 
 // Each pattern matches the text before the cursor; the last group is the prefix.
 const contexts: [RegExp, Trigger | null][] = [
@@ -25,6 +29,7 @@ const contexts: [RegExp, Trigger | null][] = [
   [/\]\(#([^)\s]*)$/, 'link-hash'],
   [/<#([^>\s]*)$/, 'link-hash'],
   [/\]\(([^)\s#]*)$/, 'link-path'],
+  [new RegExp(fileDirective.source + /(\S*)$/.source), 'path'],
   [/^\s*(?:`{3,}|:{3,})\{([\w:-]*)$/, 'directive'],
   [/\{([\w:-]*)$/, 'role'],
 ];
@@ -43,6 +48,19 @@ export function optionAt(lines: string[], line: number, character: number) {
   if (!directive) return null;
   const rest = lines[line].slice(character).match(/^[\w-]*/)![0];
   return { directive, used, prefix: m[1], start: character - m[1].length, end: character + rest.length };
+}
+
+/** The directive name, directive option, or role name under the cursor, for hover docs. `directive` is an option's directive. */
+export function nameAt(lines: string[], line: number, character: number) {
+  const text = lines[line] ?? '';
+  const d = text.match(/^(\s*(?:`{3,}|:{3,})\{)([\w:-]+)\}/);
+  if (d && d[1].length <= character && character <= d[0].length - 1) return { kind: 'directive' as const, name: d[2] };
+  const o = text.match(/^(\s*:)([\w-]+):/);
+  const opt = o && character >= o[1].length && character <= o[0].length - 1 && optionAt(lines, line, o[1].length);
+  if (opt) return { kind: 'option' as const, name: o[2], directive: opt.directive };
+  for (const m of text.matchAll(/\{([\w:-]+)\}`/g)) {
+    if (m.index < character && character <= m.index + m[1].length + 1) return { kind: 'role' as const, name: m[1] };
+  }
 }
 
 export function refAt(lineText: string, character: number): RefContext | null {
@@ -82,6 +100,12 @@ export function refsInText(text: string): Ref[] {
     const top = fences.at(-1);
     if (f && top && f[1][0] === top.fence[0] && f[1].length >= top.fence.length && !f[2]) return void fences.pop();
     if (top?.code) return;
+    // A directive's file argument; mystmd also accepts URLs, notebook cells (`#id`) and `.*` wildcards, which aren't files.
+    const p = raw.match(new RegExp(fileDirective.source + /(.*\S)/.source));
+    if (p && !/^(\w+:|#)|\*/.test(p[2])) {
+      const end = p[1].length + p[2].length;
+      refs.push({ kind: 'path', target: p[2], line, start: p[1].length, end, after: end });
+    }
     if (f) return void fences.push({ fence: f[1], code: /^\{(code|code-block|code-cell)\}/.test(f[2]) || (f[1][0] !== ':' && !f[2].startsWith('{')) });
     const lineText = maskInlineCode(raw);
     for (const [re, kind] of refPatterns) {
