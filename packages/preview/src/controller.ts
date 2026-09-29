@@ -31,22 +31,22 @@ export type PreviewHost = {
 /** The host side of the preview page (`./page`): sends it the current file and its build, and answers its messages. */
 export class PreviewController {
   private host: PreviewHost;
-  private server?: ContentServer | null; // undefined while mystmd starts, null if it isn't available
+  private server?: ContentServer | Error; // undefined while mystmd starts, the error if it didn't
   private stop?: () => void;
   private disposed = false;
 
-  /** `server` resolves to mystmd's content server once it's up, or to null without mystmd. */
-  constructor(host: PreviewHost, server: Promise<ContentServer | null>) {
+  /** `server` resolves to mystmd's content server once it's up, or rejects like `startMyst`'s `ready` (with `mystmdMissing` without mystmd). */
+  constructor(host: PreviewHost, server: Promise<ContentServer>) {
     this.host = host;
     server
-      .catch((err) => {
-        host.warn(`mystmd didn't start: ${err.message}`);
-        return null;
+      .catch((err: Error) => {
+        if (err.message !== mystmdMissing) host.warn(`mystmd didn't start: ${err.message}`);
+        return err;
       })
       .then((s) => {
         if (this.disposed) return;
         this.server = s;
-        this.stop = s?.watch(() => this.sendBuilt());
+        if (!(s instanceof Error)) this.stop = s.watch(() => this.sendBuilt());
         this.sendBuilt();
       });
   }
@@ -78,7 +78,7 @@ export class PreviewController {
     } else if (m.type === 'reveal') {
       this.host.open(file.path, m.line - 1);
     } else if (m.type === 'follow') {
-      await followLink({ ...this.host, fileForSlug: (slug) => this.server?.fileForSlug(slug) }, file.path, m.href, m.line);
+      await followLink({ ...this.host, fileForSlug: (slug) => (this.server instanceof Error ? undefined : this.server?.fileForSlug(slug)) }, file.path, m.href, m.line);
     }
   }
 
@@ -90,7 +90,7 @@ export class PreviewController {
   private async sendBuilt() {
     const path = (await this.host.current())?.path;
     if (path === undefined || this.server === undefined) return;
-    if (this.server === null) return this.host.post({ type: 'built', path, page: null, error: mystmdMissing });
+    if (this.server instanceof Error) return this.host.post({ type: 'built', path, page: null, error: this.server.message });
     const built = await this.server.built(path);
     // A slow fetch for a file the host has since left must not replace the new file's build.
     if ((await this.host.current())?.path === path) this.host.post({ type: 'built', ...built });
