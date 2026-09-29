@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createConnection, NotebookDocuments, ProposedFeatures, TextDocuments, TextDocumentSyncKind, type WorkDoneProgressServerReporter } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { startMyst } from './myst.ts';
+import { startMyst } from '@myst-author/mystmd/start';
 import { createProject } from './project.ts';
 import { createService, semanticTokensLegend } from './service.ts';
 

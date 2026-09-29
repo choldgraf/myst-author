@@ -8,9 +8,14 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 ## Packages
 
+`packages/mystmd` (`@myst-author/mystmd`)
+: Talks to mystmd, without React, so the preview and the language server share it.
+  `@myst-author/mystmd/start` runs `myst start --headless`.
+  `@myst-author/mystmd/built` reads built page JSON from its *content server*, the local HTTP server that `myst start --headless` runs.
+  `@myst-author/mystmd/parse` parses a single page with mystmd's parser and transforms, and lists the directives and roles it knows.
+
 `packages/preview` (`@myst-author/preview`)
-: Parses a MyST page in the browser with mystmd's parser and transforms, and renders it with `myst-to-react`.
-  Also loads mystmd's built page JSON for the built preview.
+: Renders a MyST page with `myst-to-react`, from the fast in-browser parse or mystmd's built page.
   Each rendered block keeps its source line range, which is what click-to-source and scroll sync use.
   `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews embed.
   `@myst-author/preview/controller` is their host side: it sends the page the current file and answers its clicks.
@@ -19,8 +24,8 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 `packages/lsp` (`@myst-author/lsp`)
 : A language server for MyST references: completion, hover, go to definition, warnings, hints, and external references.
   It indexes mystmd's built pages plus the unsaved text of open files.
-  It reads them from the *content server*, the local HTTP server that `myst start --headless` runs to serve built page JSON.
-  It also has the browser client for it (`@myst-author/lsp/client`), used by the web app and JupyterLab, and the launcher for `myst start --headless` (`@myst-author/lsp/myst`).
+  It reads them from mystmd's content server.
+  It also has the browser client for it (`@myst-author/lsp/client`), used by the web app and JupyterLab, and the arguments hosts start it with (`@myst-author/lsp/args`).
   See its [README](https://github.com/choldgraf/myst-author/tree/main/packages/lsp).
 
 `packages/codemirror-lang-myst`

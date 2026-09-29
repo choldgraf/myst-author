@@ -1,5 +1,5 @@
-import { contentServer } from '@myst-author/preview/built';
-import { parseMyst } from '@myst-author/preview/parse';
+import { contentServer } from '@myst-author/mystmd/built';
+import { parseMyst } from '@myst-author/mystmd/parse';
 import { targetsFromTree, type Target } from './index-targets.ts';
 
 /**

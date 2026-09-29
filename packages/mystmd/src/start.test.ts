@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mystmdMissing } from '@myst-author/preview/built';
-import { startMyst } from './myst.ts';
+import { mystmdMissing } from './built.ts';
+import { startMyst } from './start.ts';
 
 test('reports a missing mystmd as mystmdMissing', async () => {
   process.env.MYST_BIN = '/nonexistent/myst';

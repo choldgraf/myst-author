@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process';
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { fileURLToPath } from 'node:url';
-import { lspArgs } from '@myst-author/lsp/myst';
+import { lspArgs } from '@myst-author/lsp/args';
 import { StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node';
 import { WebSocketServer } from 'ws';
 

@@ -1,9 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
-import { contentServer, mystmdMissing } from '@myst-author/preview/built';
+import { contentServer, mystmdMissing } from '@myst-author/mystmd/built';
 import { PreviewController, type PreviewHost } from '@myst-author/preview/controller';
-import type { startMyst } from '@myst-author/lsp/myst';
+import type { startMyst } from '@myst-author/mystmd/start';
 
 // Markdown files, not notebook cells (which are Markdown documents too).
 const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.document.languageId === 'markdown' && e.document.uri.scheme === 'file';
