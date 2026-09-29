@@ -16,7 +16,7 @@ node src/server.ts --stdio [--myst | --content-server=http://127.0.0.1:3100] [--
   Use it with editors that don't start mystmd themselves, like Neovim.
 - `--root` (optional): the project folder.
   It overrides the client's, so a host that bridges untrusted clients (like the web app's `/lsp`) decides which folder the server reads.
-- Hosts that start mystmd and the server get these arguments from `lspArgs(url, root)` in `@myst-author/lsp/myst`.
+- Hosts that start mystmd and the server get these arguments from `lspArgs(url, root)` in `@myst-author/lsp/args`.
 
 Otherwise the workspace root is the first workspace folder, or `rootUri` if there is none.
 It's used to list files for path completion and to read `myst.yml` for external references.
@@ -68,7 +68,7 @@ They're read on startup.
   Each project's `myst.xref.json` (MyST) or `objects.inv` (Sphinx) is fetched on `initialize`.
   See [External references](https://choldgraf.github.io/myst-author/guide/references#external-references) for how targets are checked.
 
-Open documents are re-parsed live with `@myst-author/preview/parse`, so unsaved labels are available immediately.
+Open documents are re-parsed live with `@myst-author/mystmd/parse`, so unsaved labels are available immediately.
 
 **Notebooks**: each Markdown cell is a document in its notebook's file, with all the features above.
 Clients with notebook sync (VS Code) send cells as they are; other clients (JupyterLab) open each cell as a document `file:///path/nb.ipynb#<cell id>`.
@@ -88,6 +88,6 @@ Find references and rename search open cells, not notebooks on disk.
 - `src/service.ts`: the features (completion, hover, diagnostics, ...) without an LSP connection, so tests can call them directly.
 - `src/server.ts`: the LSP wiring.
 - `src/client/`: the browser client (`@myst-author/lsp/client`), a `@codemirror/lsp-client` over a websocket, with inlay hints.
-- `src/myst.ts`: starts `myst start --headless` (`@myst-author/lsp/myst`).
+- `src/args.ts`: the arguments hosts start the server with (`@myst-author/lsp/args`).
 - `build.mjs`: bundles the server into `dist/server.cjs` with esbuild, which starts faster than the source.
   The VS Code extension builds its copy with the same function.

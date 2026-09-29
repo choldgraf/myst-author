@@ -3,7 +3,7 @@ import { Theme } from '@myst-theme/common';
 import { ArticleProvider, ThemeProvider } from '@myst-theme/providers';
 import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, MyST } from 'myst-to-react';
-import { mystmdMissing, sha256, type Built } from './built.ts';
+import { mystmdMissing, sha256, type Built } from '@myst-author/mystmd/built';
 import { fromBuiltPage, parseMyst, type ParseResult } from './parse.ts';
 
 /**

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { Built } from './built.ts';
+import type { Built } from '@myst-author/mystmd/built';
 import type { FromPage, ToPage } from './controller.ts';
 import { Preview, usePreview } from './Preview.tsx';
 

@@ -2,7 +2,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { CompletionItemKind, DiagnosticSeverity, ErrorCodes, ResponseError, SemanticTokensBuilder, SymbolKind, type CompletionItem, type Diagnostic, type DocumentSymbol, type Position, type TextEdit } from 'vscode-languageserver';
-import { directives, roles } from '@myst-author/preview/parse';
+import { directives, roles } from '@myst-author/mystmd/parse';
 import { authorYear, readBibliography, type BibEntry } from './cite.ts';
 import type { createProject } from './project.ts';
 import { labelDefinition, nameAt, optionAt, refAt, refsInText, type Ref } from './syntax.ts';

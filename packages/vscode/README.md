@@ -59,6 +59,6 @@ After changing any package, rebuild (`node build.mjs`) and reload the window (**
 
 - `build.mjs`: bundles the extension, the language server (with `@myst-author/lsp/build`), and the webview with esbuild.
   It also builds the webview CSS with Tailwind.
-- `src/extension.ts`: starts mystmd (with `@myst-author/lsp/myst`) and the language client.
+- `src/extension.ts`: starts mystmd (with `@myst-author/mystmd/start`) and the language client.
 - `src/preview.ts`: the preview panel (extension side), which connects the editor to `@myst-author/preview/controller`.
 - `src/webview.tsx`: the preview page (webview side), which is `@myst-author/preview/page`.

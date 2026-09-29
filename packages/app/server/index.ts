@@ -5,7 +5,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createProxyServer } from 'http-proxy-3';
 import sirv from 'sirv';
-import { startMyst } from '@myst-author/lsp/myst';
+import { startMyst } from '@myst-author/mystmd/start';
 import { listMarkdown, resolveInside } from './files.ts';
 import { lspBridge } from './lsp.ts';
 

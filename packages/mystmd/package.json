@@ -1,0 +1,30 @@
+{
+  "name": "@myst-author/mystmd",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test src/*.test.ts"
+  },
+  "dependencies": {
+    "js-yaml": "^4.1.0",
+    "myst-common": "^1.10.1",
+    "myst-directives": "^1.7.4",
+    "myst-ext-button": "^0.0.2",
+    "myst-ext-card": "^1.0.9",
+    "myst-ext-exercise": "^1.0.10",
+    "myst-ext-grid": "^1.1.1",
+    "myst-ext-proof": "^1.0.13",
+    "myst-ext-tabs": "^1.0.10",
+    "myst-parser": "^1.7.4",
+    "myst-roles": "^1.7.4",
+    "myst-transforms": "^1.3.51",
+    "unified": "^10.1.2",
+    "unist-util-visit": "^4.1.2",
+    "vfile": "^5.3.7"
+  },
+  "exports": {
+    "./built": "./src/built.ts",
+    "./parse": "./src/parse.ts",
+    "./start": "./src/start.ts"
+  }
+}

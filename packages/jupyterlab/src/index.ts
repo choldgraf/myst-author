@@ -9,7 +9,7 @@ import { INotebookTracker, type NotebookPanel } from '@jupyterlab/notebook';
 import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { connectLsp } from '@myst-author/lsp/client';
-import { contentServer } from '@myst-author/preview/built';
+import { contentServer } from '@myst-author/mystmd/built';
 import { PreviewController } from '@myst-author/preview/controller';
 
 type Editor = IDocumentWidget<FileEditor>;

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseMyst } from '@myst-author/preview/parse';
+import { parseMyst } from '@myst-author/mystmd/parse';
 import { targetsFromTree } from './index-targets.ts';
 
 const doc = `(intro)=

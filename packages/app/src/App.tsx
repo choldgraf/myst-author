@@ -3,7 +3,7 @@ import { EditorView } from 'codemirror';
 import type { DocumentSymbol, SymbolInformation } from 'vscode-languageserver-protocol';
 import { connectLsp } from '@myst-author/lsp/client';
 import { type Built, Preview, usePreview } from '@myst-author/preview';
-import { contentServer } from '@myst-author/preview/built';
+import { contentServer } from '@myst-author/mystmd/built';
 import { followLink } from '@myst-author/preview/controller';
 import { listFiles, readFile, writeFile } from './api.ts';
 import { Editor } from './Editor.tsx';

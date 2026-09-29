@@ -1,7 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createServer, type AddressInfo } from 'node:net';
 import { createInterface } from 'node:readline';
-import { mystmdMissing } from '@myst-author/preview/built';
+import { mystmdMissing } from './built.ts';
 
 /** A port that's free on 127.0.0.1 right now. */
 function freePort(): Promise<number> {
@@ -46,9 +46,3 @@ export async function startMyst(root: string, log = console.log) {
   ready.catch(() => {}); // callers that don't wait for mystmd mustn't crash when it's missing
   return { url: `http://127.0.0.1:${port}`, ready, stop };
 }
-
-/** Language server arguments for a content server and, optionally, a project folder that overrides the client's; hosts pass them when they start the server. */
-export const lspArgs = (contentServer: string | undefined, root?: string) => [
-  ...(contentServer ? [`--content-server=${contentServer}`] : []),
-  ...(root ? [`--root=${root}`] : []),
-];

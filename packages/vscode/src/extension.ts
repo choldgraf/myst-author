@@ -3,7 +3,8 @@ import { basename, dirname, join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
-import { lspArgs, startMyst } from '@myst-author/lsp/myst';
+import { lspArgs } from '@myst-author/lsp/args';
+import { startMyst } from '@myst-author/mystmd/start';
 import { MystPreview } from './preview.ts';
 
 let client: LanguageClient | undefined;
