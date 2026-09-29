@@ -17,14 +17,15 @@ export type HostFile = { path: string; text: string; dirty: boolean; line?: numb
 
 /**
  * What a host editor (VS Code, JupyterLab) provides to the preview.
- * Paths are project-relative with `/` separators, like mystmd's page `location`; `open` takes a 0-based line.
+ * Paths are project-relative with `/` separators (e.g. `docs/intro.md`).
+ * Lines passed to `open` and returned by `findLabel` are 0-based.
  */
 export type PreviewHost = {
   current(): HostFile | undefined | Promise<HostFile | undefined>;
   post(message: ToPage): void; // to the preview page
   open(path: string, line: number): void;
   openExternal(url: string): void;
-  findLabel(id: string): Promise<{ path: string; line: number } | undefined>; // hosts ask their LSP client for `workspace/symbol`
+  findLabel(id: string): Promise<{ path: string; line: number } | undefined>; // hosts use `findLabel` from `@myst-author/lsp/labels`
   warn(message: string): void;
 };
 
@@ -35,7 +36,10 @@ export class PreviewController {
   private stop?: () => void;
   private disposed = false;
 
-  /** `server` resolves to mystmd's content server once it's up, or rejects like `startMyst`'s `ready` (with `mystmdMissing` without mystmd). */
+  /**
+   * `server` resolves to mystmd's content server once it's up, or rejects if mystmd can't start.
+   * Reject with the message `mystmdMissing` when mystmd isn't installed: the preview then shows `no mystmd` instead of a warning.
+   */
   constructor(host: PreviewHost, server: Promise<ContentServer>) {
     this.host = host;
     server

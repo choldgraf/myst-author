@@ -9,7 +9,7 @@ import { labelDefinition, nameAt, optionAt, refAt, refsInText, type Ref } from '
 import type { Target } from './index-targets.ts';
 import { resolveXref, splitXref, type XrefEntry, type XrefProject } from './xref.ts';
 
-// The same directives and roles as the preview's parser.
+// The same directives and roles as mystmd's parser (`@myst-author/mystmd/parse`).
 const names = (specs: { name: string; alias?: string[] }[]) => specs.flatMap((s) => [s.name, ...(s.alias ?? [])]);
 const byName = <T extends { name: string; alias?: string[] }>(specs: T[]) => new Map(specs.flatMap((s) => names([s]).map((n) => [n, s])));
 const directiveNames = names(directives);

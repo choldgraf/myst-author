@@ -23,8 +23,8 @@ The badge in the toolbar tells you which one you're looking at:
 | Badge | Meaning |
 |---|---|
 | `fast preview · unsaved` | The file has unsaved changes, and mystmd only builds saved files. The web editor saves as you type; in JupyterLab and VS Code, save the file to build it. |
-| `fast preview` | You're looking at the fast preview. You see it while mystmd starts, if mystmd stops, and for files mystmd doesn't build (such as files left out of the `toc` in `myst.yml`). |
-| `building…` | Your changes are saved and mystmd is rebuilding. You only see it for files mystmd has built before. |
+| `fast preview` | You're looking at the fast preview. You see it while mystmd starts, if it fails to start or stops, and for files mystmd doesn't build (such as files left out of the `toc` in `myst.yml`). |
+| `building…` | Your changes are saved and mystmd is rebuilding. You only see it for files mystmd has built before; a file's first build shows `fast preview`. |
 | `built ✓` | You're looking at mystmd's build of exactly this text. |
 | `no mystmd` | mystmd isn't installed, so only the fast preview is available. |
 
