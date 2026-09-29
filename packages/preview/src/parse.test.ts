@@ -32,6 +32,14 @@ test('a broken reference produces a message instead of throwing', () => {
   assert.ok(messages.length > 0);
 });
 
+test('embeds show a placeholder until mystmd builds them', () => {
+  const { blocks } = parseMyst('![](#a)\n\n```{embed} #b\n```\n');
+  assert.deepEqual(blocks.map((b) => [b.node.type, b.node.children[0].value]), [
+    ['span', '#a is embedded after mystmd builds'],
+    ['span', '#b is embedded after mystmd builds'],
+  ]);
+});
+
 test('a built page keeps its line ranges, using content positions for directive output', () => {
   const pos = (a: number, b: number) => ({ start: { line: a, column: 1 }, end: { line: b, column: 1 } });
   const text = (l: number) => ({ type: 'paragraph', position: pos(l, l), children: [{ type: 'text', value: 'x' }] });
