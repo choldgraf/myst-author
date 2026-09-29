@@ -12,7 +12,6 @@
     "@myst-author/lsp": "*",
     "@myst-author/preview": "*",
     "@myst-theme/styles": "^1.4.1",
-    "@tailwindcss/typography": "^0.5.20",
     "codemirror": "^6.0.2",
     "codemirror-lang-myst": "*",
     "http-proxy-3": "^2.0.1",
