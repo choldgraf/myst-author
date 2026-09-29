@@ -9,26 +9,46 @@ import { MystPreview } from './preview.ts';
 let client: LanguageClient | undefined;
 let myst: Awaited<ReturnType<typeof startMyst>> | undefined;
 
-export async function activate(context: vscode.ExtensionContext) {
-  const root = projectRoot();
+export function activate(context: vscode.ExtensionContext) {
   const output = vscode.window.createOutputChannel('MyST');
-  context.subscriptions.push(output);
-  myst = root ? await startMyst(root, (line) => output.appendLine(stripVTControlCharacters(line))) : undefined;
-
-  const preview = new MystPreview(context, root, myst);
-  context.subscriptions.push(vscode.commands.registerCommand('mystAuthor.openPreview', () => preview.open()));
-
-  // The LSP loads the whole project once mystmd has built it; until then it knows the open files.
-  client = new LanguageClient(
-    'mystAuthor',
-    'MyST Author',
-    { module: context.asAbsolutePath('dist/lsp.js'), transport: TransportKind.ipc, args: lspArgs(myst?.url) },
-    {
-      documentSelector: [{ scheme: 'file', language: 'markdown' }],
-      workspaceFolder: root ? { uri: vscode.Uri.file(root), name: basename(root), index: 0 } : undefined,
-    },
+  let project: string | undefined;
+  let preview: MystPreview | undefined;
+  context.subscriptions.push(
+    output,
+    vscode.commands.registerCommand('mystAuthor.openPreview', () =>
+      preview ? preview.open() : vscode.window.showInformationMessage('Open a Markdown file in a MyST project (a folder with myst.yml) to preview it.')),
   );
-  await client.start();
+
+  // Start once we see a file in a MyST project: one that's open now, or the next one the user switches to.
+  // Only one project per window: files in a second project still talk to the first project's mystmd.
+  const start = async (uri?: vscode.Uri) => {
+    const root = uri && projectRoot(uri);
+    if (!root || project) return;
+    project = root;
+    watch.forEach((w) => w.dispose());
+    output.appendLine(`Starting mystmd in ${root}`);
+    myst = await startMyst(root, (line) => output.appendLine(stripVTControlCharacters(line)));
+    preview = new MystPreview(context, root, myst);
+
+    // The LSP loads the whole project once mystmd has built it; until then it knows the open files.
+    client = new LanguageClient(
+      'mystAuthor',
+      'MyST Author',
+      { module: context.asAbsolutePath('dist/lsp.js'), transport: TransportKind.ipc, args: lspArgs(myst.url) },
+      {
+        documentSelector: [{ scheme: 'file', language: 'markdown' }],
+        workspaceFolder: { uri: vscode.Uri.file(root), name: basename(root), index: 0 },
+      },
+    );
+    await client.start();
+  };
+  const watch = [
+    vscode.window.onDidChangeActiveTextEditor((e) => isMarkdown(e?.document) && start(e!.document.uri)),
+    vscode.window.onDidChangeActiveNotebookEditor((e) => start(e?.notebook.uri)),
+  ];
+  context.subscriptions.push(...watch);
+  const open = [...vscode.workspace.notebookDocuments.map((d) => d.uri), ...vscode.workspace.textDocuments.filter(isMarkdown).map((d) => d.uri)];
+  start(open.find((uri) => projectRoot(uri)));
 }
 
 export async function deactivate() {
@@ -36,13 +56,12 @@ export async function deactivate() {
   await client?.stop();
 }
 
-/** The folder of the nearest `myst.yml` above the notebook or Markdown file that activated us, if any. */
-function projectRoot() {
-  // In a notebook, the active text editor is a cell, whose URI isn't a file in the workspace.
-  const uri = vscode.window.activeNotebookEditor?.notebook.uri
-    ?? (vscode.window.activeTextEditor?.document ?? vscode.workspace.textDocuments.find((d) => d.languageId === 'markdown'))?.uri;
-  const top = uri && vscode.workspace.getWorkspaceFolder(uri)?.uri.fsPath;
-  if (!uri || !top) return;
+const isMarkdown = (d?: vscode.TextDocument) => d?.languageId === 'markdown' && d.uri.scheme === 'file';
+
+/** The folder of the nearest `myst.yml` above a file, within its workspace folder, if any. */
+function projectRoot(uri: vscode.Uri) {
+  const top = vscode.workspace.getWorkspaceFolder(uri)?.uri.fsPath;
+  if (!top) return;
   for (let dir = dirname(uri.fsPath); ; dir = dirname(dir)) {
     if (existsSync(join(dir, 'myst.yml'))) return dir;
     if (dir === top) return;

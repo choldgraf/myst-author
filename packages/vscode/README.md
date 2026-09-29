@@ -26,8 +26,9 @@ code --install-extension packages/vscode/myst-author.vsix
 
 ## What works
 
-- The extension starts when you open a Markdown file or a notebook.
-  Its project is the folder of the nearest `myst.yml` above that file, and it runs `myst start --headless` there.
+- The extension starts when you open a Markdown file or a notebook in a MyST project, the folder of the nearest `myst.yml` above it.
+  It runs `myst start --headless` there, and uses that project for the rest of the window's session.
+  Files outside a MyST project get no MyST features.
   Set `MYST_BIN` if `myst` isn't on your `PATH`.
 - Without mystmd the extension still runs.
   The language server only knows the open files, and the preview only shows the fast render.
