@@ -12,6 +12,9 @@ export type BuiltPage = {
 /** mystmd's latest build of a file, or why there is none. */
 export type Built = { path: string; page: BuiltPage | null; error?: string };
 
+/** The `error` when mystmd isn't installed; hosts that proxy the content server send it as the error body. */
+export const mystmdMissing = 'mystmd not found';
+
 /** Slugs of every page in a `myst start` project, from its `/config.json`; the index page first. */
 function pageSlugs(config: any): string[] {
   const project = config.projects[0];

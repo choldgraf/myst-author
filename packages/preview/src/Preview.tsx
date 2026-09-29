@@ -3,7 +3,7 @@ import { Theme } from '@myst-theme/common';
 import { ArticleProvider, ThemeProvider } from '@myst-theme/providers';
 import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, MyST } from 'myst-to-react';
-import { sha256, type Built } from './built.ts';
+import { mystmdMissing, sha256, type Built } from './built.ts';
 import { fromBuiltPage, parseMyst, type ParseResult } from './parse.ts';
 
 /**
@@ -23,7 +23,7 @@ export function usePreview(path: string | undefined, text: string, dirty: boolea
   const current = built?.path === path ? built : null;
   const page = current?.page?.sha256 === hash ? current.page : null;
   const result = useMemo(() => (page ? fromBuiltPage(page) : parseMyst(deferred)), [page, deferred]);
-  const badge = current?.error === 'mystmd not found' ? 'no mystmd'
+  const badge = current?.error === mystmdMissing ? 'no mystmd'
     : page ? 'built ✓'
     : current?.page && !dirty ? 'building…'
     : 'fast preview';

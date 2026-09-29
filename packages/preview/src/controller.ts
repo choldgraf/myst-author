@@ -1,4 +1,4 @@
-import type { Built, ContentServer } from './built.ts';
+import { mystmdMissing, type Built, type ContentServer } from './built.ts';
 
 /** Messages from the host to the preview page (`./page`). */
 export type ToPage =
@@ -90,7 +90,7 @@ export class PreviewController {
   private async sendBuilt() {
     const path = (await this.host.current())?.path;
     if (path === undefined || this.server === undefined) return;
-    if (this.server === null) return this.host.post({ type: 'built', path, page: null, error: 'mystmd not found' });
+    if (this.server === null) return this.host.post({ type: 'built', path, page: null, error: mystmdMissing });
     try {
       this.host.post({ type: 'built', path, page: await this.server.page(path) });
     } catch (err) {
