@@ -43,6 +43,8 @@ In the web editor, rename only changes the file you have open; use VS Code to re
 
 A reference to a label that doesn't exist gets a squiggle.
 Hover it to read the warning.
+A label that's defined more than once in your project gets a warning too.
+Headings without an explicit label, like two `## Examples` headings in different files, don't.
 
 ![A warning on a broken reference](../images/diagnostic.png)
 

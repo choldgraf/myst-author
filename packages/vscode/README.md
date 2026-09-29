@@ -45,6 +45,10 @@ code --install-extension packages/vscode/myst-author.vsix
 
 - Syntax highlighting is VS Code's built-in Markdown grammar.
   Install the [MyST-Markdown](https://marketplace.visualstudio.com/items?itemName=ExecutableBookProject.myst-highlight) extension for MyST highlighting.
+- VS Code's built-in Markdown support also suggests `[](#...)` links to headings, as GitHub-style slugs of the heading text.
+  mystmd doesn't use these slugs for headings that have a label, so the links may not resolve.
+  To see only MyST's labels, set `"markdown.suggest.paths.enabled": false` in your workspace settings.
+  MyST Author still completes file paths.
 - mystmd's output goes to the extension host console (**Help → Toggle Developer Tools**).
 - The language server logs to the **MyST Author** output channel.
 

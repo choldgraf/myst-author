@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { optionAt, refAt, refsInText } from './syntax.ts';
+import { nameAt, optionAt, refAt, refsInText } from './syntax.ts';
 
 const at = (line: string) => refAt(line.replace('|', ''), line.indexOf('|'));
 
@@ -69,4 +69,15 @@ test('citations: `@key` and `{cite}` keys, but not emails or URLs', () => {
   assert.deepEqual(at('{cite:p}`a, b|`'), { trigger: 'cite', prefix: 'b', start: 12, end: 13 });
   const refs = refsInText('See @fig-a. [@doe2020, p. 3; -@roe] {cite:t}`a, b` a@b.com https://x.com/@me');
   assert.deepEqual(refs.map((r) => [r.kind, r.target, r.start]), [['cite', 'fig-a', 5], ['cite', 'doe2020', 14], ['cite', 'roe', 31], ['cite', 'a', 45], ['cite', 'b', 48]]);
+});
+
+test('directive file arguments, and names to hover', () => {
+  assert.equal(at('```{figure} img/pl|')?.trigger, 'path');
+  const text = '```{figure} img/a b.png\n```\n:::{include} /x.md\n:::\n```{image} https://x.org/a.png\n```\n```{figure} #cell\n```\n```md\n```{image} c.png\n```\n```';
+  assert.deepEqual(refsInText(text).map((r) => [r.kind, r.target, r.line, r.start, r.end]), [['path', 'img/a b.png', 0, 12, 23], ['path', '/x.md', 2, 13, 18]]);
+  const lines = ['```{figure} a.png', ':width: 50%', 'See {numref}`x`', '```'];
+  assert.deepEqual(nameAt(lines, 0, 5), { kind: 'directive', name: 'figure' });
+  assert.deepEqual(nameAt(lines, 1, 3), { kind: 'option', name: 'width', directive: 'figure' });
+  assert.deepEqual(nameAt(lines, 2, 6), { kind: 'role', name: 'numref' });
+  assert.equal(nameAt(lines, 2, 14), undefined);
 });

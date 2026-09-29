@@ -1,7 +1,7 @@
 import type { GenericNode } from 'myst-common';
 
-/** Something a reference can point at. `line` is 1-based, as in mdast positions. `depth` is a heading's level. */
-export type Target = { identifier: string; kind: string; text: string; enumerator?: string; file: string; line: number; depth?: number };
+/** Something a reference can point at. `line` is 1-based, as in mdast positions. `depth` is a heading's level. `implicit` labels are made by mystmd, e.g. from a heading's text. */
+export type Target = { identifier: string; kind: string; text: string; enumerator?: string; file: string; line: number; depth?: number; implicit?: boolean };
 
 const targetTypes = new Set(['heading', 'container', 'math', 'code', 'table', 'paragraph', 'proof', 'exercise', 'admonition']);
 
@@ -18,6 +18,7 @@ export function targetsFromTree(tree: GenericNode, file: string): Target[] {
         file,
         line: lineOf(node) ?? 1,
         depth: node.type === 'heading' ? node.depth : undefined,
+        implicit: node.implicit,
       });
     }
     node.children?.forEach(walk);
