@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
 import { createConnection, ProposedFeatures, TextDocuments, TextDocumentSyncKind } from 'vscode-languageserver/node';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { createProject } from './project.ts';
@@ -9,6 +10,7 @@ import { createService } from './service.ts';
 const connection = createConnection(ProposedFeatures.all);
 const documents = new TextDocuments(TextDocument);
 let service: ReturnType<typeof createService>;
+const args = parseArgs({ strict: false, options: { 'content-server': { type: 'string' }, root: { type: 'string' } } }).values as { 'content-server'?: string; root?: string };
 
 connection.onInitialize((params) => {
   const folder = params.workspaceFolders?.[0]?.uri ?? params.rootUri;
@@ -17,7 +19,8 @@ connection.onInitialize((params) => {
     documents.all().forEach(({ uri }) => connection.sendDiagnostics({ uri, diagnostics: service.diagnostics(uri) }));
     if (refreshHints) connection.languages.inlayHint.refresh();
   };
-  service = createService(folder ? fileURLToPath(folder) : undefined, createProject(params.initializationOptions?.contentServer, refresh), refresh);
+  const root = args.root ?? (folder ? fileURLToPath(folder) : undefined);
+  service = createService(root, createProject(args['content-server'], refresh), refresh);
   return {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,

@@ -1,7 +1,8 @@
 import { spawn } from 'node:child_process';
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
+import { lspArgs } from '@myst-author/lsp/myst';
 import { StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc/node';
 import { WebSocketServer } from 'ws';
 
@@ -12,7 +13,7 @@ const serverScript = fileURLToPath(import.meta.resolve(process.env.NODE_ENV === 
 export function lspBridge(root: string, contentServer: string) {
   const wss = new WebSocketServer({ noServer: true });
   wss.on('connection', (ws) => {
-    const child = spawn(process.execPath, [serverScript, '--stdio'], { stdio: ['pipe', 'pipe', 'inherit'] });
+    const child = spawn(process.execPath, [serverScript, '--stdio', ...lspArgs(contentServer, root)], { stdio: ['pipe', 'pipe', 'inherit'] });
     const stop = () => child.kill();
     process.on('exit', stop);
     child.on('exit', () => { process.off('exit', stop); ws.close(); });
@@ -21,15 +22,7 @@ export function lspBridge(root: string, contentServer: string) {
 
     const writer = new StreamMessageWriter(child.stdin);
     new StreamMessageReader(child.stdout).listen((msg) => ws.send(JSON.stringify(msg)));
-    // The browser doesn't know the project's path or the content server, so fill them in on `initialize`.
-    ws.on('message', (data) => {
-      const msg = JSON.parse(String(data));
-      if (msg.method === 'initialize') {
-        msg.params.rootUri = pathToFileURL(root).href;
-        msg.params.initializationOptions = { ...msg.params.initializationOptions, contentServer };
-      }
-      writer.write(msg);
-    });
+    ws.on('message', (data) => writer.write(JSON.parse(String(data))));
   });
   return (req: IncomingMessage, socket: Duplex, head: Buffer) =>
     wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
