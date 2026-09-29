@@ -31,3 +31,8 @@ See [Get started](https://choldgraf.github.io/myst-author/get-started) for more 
 ## Documentation
 
 See [the documentation](https://choldgraf.github.io/myst-author/) to get started, take the guided tour, and learn how the pieces fit together.
+
+## Development workflow
+
+A lot of this has been written with the assistance of Claude Opus 5.5.
+This is partially because the main goal of this repo is to create a proof of concept, see what is possible, and see what opportunities there are for upstreaming pieces that need more attention and care.
