@@ -18,9 +18,11 @@
     "unist-util-visit": "^4.1.2"
   },
   "peerDependencies": {
+    "@codemirror/language": "^6.0.0",
     "@codemirror/lint": "^6.0.0",
     "@codemirror/state": "^6.0.0",
     "@codemirror/view": "^6.0.0",
+    "@lezer/highlight": "^1.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -31,6 +33,7 @@
     "./live": "./src/live.tsx",
     "./page": "./src/page.tsx",
     "./page.css": "./src/page.css",
-    "./tailwind.config.cjs": "./tailwind.config.cjs"
+    "./tailwind.config.cjs": "./tailwind.config.cjs",
+    "./build": "./build.mjs"
   }
 }

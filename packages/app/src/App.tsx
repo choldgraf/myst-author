@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { Compartment } from '@codemirror/state';
-import { tags } from '@lezer/highlight';
 import { EditorView } from 'codemirror';
 import type { DocumentSymbol, SymbolInformation } from 'vscode-languageserver-protocol';
 import { connectLsp } from '@myst-author/lsp/client';
@@ -9,7 +7,7 @@ import { findLabel } from '@myst-author/lsp/labels';
 import { type Built, Preview, usePreview } from '@myst-author/preview';
 import { contentServer } from '@myst-author/mystmd/built';
 import { followLink } from '@myst-author/preview/controller';
-import { livePreview, showBuilt } from '@myst-author/preview/live';
+import { livePreview, pageLook, showBuilt } from '@myst-author/preview/live';
 import { listFiles, projectRoot, readFile, writeFile } from './api.ts';
 import { Editor } from './Editor.tsx';
 import { myst } from 'codemirror-lang-myst';
@@ -21,16 +19,8 @@ type Lsp = ReturnType<typeof connectLsp>;
 // The host server proxies the content server under myst/ (relative, like every app URL).
 const content = contentServer('myst');
 // Live preview in the editor, switched on and off without remounting it.
-// It reads like the page: a centred column, a proportional font (code stays monospace), and no gutters.
 const liveMode = new Compartment();
-const liveExtensions = [
-  livePreview(),
-  EditorView.theme({
-    '.cm-content': { maxWidth: '46rem', margin: '0 auto', padding: '2.5rem 1.5rem 30vh', fontFamily: 'system-ui, sans-serif', lineHeight: '1.6' },
-    '.cm-gutters': { display: 'none' },
-  }),
-  syntaxHighlighting(HighlightStyle.define([{ tag: tags.monospace, fontFamily: 'monospace' }])),
-];
+const liveExtensions = [livePreview(), pageLook];
 
 export function App() {
   const [files, setFiles] = useState<string[]>([]);

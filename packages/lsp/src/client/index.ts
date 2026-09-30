@@ -2,17 +2,28 @@ import { jumpToDefinition, languageServerExtensions, LSPClient, type Transport }
 import { EditorView } from '@codemirror/view';
 import { inlayHints } from './inlayHints.ts';
 
-/** A websocket transport that buffers messages until the socket opens. */
-function transport(ws: WebSocket): Transport {
+/**
+ * A transport over any message channel, such as a webview's postMessage.
+ * `post` sends a message; `listen` registers the one function that receives them.
+ */
+export function messageTransport(post: (message: string) => void, listen: (receive: (message: string) => void) => void): Transport {
   let handlers: ((message: string) => void)[] = [];
-  const pending: string[] = [];
-  ws.onopen = () => pending.splice(0).forEach((m) => ws.send(m));
-  ws.onmessage = (e) => handlers.forEach((h) => h(e.data));
+  listen((m) => handlers.forEach((h) => h(m)));
   return {
-    send: (m) => (ws.readyState === WebSocket.OPEN ? ws.send(m) : pending.push(m)),
+    send: post,
     subscribe: (h) => handlers.push(h),
     unsubscribe: (h) => (handlers = handlers.filter((x) => x !== h)),
   };
+}
+
+/** A websocket transport that buffers messages until the socket opens. */
+function socketTransport(ws: WebSocket) {
+  const pending: string[] = [];
+  ws.onopen = () => pending.splice(0).forEach((m) => ws.send(m));
+  return messageTransport(
+    (m) => (ws.readyState === WebSocket.OPEN ? ws.send(m) : pending.push(m)),
+    (receive) => (ws.onmessage = (e) => receive(e.data)),
+  );
 }
 
 /**
@@ -21,7 +32,7 @@ function transport(ws: WebSocket): Transport {
  */
 function keepConnected(client: LSPClient, url: string, delay = 1000) {
   const ws = new WebSocket(url);
-  client.connect(transport(ws));
+  client.connect(socketTransport(ws));
   client.initializing.then(() => (delay = 1000), () => ws.close());
   ws.addEventListener('close', () => {
     client.disconnect(); // a fresh `initializing` promise; requests made meanwhile wait for the next connection
@@ -42,16 +53,18 @@ const definitionClick = EditorView.domEventHandlers({
 });
 
 /**
- * Connect to the language server's websocket at `url` (relative to the page; http(s) means ws(s)).
+ * Connect to the language server at `server`: a websocket URL relative to the page (http(s) means ws(s)),
+ * or a transport when the host relays messages itself (see `messageTransport`).
  * Document URIs are built under `root`, a `file://` URI chosen by the host.
  */
-export function connectLsp(url: string, root: string) {
+export function connectLsp(server: string | Transport, root: string) {
   const client = new LSPClient({
     rootUri: root,
     timeout: 20000, // the host starts a language server process per connection, which can take seconds on a busy host (e.g. Binder)
     extensions: [inlayHints(), ...languageServerExtensions(), { editorExtension: definitionClick }], // inlayHints first: serverDiagnostics consumes the notification
   });
-  keepConnected(client, new URL(url, location.href).href.replace(/^http/, 'ws'));
+  if (typeof server === 'string') keepConnected(client, new URL(server, location.href).href.replace(/^http/, 'ws'));
+  else client.connect(server);
   return {
     client,
     uri: (path: string) => `${root}/${path.split('/').map(encodeURIComponent).join('/')}`,
