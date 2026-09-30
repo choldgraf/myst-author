@@ -20,6 +20,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
   Each rendered block keeps its source line range, which is what click-to-source and scroll sync use.
   `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews embed.
   `@myst-author/preview/controller` runs in the extension and drives that page: it sends the current file and handles clicks.
+  `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block with the cursor.
   Each extension implements its `PreviewHost` interface to open files and look up labels.
 
 `packages/lsp` (`@myst-author/lsp`)

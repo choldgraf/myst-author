@@ -3,4 +3,5 @@ _build/
 .DS_Store
 dist/
 __pycache__
+.ipynb_checkpoints/
 *.vsix

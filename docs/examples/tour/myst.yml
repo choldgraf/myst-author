@@ -5,7 +5,9 @@ project:
     python: https://docs.python.org/3/
   toc:
     - file: index.md
+    - file: live.md
     - file: references.md
     - file: directives.md
+    - file: notebook.ipynb
 site:
   template: book-theme

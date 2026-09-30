@@ -52,7 +52,11 @@ npm run serve -- docs/examples/tour
 
 The VS Code extension: see [VS Code](../guide/vscode.md) to run it, and the [Develop section of its README](https://github.com/choldgraf/myst-author/tree/main/packages/vscode#develop) for rebuilding after changes.
 
-The JupyterLab extension: see [JupyterLab](../guide/jupyterlab.md).
+The JupyterLab extension, built and running in JupyterLab (see [JupyterLab](../guide/jupyterlab.md)):
+
+```bash
+npm run lab -- docs/examples/tour
+```
 
 The language server on its own, for any LSP client:
 

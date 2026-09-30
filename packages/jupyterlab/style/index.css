@@ -1,0 +1,2 @@
+/* KaTeX's fonts for live preview: its blocks render in shadow roots, which ignore @font-face. KaTeX's other rules only match its own classes. */
+@import 'katex/dist/katex.min.css';

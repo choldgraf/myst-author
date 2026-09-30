@@ -1,10 +1,29 @@
 ---
 title: Preview
-description: The fast and built previews, the badge, click-to-source, scroll sync, and following links.
+description: Live preview in the editor, the fast and built previews, the badge, click-to-source, scroll sync, and following links.
 ---
 
-The preview shows the open file as a MyST page.
-Use the **Preview** button in the toolbar to show or hide it.
+There are two ways to see the open file as a MyST page:
+
+- **Live** renders it inside the editor. It's on by default.
+- **Preview** shows it in a pane beside the editor.
+
+Use the buttons in the toolbar to turn each one on or off.
+
+## Live preview
+
+With **Live** on, each block (a paragraph, heading, directive, or equation) shows rendered, and the block with the cursor shows its Markdown.
+To edit a block, click it or move into it with the arrow keys.
+The cursor lands on the text you clicked.
+
+- Tabs, dropdowns, and buttons in a rendered block work without opening its source.
+- A block with a warning, such as a broken reference, has an orange bar on its left. Open it to see the warning.
+- Blocks render like the [fast preview](preview.md#fast-and-built-previews), so embeds and references to other pages show grey placeholders until mystmd has built your latest saved text.
+  In a notebook, cells show the build while the notebook is saved.
+
+Live preview works in the web editor and in JupyterLab, where it also covers notebooks' Markdown cells while you edit them.
+In JupyterLab, turn it on or off with **MyST: Live Preview** in the Command Palette.
+VS Code shows the preview beside the editor instead.
 
 ## Fast and built previews
 

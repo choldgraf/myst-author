@@ -8,12 +8,13 @@ title: References
 This links back to [the figure on the first page](#fig-logo), and this to {ref}`tour-basics`.
 
 :::{tip} Try this: go to the definition
-Cmd-click (or Ctrl-click) `fig-logo` in the source above.
+Click the paragraph above to show its Markdown, then Cmd-click (or Ctrl-click) `fig-logo`.
 The editor opens `index.md` at the figure.
 :::
 
 :::{tip} Try this: follow a link in the preview
-In the preview, a plain click on a link jumps to its source line.
+Open the preview with **Preview** in the toolbar.
+There, a plain click on a link jumps to its source line.
 Cmd-click (or Ctrl-click) the link instead to open the page it points to.
 :::
 
@@ -25,9 +26,9 @@ The following references point to labels that don't exist:
 - An embed: ![](#foo)
 
 :::{tip} Try this: fix it
-The reference above has a squiggle.
-Hover it to read the warning, then change `tour-missing` to `tour-references`.
-The warning goes away.
+The list above has an orange bar, because its references are broken.
+Click it to see the squiggles, hover one to read the warning, then change the first `foo` to `tour-references`.
+That warning goes away.
 :::
 
 ## External references
@@ -45,4 +46,4 @@ Hover the finished link to see the URL it resolves to.
 
 ## Next
 
-The last page, [](directives.md), covers directives.
+The next page, [](directives.md), covers directives.

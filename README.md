@@ -4,7 +4,7 @@
 [![Launch on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/choldgraf/myst-author/main?urlpath=lab/tree/docs/examples/tour/index.md)
 
 An editor for [MyST](https://mystmd.org) projects.
-You edit Markdown on the left and see the rendered page on the right.
+You write Markdown and see it rendered in place, with the block you're editing showing its source.
 Cross-references are completed and checked as you type, across the whole project.
 
 ![The editor: a file list, the Markdown source with reference hints, and the rendered preview](docs/images/editor.png)

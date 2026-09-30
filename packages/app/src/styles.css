@@ -1,23 +1,50 @@
 @import '@myst-theme/styles/app.css';
 @import 'katex/dist/katex.min.css';
 
+:root {
+  --text: #1f2328;
+  --muted: #6e7681;
+  --line: #ebebed;
+  --panel: #f8f8f9;
+  --hover: #efeff1;
+  --accent: #4f46e5;
+  --accent-soft: #eef0fe;
+  --radius: 6px;
+}
+
 html, body, #root { height: 100%; margin: 0; }
-.layout { display: flex; flex-direction: column; height: 100%; font-family: system-ui, sans-serif; }
-.toolbar { display: flex; gap: 0.5rem; align-items: center; padding: 0.25rem 0.75rem; border-bottom: 1px solid #ddd; font-size: 0.85rem; }
-.toolbar button { padding: 0.1rem 0.5rem; border: 1px solid #ccc; border-radius: 4px; background: #fafafa; }
-.toolbar button:hover { background: #eee; }
-.toolbar .status { margin-left: auto; color: #888; }
+.layout { display: flex; flex-direction: column; height: 100%; font: 14px/1.4 system-ui, -apple-system, sans-serif; color: var(--text); background: white; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+/* Toolbar: quiet text buttons, the file name in the middle, the view toggles on the right. */
+.toolbar { display: flex; align-items: center; gap: 0.25rem; height: 2.75rem; padding: 0 0.75rem; border-bottom: 1px solid var(--line); }
+.toolbar button { border: 0; background: none; padding: 0.3rem 0.6rem; border-radius: var(--radius); color: var(--muted); }
+.toolbar button:hover, .toolbar button[aria-pressed='true'] { background: var(--hover); color: var(--text); }
+.toolbar kbd { margin-left: 0.3rem; padding: 0 0.3rem; border: 1px solid var(--line); border-radius: 4px; font: 11px system-ui, sans-serif; color: var(--muted); }
+.toolbar .title { flex: 1; min-width: 0; overflow: hidden; text-align: center; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.toolbar .status { margin-left: 0.5rem; font-size: 12px; font-weight: 400; color: var(--muted); }
+.toolbar .badge { margin-right: 0.5rem; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.toggles { display: flex; padding: 2px; border-radius: calc(var(--radius) + 2px); background: var(--panel); border: 1px solid var(--line); }
+.toggles button { padding: 0.15rem 0.65rem; }
+.toggles button[aria-pressed='true'] { background: white; box-shadow: 0 1px 2px #0000001f; }
+
 .panes { flex: 1; display: flex; min-height: 0; }
-.files { width: 14rem; overflow: auto; border-right: 1px solid #ddd; padding: 0.5rem 0; font-size: 0.85rem; }
-.files button { display: block; width: 100%; text-align: left; padding: 0.15rem 0.75rem; }
-.files button[aria-current='true'] { background: #eef; }
-.files .dir, .switcher .dir { color: #999; }
+.files { width: 13rem; overflow: auto; padding: 0.75rem 0.5rem; background: var(--panel); border-right: 1px solid var(--line); }
+.files button { display: block; width: 100%; overflow: hidden; padding: 0.3rem 0.6rem; border: 0; border-radius: var(--radius); background: none; text-align: left; text-overflow: ellipsis; white-space: nowrap; }
+.files button:hover { background: var(--hover); }
+.files button[aria-current='true'] { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.files .dir, .switcher .dir { color: var(--muted); font-weight: 400; }
 .editor { flex: 1; min-width: 0; overflow: hidden; }
 .editor .cm-editor { height: 100%; }
-.preview { flex: 1; min-width: 0; overflow: auto; padding: 1rem 2rem; border-left: 1px solid #ddd; }
+.editor .cm-editor.cm-focused { outline: none; }
+.preview { flex: 1; min-width: 0; overflow: auto; padding: 1.5rem 2rem; border-left: 1px solid var(--line); }
+/* Positioned, so KaTeX's hidden MathML scrolls with the pane instead of making the page taller. */
+.preview { position: relative; }
 .preview [data-line-start]:hover { outline: 1px dashed #ccd; cursor: pointer; }
-.switcher { position: fixed; inset: 15% 0 auto; margin: auto; width: 30rem; background: white; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 8px 30px #0003; }
-.switcher input { width: 100%; padding: 0.5rem 0.75rem; border: 0; border-bottom: 1px solid #ddd; outline: none; }
-.switcher li { padding: 0.25rem 0.75rem; cursor: pointer; }
-.switcher li[aria-selected='true'] { background: #eef; }
-.toolbar .badge { padding: 0 0.4rem; border: 1px solid #ccc; border-radius: 999px; color: #666; }
+
+/* Quick switcher (Cmd+P) */
+.switcher { position: fixed; inset: 12% 0 auto; width: min(34rem, 90vw); margin: auto; overflow: hidden; background: white; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 24px 60px #00000029; }
+.switcher input { box-sizing: border-box; width: 100%; padding: 0.9rem 1rem; border: 0; border-bottom: 1px solid var(--line); outline: none; font: 15px system-ui, sans-serif; }
+.switcher ul { max-height: 50vh; overflow: auto; margin: 0; padding: 0.35rem; list-style: none; }
+.switcher li { padding: 0.4rem 0.65rem; border-radius: var(--radius); cursor: pointer; }
+.switcher li[aria-selected='true'] { background: var(--accent-soft); }

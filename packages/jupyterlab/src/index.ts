@@ -1,5 +1,6 @@
 import type { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { ICommandPalette, MainAreaWidget } from '@jupyterlab/apputils';
+import { Compartment } from '@codemirror/state';
 import type { CodeMirrorEditor } from '@jupyterlab/codemirror';
 import { PageConfig, PathExt, URLExt } from '@jupyterlab/coreutils';
 import { IDocumentManager } from '@jupyterlab/docmanager';
@@ -10,8 +11,10 @@ import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { connectLsp } from '@myst-author/lsp/client';
 import { findLabel } from '@myst-author/lsp/labels';
-import { contentServer } from '@myst-author/mystmd/built';
+import { contentServer, sha256 } from '@myst-author/mystmd/built';
 import { PreviewController } from '@myst-author/preview/controller';
+import { livePreview, showBuilt } from '@myst-author/preview/live';
+import liveCss from '../dist/live.css'; // the preview's CSS, for live blocks' shadow roots (see build.mjs)
 
 type Editor = IDocumentWidget<FileEditor>;
 type Lsp = ReturnType<typeof connectLsp>;
@@ -22,6 +25,13 @@ const serverOrigin = new URL(server, location.href).origin;
 // Jupyter's root folder as a file:// URI (set by jupyter-lsp, which ships with JupyterLab), to map Lab paths to document URIs.
 // The server's `/lsp` bridge starts the language server with the project folder, which overrides this root.
 const jupyterRoot = PageConfig.getOption('rootUri').replace(/\/$/, '');
+
+const content = contentServer(server + 'myst');
+// Live preview in Markdown editors and notebook Markdown cells. Blocks render in shadow roots, so the preview's CSS can't restyle Lab.
+// Blocks read at Lab's content size, like its rendered Markdown, rather than the preview's 16px.
+const live = livePreview({ css: `${liveCss}\n.article { font-size: var(--jp-content-font-size1); line-height: var(--jp-content-line-height) }` });
+const liveMode = new Compartment();
+let liveOn = true;
 
 const isMarkdown = (w: Editor | null): w is Editor => !!w && w.context.path.endsWith('.md');
 const cm = (w: Editor) => w.content.editor as CodeMirrorEditor;
@@ -75,30 +85,83 @@ const plugin: JupyterFrontEndPlugin<void> = {
         await w?.context.ready;
         return w ? cm(w).editor : null;
       };
-      const attach = (w: Editor) => isMarkdown(w) && cm(w).injectExtension(l.client.plugin(l.uri(w.context.path), 'markdown'));
-      tracker.forEach(attach);
-      tracker.widgetAdded.connect((_, w) => attach(w));
-
-      // Each Markdown cell is a document `<notebook URI>#<cell id>`.
-      // Attach to every cell, not just the one being edited: once a notebook has open cells, the server only knows their labels.
-      // ponytail: a cell is attached once it first renders, so with Lab's `full` windowing mode, off-screen cells wait until they're scrolled to.
-      const attached = new WeakSet<object>();
-      const attachCells = (nb: NotebookPanel) =>
-        nb.content.widgets.forEach(async (cell) => {
-          if (cell.model.type !== 'markdown' || attached.has(cell)) return;
-          attached.add(cell);
-          await cell.ready;
-          (cell.editor as CodeMirrorEditor).injectExtension(l.client.plugin(`${l.uri(nb.context.path)}#${cell.model.id}`, 'markdown'));
-        });
-      const watch = (nb: NotebookPanel) =>
-        nb.context.ready.then(() => {
-          attachCells(nb);
-          // Changing a cell's type replaces its widget, so this also catches cells that become Markdown.
-          nb.content.model?.cells.changed.connect(() => attachCells(nb));
-        });
-      notebooks.forEach(watch);
-      notebooks.widgetAdded.connect((_, nb) => watch(nb));
     }, (err) => console.warn(`MyST Author: no language features from ${server} (${err})`));
+    // The project folder, relative to Jupyter's root.
+    const project = Promise.all([lsp, fetch(server + 'api/root').then((r) => r.json())]).then(([l, { uri }]) => l.path(uri) ?? '', () => '');
+
+    // Live preview, and the language client once it connects. `uri` is the editor's document URI.
+    const attachEditor = (editor: CodeMirrorEditor, uri: (l: Lsp) => string) => {
+      editor.injectExtension(liveMode.of(liveOn ? live : []));
+      lsp.then((l) => editor.injectExtension(l.client.plugin(uri(l), 'markdown')), () => {});
+    };
+
+    // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.
+    const sendBuilt = async (w: Editor) => {
+      const text = w.content.model.sharedModel.getSource();
+      const { page } = await content.built(PathExt.relative(await project, w.context.path));
+      if (page && page.sha256 === (await sha256(text))) cm(w).editor.dispatch({ effects: showBuilt.of({ page, text }) });
+    };
+
+    const attach = async (w: Editor) => {
+      if (!isMarkdown(w)) return;
+      attachEditor(cm(w), (l) => l.uri(w.context.path));
+      await w.context.ready;
+      sendBuilt(w);
+    };
+    tracker.forEach(attach);
+    tracker.widgetAdded.connect((_, w) => attach(w));
+
+    // Each Markdown cell is a document `<notebook URI>#<cell id>`.
+    // Attach to every cell, not just the one being edited: once a notebook has open cells, the server only knows their labels.
+    // ponytail: a cell is attached once it first renders, so with Lab's `full` windowing mode, off-screen cells wait until they're scrolled to.
+    const attached = new WeakSet<object>();
+    const attachCells = (nb: NotebookPanel) =>
+      Promise.all(nb.content.widgets.map(async (cell) => {
+        if (cell.model.type !== 'markdown' || attached.has(cell)) return false;
+        attached.add(cell);
+        await cell.ready;
+        attachEditor(cell.editor as CodeMirrorEditor, (l) => `${l.uri(nb.context.path)}#${cell.model.id}`);
+        return true;
+      })).then((added) => added.includes(true) && sendBuiltCells(nb));
+
+    // A notebook's build has one block per cell, and no hash to compare with, so cells use it while the notebook is saved: that's what mystmd built.
+    const sendBuiltCells = async (nb: NotebookPanel) => {
+      const { page } = await content.built(PathExt.relative(await project, nb.context.path));
+      const blocks = page?.mdast.children ?? [];
+      if (!page || nb.context.model.dirty || blocks.length !== nb.content.widgets.length) return;
+      nb.content.widgets.forEach((cell, i) => {
+        if (!attached.has(cell) || !cell.editor) return;
+        const cellPage = { ...page, mdast: { type: 'root', children: blocks[i].children ?? [] } };
+        (cell.editor as CodeMirrorEditor).editor.dispatch({ effects: showBuilt.of({ page: cellPage, text: cell.model.sharedModel.getSource() }) });
+      });
+    };
+    content.watch(() => {
+      tracker.forEach((w) => isMarkdown(w) && sendBuilt(w));
+      notebooks.forEach(sendBuiltCells);
+    });
+    const watch = (nb: NotebookPanel) =>
+      nb.context.ready.then(() => {
+        attachCells(nb);
+        // Changing a cell's type replaces its widget, so this also catches cells that become Markdown.
+        nb.content.model?.cells.changed.connect(() => attachCells(nb));
+        // Cell widgets can appear after the notebook is ready; a cell is always active before it's edited.
+        nb.content.activeCellChanged.connect(() => attachCells(nb));
+      });
+    notebooks.forEach(watch);
+    notebooks.widgetAdded.connect((_, nb) => watch(nb));
+
+    const toggleLive = 'myst-author:toggle-live-preview';
+    app.commands.addCommand(toggleLive, {
+      label: 'MyST: Live Preview',
+      isToggled: () => liveOn,
+      execute: () => {
+        liveOn = !liveOn;
+        const effects = liveMode.reconfigure(liveOn ? live : []);
+        tracker.forEach((w) => isMarkdown(w) && cm(w).editor.dispatch({ effects }));
+        notebooks.forEach((nb) => nb.content.widgets.forEach((cell) => attached.has(cell) && (cell.editor as CodeMirrorEditor | null)?.editor.dispatch({ effects })));
+      },
+    });
+    palette?.addItem({ command: toggleLive, category: 'MyST' });
 
     let preview: MainAreaWidget<MystPreview> | undefined;
     const command = 'myst-author:open-preview';
@@ -106,7 +169,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       label: 'MyST: Open Preview to the Side',
       execute: () => {
         if (preview && !preview.isDisposed) return app.shell.activateById(preview.id);
-        preview = new MainAreaWidget({ content: new MystPreview(tracker, docs, lsp) });
+        preview = new MainAreaWidget({ content: new MystPreview(tracker, docs, lsp, project) });
         preview.id = 'myst-author-preview';
         app.shell.add(preview, 'main', { mode: 'split-right', ref: tracker.currentWidget?.id });
       },
@@ -120,7 +183,6 @@ const plugin: JupyterFrontEndPlugin<void> = {
 class MystPreview extends Widget {
   private iframe = document.createElement('iframe');
   private editor: Editor | null = null;
-  private project: Promise<string>; // the project folder, relative to Jupyter's root
   private preview = new PreviewController({
     current: async () => {
       const w = this.editor;
@@ -136,14 +198,12 @@ class MystPreview extends Widget {
       return path != null ? { path: PathExt.relative(await this.project, path), line: s!.line } : undefined;
     },
     warn: (message) => console.warn(`MyST Author: ${message}`),
-  }, Promise.resolve(contentServer(server + 'myst')));
+  }, Promise.resolve(content));
 
-  constructor(private tracker: IEditorTracker, private docs: IDocumentManager, private lsp: Promise<Lsp>) {
+  constructor(private tracker: IEditorTracker, private docs: IDocumentManager, private lsp: Promise<Lsp>, private project: Promise<string>) {
     super();
     this.title.label = 'MyST Preview';
     this.title.closable = true;
-    const root = fetch(server + 'api/root').then((r) => r.json());
-    this.project = Promise.all([lsp, root]).then(([l, { uri }]) => l.path(uri) ?? '', () => '');
     this.iframe.src = server + 'preview.html';
     this.iframe.style.cssText = 'width: 100%; height: 100%; border: 0';
     this.node.appendChild(this.iframe);

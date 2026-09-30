@@ -10,20 +10,28 @@ The tour uses a little MyST syntax for [cross-references](https://mystmd.org/gui
 A line like `(tour-basics)=` sets a label on the heading below it, and a figure's `:label:` option sets one on the figure.
 Roles like `{ref}`, `{numref}`, and `{eq}` link to a label.
 
+[](#eq-live)
+
+![](#eq-live)
+
 (tour-basics)=
 ## The basics
 
-The editor is on the left and the preview is on the right.
+The editor shows each block rendered, and the block with your cursor shows its Markdown.
 Changes save automatically about half a second after you stop typing.
 
-:::{tip} Try this: watch the preview
-Change a word in this sentence and watch the preview update.
+:::{tip} Try this: edit a block
+Click a word in this sentence and change it.
+Click outside the box and it renders again.
 The badge in the top right says `fast preview` while you type and `built ✓` once mystmd has rebuilt the page.
+
+[](#tour-basics)
+
 :::
 
-:::{tip} Try this: click the preview
-Click any paragraph in the preview.
-The editor jumps to the line it came from.
+:::{tip} Try this: open the preview
+Click **Preview** in the toolbar to see the whole page beside the editor.
+Click any paragraph in the preview: the editor jumps to the line it came from.
 :::
 
 (tour-figure)=
@@ -36,6 +44,8 @@ The editor jumps to the line it came from.
 The MyST logo.
 ```
 
+
+(euler)
 $$e^{i\pi}+1=0$$ (euler)
 
 {numref}`fig-logo` shows the logo and {eq}`euler` is Euler's identity.
@@ -46,7 +56,7 @@ Put your cursor at the end of this sentence, type `` {numref}` ``, and pick `fig
 :::
 
 :::{tip} Try this: hover a reference
-Hover over `fig-logo` in the reference above to see what it points to.
+Click the paragraph above to show its Markdown, then hover over `fig-logo` to see what it points to.
 :::
 
 :::{tip} Try this: jump around the page
@@ -56,5 +66,5 @@ In VS Code, open the **Outline** view instead.
 
 ## Next
 
-The next page, [](references.md), covers links between pages.
+The next page, [](live.md), shows what live preview does.
 Press {kbd}`Cmd+P` (or {kbd}`Ctrl+P`) to open it by name.

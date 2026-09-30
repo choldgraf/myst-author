@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fromBuiltPage, parseMyst } from './parse.ts';
+import { fromBuiltPage, parseMyst, spans, withSourceLines } from './parse.ts';
 
 const md = [
   '---', 'title: Hi', '---',          // 1-3
@@ -25,6 +25,29 @@ test('top-level blocks keep their source line ranges', () => {
     [['heading', 4, 4], ['paragraph', 6, 6], ['container', 8, 11], ['math', 13, 13]],
   );
   assert.deepEqual(messages, []);
+});
+
+test('spans: the titled frontmatter, and each block with the label lines above it', () => {
+  const result = parseMyst(md);
+  assert.deepEqual(
+    spans(result, md.split('\n')).map((s) => [s.start, s.end, s.blocks.map((b) => b.node.type)]),
+    [[1, 3, []], [4, 4, ['heading']], [5, 6, ['paragraph']], [8, 11, ['container']], [13, 13, ['math']]],
+  );
+});
+
+test('withSourceLines: built blocks take the lines of the fast parse, or null if the blocks differ', () => {
+  const fast = parseMyst(md);
+  const built = { ...fast, blocks: fast.blocks.map((b) => ({ ...b, start: 1, end: 1 })) };
+  assert.deepEqual(withSourceLines(built, fast)!.blocks.map((b) => [b.start, b.end]), fast.blocks.map((b) => [b.start, b.end]));
+  assert.equal(withSourceLines({ ...built, blocks: built.blocks.slice(1) }, fast), null);
+});
+
+test('@label resolves to a label on the page, like [](#label)', () => {
+  const para = parseMyst('```{figure} a.png\n:label: fig-a\nCap\n```\n\nSee @fig-a and [](#fig-a).\n').blocks[1].node;
+  const text = (n: any): string => n.value ?? (n.children ?? []).map(text).join('');
+  const refs = para.children.filter((c: any) => c.type !== 'text');
+  // mystmd puts a non-breaking space before the number.
+  assert.deepEqual(refs.map((c: any) => [c.type, text(c)]), [['crossReference', 'Figure\u00a01'], ['crossReference', 'Figure\u00a01']]);
 });
 
 test('a broken reference produces a message instead of throwing', () => {
