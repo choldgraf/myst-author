@@ -189,6 +189,9 @@ export function livePreview({ css }: { css?: string } = {}): Extension {
   return [liveField, arrows, theme, shadowStyles.of(sheet)];
 }
 
+/** Where the body starts, after any frontmatter. Editors start the cursor there, so live preview shows the page title rendered. */
+export const bodyStart = (text: string) => /^---\n[\s\S]*?\n---\n/.exec(text)?.[0].length ?? 0;
+
 /**
  * Live preview that reads like the page: a centred column, a proportional font (code stays monospace), and no gutters.
  * The web app and the VS Code live editor use it; JupyterLab keeps Lab's editor look.

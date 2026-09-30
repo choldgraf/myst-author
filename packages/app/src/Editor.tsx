@@ -2,6 +2,7 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { markdown } from '@codemirror/lang-markdown';
 import type { Extension } from '@codemirror/state';
 import { basicSetup, EditorView } from 'codemirror';
+import { bodyStart } from '@myst-author/preview/live';
 
 type Props = {
   initial: string;
@@ -10,9 +11,6 @@ type Props = {
   viewRef: RefObject<EditorView | null>;
   extensions: Extension;
 };
-
-// The cursor starts after any frontmatter, so live preview shows the page title rendered.
-const bodyStart = (text: string) => /^---\n[\s\S]*?\n---\n/.exec(text)?.[0].length ?? 0;
 
 /** CodeMirror editor. Remount (via `key`) to load a different file; callbacks must be stable. */
 export function Editor({ initial, onChange, onTopLine, viewRef, extensions }: Props) {

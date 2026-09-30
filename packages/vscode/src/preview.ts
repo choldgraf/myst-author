@@ -68,19 +68,7 @@ export class MystPreview {
       { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [dist] },
     );
     const { webview } = panel;
-    const src = (file: string) => webview.asWebviewUri(vscode.Uri.joinPath(dist, file));
-    const nonce = randomBytes(16).toString('base64');
-    // Built pages load images from the content server, plus any remote images the author links to.
-    const csp = `default-src 'none'; img-src ${webview.cspSource} ${new URL(assets).origin} https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
-    webview.html = `<!DOCTYPE html>
-<html><head>
-<meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="${csp}">
-<link rel="stylesheet" href="${src('webview.css')}">
-</head><body>
-<div id="root"></div>
-<script nonce="${nonce}" src="${src('webview.js')}"></script>
-</body></html>`;
+    webview.html = webviewHtml(webview, dist, 'webview', assets);
     webview.onDidReceiveMessage((m) => this.preview.onMessage(m));
     panel.onDidDispose(() => (this.panel = undefined));
     this.panel = panel;
@@ -100,4 +88,24 @@ export class MystPreview {
   private path(uri: vscode.Uri) {
     return relative(this.root ?? '/', uri.fsPath).split(sep).join('/');
   }
+}
+
+/**
+ * A webview page that runs `dist/<script>.js` with the preview's CSS.
+ * Built pages load images from `assets` (the content server as the webview reaches it), plus any remote images the author links to.
+ */
+export function webviewHtml(webview: vscode.Webview, dist: vscode.Uri, script: string, assets?: string) {
+  const src = (file: string) => webview.asWebviewUri(vscode.Uri.joinPath(dist, file));
+  const nonce = randomBytes(16).toString('base64');
+  const images = assets ? new URL(assets).origin : '';
+  const csp = `default-src 'none'; img-src ${webview.cspSource} ${images} https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
+  return `<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="${csp}">
+<link rel="stylesheet" href="${src('webview.css')}">
+</head><body>
+<div id="root"></div>
+<script nonce="${nonce}" src="${src(`${script}.js`)}"></script>
+</body></html>`;
 }
