@@ -73,6 +73,42 @@ export function toBlocks(tree: GenericParent): Block[] {
   });
 }
 
+/**
+ * A built page's blocks, with the source lines of the fast parse's blocks.
+ * Built pages lose the lines of directive output, and embedded content keeps the lines of the page it came from.
+ * Both parses find the same top-level blocks, so they pair up in order; when the counts differ, returns null.
+ */
+export function withSourceLines(built: ParseResult, fast: ParseResult): ParseResult | null {
+  if (built.blocks.length !== fast.blocks.length) return null;
+  return { ...built, blocks: built.blocks.map((b, i) => ({ ...b, start: fast.blocks[i].start, end: fast.blocks[i].end })) };
+}
+
+/** Source lines (1-based, inclusive) that the live editor (`./live`) renders and reveals as one unit, and the blocks from them. */
+export type Span = { start: number; end: number; blocks: Block[] };
+
+const LABEL = /^\([^)\s]+\)=\s*$/;
+
+/**
+ * Group a page's blocks into spans for the live editor, given the page's source lines.
+ * Blocks that share lines merge, and label lines (`(x)=`) join the block below them.
+ * Frontmatter with a title is a span with no blocks: it renders as the page title.
+ */
+export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Span[] {
+  const out: Span[] = [];
+  const close = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
+  if (close > 0 && frontmatter.title) out.push({ start: 1, end: close + 1, blocks: [] });
+  for (const b of blocks) {
+    const last = out.at(-1);
+    let start = b.start;
+    while (start - 1 > (last?.end ?? 0) && LABEL.test(lines[start - 2])) start--;
+    if (last && start <= last.end) {
+      last.end = Math.max(last.end, b.end);
+      last.blocks.push(b);
+    } else out.push({ start, end: b.end, blocks: [b] });
+  }
+  return out;
+}
+
 // Built pages drop positions on directive output (admonition, figure, tabs…); their content keeps them.
 // Included content carries the other file's lines, so don't look inside it.
 function firstPosition(node: GenericNode) {

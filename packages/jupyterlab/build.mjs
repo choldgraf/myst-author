@@ -3,6 +3,11 @@
 // JupyterLab and CodeMirror stay external, so the extension shares Lab's copies (CodeMirror breaks with two).
 import { build } from 'esbuild';
 import { execFileSync } from 'node:child_process';
+import { createRequire } from 'node:module';
+
+// The preview's CSS, compiled as for the VS Code webview. index.ts imports it as text, for live preview's shadow roots.
+const resolve = createRequire(import.meta.url).resolve;
+execFileSync('npx', ['tailwindcss', '-c', resolve('@myst-author/preview/tailwind.config.cjs'), '-i', resolve('@myst-author/preview/page.css'), '-o', 'dist/live.css', '--minify'], { stdio: 'inherit' });
 
 await build({
   entryPoints: ['src/index.ts'],
@@ -11,6 +16,8 @@ await build({
   format: 'esm',
   platform: 'browser',
   external: ['@jupyterlab/*', '@lumino/*', '@codemirror/state', '@codemirror/view', '@codemirror/language', '@codemirror/autocomplete', '@lezer/*'],
+  loader: { '.css': 'text' },
+  jsx: 'automatic',
   logLevel: 'warning',
 });
 // Same as `jupyter labextension build .`, minus its `jlpm install`, which doesn't work inside an npm workspace.

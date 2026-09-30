@@ -8,7 +8,9 @@
   },
   "dependencies": {
     "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.11.0",
     "@codemirror/state": "^6.7.6",
+    "@lezer/highlight": "^1.2.1",
     "@myst-author/lsp": "*",
     "@myst-author/mystmd": "*",
     "@myst-author/preview": "*",

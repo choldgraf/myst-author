@@ -3,10 +3,12 @@
 import os
 
 repo = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+# The project to edit: MYST_AUTHOR_PROJECT (which `npm run lab` sets), else the tour.
+project = os.environ.get("MYST_AUTHOR_PROJECT", f"{repo}/docs/examples/tour")
 
 c.ServerProxy.servers = {
     "myst-author": {
-        "command": ["node", f"{repo}/packages/app/server/index.ts", f"{repo}/docs/examples/tour"],
+        "command": ["node", f"{repo}/packages/app/server/index.ts", project],
         "environment": {"PORT": "{port}", "NODE_ENV": "production", "NO_OPEN": "1"},
         "timeout": 30,
         "launcher_entry": {"title": "MyST Author"},

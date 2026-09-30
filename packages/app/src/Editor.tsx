@@ -11,12 +11,16 @@ type Props = {
   extensions: Extension;
 };
 
+// The cursor starts after any frontmatter, so live preview shows the page title rendered.
+const bodyStart = (text: string) => /^---\n[\s\S]*?\n---\n/.exec(text)?.[0].length ?? 0;
+
 /** CodeMirror editor. Remount (via `key`) to load a different file; callbacks must be stable. */
 export function Editor({ initial, onChange, onTopLine, viewRef, extensions }: Props) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const view = new EditorView({
       doc: initial,
+      selection: { anchor: bodyStart(initial) },
       parent: host.current!,
       extensions: [
         basicSetup,

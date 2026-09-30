@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { Compartment } from '@codemirror/state';
+import { tags } from '@lezer/highlight';
 import { EditorView } from 'codemirror';
 import type { DocumentSymbol, SymbolInformation } from 'vscode-languageserver-protocol';
 import { connectLsp } from '@myst-author/lsp/client';
@@ -6,6 +9,7 @@ import { findLabel } from '@myst-author/lsp/labels';
 import { type Built, Preview, usePreview } from '@myst-author/preview';
 import { contentServer } from '@myst-author/mystmd/built';
 import { followLink } from '@myst-author/preview/controller';
+import { livePreview, showBuilt } from '@myst-author/preview/live';
 import { listFiles, projectRoot, readFile, writeFile } from './api.ts';
 import { Editor } from './Editor.tsx';
 import { myst } from 'codemirror-lang-myst';
@@ -16,6 +20,17 @@ type Lsp = ReturnType<typeof connectLsp>;
 
 // The host server proxies the content server under myst/ (relative, like every app URL).
 const content = contentServer('myst');
+// Live preview in the editor, switched on and off without remounting it.
+// It reads like the page: a centred column, a proportional font (code stays monospace), and no gutters.
+const liveMode = new Compartment();
+const liveExtensions = [
+  livePreview(),
+  EditorView.theme({
+    '.cm-content': { maxWidth: '46rem', margin: '0 auto', padding: '2.5rem 1.5rem 30vh', fontFamily: 'system-ui, sans-serif', lineHeight: '1.6' },
+    '.cm-gutters': { display: 'none' },
+  }),
+  syntaxHighlighting(HighlightStyle.define([{ tag: tags.monospace, fontFamily: 'monospace' }])),
+];
 
 export function App() {
   const [files, setFiles] = useState<string[]>([]);
@@ -23,7 +38,8 @@ export function App() {
   const [text, setText] = useState(''); // live editor content
   const [status, setStatus] = useState('');
   const [showFiles, setShowFiles] = useState(true);
-  const [showPreview, setShowPreview] = useState(true);
+  const [showLive, setShowLive] = useState(true);
+  const [showPreview, setShowPreview] = useState(false);
   const [switcher, setSwitcher] = useState(false);
   const [topLine, setTopLine] = useState(1);
   const [built, setBuilt] = useState<Built | null>(null); // mystmd's latest build of the open file
@@ -101,6 +117,10 @@ export function App() {
     viewOpened.current = null;
   }, [doc]);
 
+  useEffect(() => {
+    viewRef.current?.dispatch({ effects: liveMode.reconfigure(showLive ? liveExtensions : []) });
+  }, [showLive]);
+
   const refreshBuilt = useCallback(() => {
     const path = latest.current.doc?.path;
     if (!path) return;
@@ -109,7 +129,11 @@ export function App() {
   useEffect(refreshBuilt, [doc]);
   useEffect(() => content.watch(refreshBuilt), []);
 
-  const { result, badge } = usePreview(doc?.path, text, text !== saved.current, built);
+  const { result, badge, builtMatch } = usePreview(doc?.path, text, text !== saved.current, built);
+  // Live blocks render mystmd's build when it matches the text, as the preview pane does.
+  useEffect(() => {
+    if (builtMatch) viewRef.current?.dispatch({ effects: showBuilt.of(builtMatch) });
+  }, [builtMatch, showLive]);
 
   function gotoLine(line: number) {
     const view = viewRef.current;
@@ -169,11 +193,14 @@ export function App() {
   return (
     <div className="layout">
       <div className="toolbar">
-        <button onClick={() => setShowFiles(!showFiles)}>Files</button>
-        <button onClick={() => setSwitcher(true)}>Open… (⌘P)</button>
-        <button onClick={() => setShowPreview(!showPreview)}>Preview</button>
-        <span className="status">{doc?.path} {status}</span>
+        <button aria-pressed={showFiles} onClick={() => setShowFiles(!showFiles)}>Files</button>
+        <button onClick={() => setSwitcher(true)}>Open <kbd>⌘P</kbd></button>
+        <span className="title">{doc?.path}<span className="status">{status}</span></span>
         <span className="badge" title="Preview source">{badge}</span>
+        <span className="toggles">
+          <button aria-pressed={showLive} onClick={() => setShowLive(!showLive)}>Live</button>
+          <button aria-pressed={showPreview} onClick={() => setShowPreview(!showPreview)}>Preview</button>
+        </span>
       </div>
       <div className="panes">
         {showFiles && (
@@ -189,7 +216,7 @@ export function App() {
           </nav>
         )}
         {doc && <Editor key={doc.path} initial={doc.text} onChange={setText} onTopLine={setTopLine} viewRef={viewRef}
-          extensions={lsp ? [lsp.client.plugin(lsp.uri(doc.path), 'markdown'), myst()] : myst()} />}
+          extensions={[lsp ? lsp.client.plugin(lsp.uri(doc.path), 'markdown') : [], myst(), liveMode.of(showLive ? liveExtensions : [])]} />}
         {showPreview && (
           <div className="preview">
             <Preview result={result} topLine={topLine} onLineClick={gotoLine} onFollowLink={follow} />

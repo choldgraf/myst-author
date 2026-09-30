@@ -52,6 +52,8 @@ export function parseMyst(md: string) {
 
   // Directive transforms replace the directive node with children that have no position; keep the directive's lines.
   visit(tree, 'mystDirective', (d: GenericNode) => d.children?.forEach((c) => (c.position ??= d.position)));
+  // Without the project's bibliography, no citation is found, so mystmd's fallback turns `@label` into a reference to a label on this page, as a build does.
+  visit(tree, 'cite', (c: GenericNode) => void (c.error = true));
 
   const state = new ReferenceState('', { vfile });
   unified()

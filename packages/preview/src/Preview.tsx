@@ -8,28 +8,32 @@ import { fromBuiltPage, parseMyst, type ParseResult } from './parse.ts';
 
 /**
  * What to preview for a file's live text: mystmd's build when it matches the text exactly, otherwise the fast in-browser parse.
- * `badge` says which one it is.
+ * `badge` says which one it is, and `builtMatch` is the matching build with the text it matches, for the live editor (`./live`).
  */
 export function usePreview(path: string | undefined, text: string, dirty: boolean, built: Built | null) {
   // Parses on the main thread; deferring the text lets React keep typing responsive while it runs.
   const deferred = useDeferredValue(text);
-  const [hash, setHash] = useState('');
+  const [hashed, setHashed] = useState({ text: '', hash: '' });
   useEffect(() => {
     let current = true;
-    sha256(deferred).then((h) => current && setHash(h));
+    sha256(deferred).then((hash) => current && setHashed({ text: deferred, hash }));
     return () => { current = false; };
   }, [deferred]);
 
   const current = built?.path === path ? built : null;
-  const page = current?.page?.sha256 === hash ? current.page : null;
+  const page = current?.page?.sha256 === hashed.hash ? current.page : null;
+  const builtMatch = useMemo(() => (page ? { page, text: hashed.text } : null), [page, hashed]);
   const result = useMemo(() => (page ? fromBuiltPage(page) : parseMyst(deferred)), [page, deferred]);
   const badge = current?.error === mystmdMissing ? 'no mystmd'
     : page ? 'built ✓'
     : dirty ? 'fast preview · unsaved'
     : current?.page ? 'building…'
     : 'fast preview';
-  return { result, badge };
+  return { result, badge, builtMatch };
 }
+
+/** Controls in a rendered page that handle their own clicks (tabs, dropdowns, buttons), so a click on them doesn't jump to the source. */
+export const INTERACTIVE = 'button, summary, input, .cursor-pointer';
 
 type Props = {
   result: ParseResult;
@@ -67,7 +71,7 @@ export function Preview({ result, topLine, onLineClick, onFollowLink }: Props) {
       }
     }
     // Let tabs, dropdowns, and text selection work without jumping the editor.
-    if (target.closest('button, summary, input, .cursor-pointer') || getSelection()?.toString()) return;
+    if (target.closest(INTERACTIVE) || getSelection()?.toString()) return;
     const block = target.closest<HTMLElement>('[data-line-start]');
     if (block) onLineClick?.(Number(block.dataset.lineStart));
   }

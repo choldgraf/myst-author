@@ -10,8 +10,10 @@ title: Directives
 This is a note that opens and closes.
 ```
 
+
 :::{tip} Try this: add an option
-Put your cursor at the end of the `:class: dropdown` line above, press Enter, and type `:`.
+Click the text inside the note above to show its Markdown.
+Put your cursor at the end of the `:class: dropdown` line, press Enter, and type `:`.
 The list shows the options `{note}` accepts, minus the one already set.
 :::
 
@@ -33,5 +35,9 @@ Content of the second tab.
 
 :::{tip} Try this: edit a nested directive
 Add a third `{tab-item}` inside the `{tab-set}` above.
-Click the tabs in the preview to switch between them; clicking a tab doesn't move the editor.
+Click a tab to switch to it; that doesn't show the Markdown, but clicking the tab's text does.
 :::
+
+## Next
+
+The last page, [](notebook.ipynb), shows MyST in a notebook.

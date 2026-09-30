@@ -18,12 +18,17 @@
     "unist-util-visit": "^4.1.2"
   },
   "peerDependencies": {
-    "react": "^19.0.0"
+    "@codemirror/lint": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "exports": {
     ".": "./src/index.ts",
     "./parse": "./src/parse.ts",
     "./controller": "./src/controller.ts",
+    "./live": "./src/live.tsx",
     "./page": "./src/page.tsx",
     "./page.css": "./src/page.css",
     "./tailwind.config.cjs": "./tailwind.config.cjs"
