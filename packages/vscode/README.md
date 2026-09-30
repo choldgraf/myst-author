@@ -41,6 +41,11 @@ code --install-extension packages/vscode/myst-author.vsix
   - Clicking a block reveals its source line.
   - Cmd-click (or Ctrl-click) a link to follow it.
     Web links open in the browser, and links to other pages open in the editor.
+- To edit with live preview, click the book button in a Markdown file's toolbar, or run **MyST: Toggle Live Editor**.
+  It's the web editor's live preview, with the same language features, on the same file: save and undo work as usual, and you can keep the text editor open beside it.
+  Rename (F2), find references (Shift+F12), and go to definition in another file use VS Code's own commands, so they cover the whole project.
+  VS Code's own editor features don't reach it: its outline and breadcrumbs, Copilot suggestions, and extensions such as Vim.
+  Notebooks' Markdown cells don't get it.
 
 ## Notes
 

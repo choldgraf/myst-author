@@ -21,9 +21,9 @@ The cursor lands on the text you clicked.
 - Blocks render like the [fast preview](preview.md#fast-and-built-previews), so embeds and references to other pages show grey placeholders until mystmd has built your latest saved text.
   In a notebook, cells show the build while the notebook is saved.
 
-Live preview works in the web editor and in JupyterLab, where it also covers notebooks' Markdown cells while you edit them.
+Live preview works in the web editor, in JupyterLab, where it also covers notebooks' Markdown cells while you edit them, and in VS Code.
 In JupyterLab, turn it on or off with **MyST: Live Preview** in the Command Palette.
-VS Code shows the preview beside the editor instead.
+In VS Code, switch a Markdown file between the text editor and the live editor with **MyST: Toggle Live Editor**.
 
 ## Fast and built previews
 

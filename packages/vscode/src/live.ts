@@ -19,13 +19,15 @@ export type ToLive =
   | { type: 'changes'; changes: Change[] } // edits made outside the webview, to apply one after another
   | { type: 'connect'; root: string; uri: string } // start the language client: the project folder's URI, and this file's
   | { type: 'lsp'; message: string }
-  | { type: 'built'; page: BuiltPage; text: string }; // mystmd's build of `text` (with \n line breaks)
+  | { type: 'built'; page: BuiltPage; text: string } // mystmd's build of `text` (with \n line breaks)
+  | { type: 'select'; at: Pos };
 
 /** Messages from the webview. */
 export type FromLive =
   | { type: 'ready' }
   | { type: 'edit'; changes: Change[] } // one CodeMirror transaction: positions in the text before it, as in a WorkspaceEdit
-  | { type: 'lsp'; message: string };
+  | { type: 'lsp'; message: string }
+  | { type: 'definition' | 'references' | 'rename'; at: Pos }; // cross-file actions, which VS Code handles
 
 const toPos = (p: vscode.Position): Pos => ({ line: p.line, character: p.character });
 
@@ -94,6 +96,11 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
           project?.then(connect);
         } else if (m.type === 'edit') apply(m.changes);
         else if (m.type === 'lsp') server?.send(m.message);
+        // lsp-client only acts on files open in an editor, which here is just this one.
+        // VS Code's commands ask the extension's main language client (the same server code), and can edit or open any file.
+        else if (m.type === 'definition') this.definition(document, at(m.at));
+        else if (m.type === 'references') this.references(document, at(m.at), post);
+        else if (m.type === 'rename') this.rename(document, at(m.at));
       }),
       // Edits from anywhere else (the text editor, its undo, a rename, git) go to the webview.
       vscode.workspace.onDidChangeTextDocument((e) => {
@@ -107,5 +114,36 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
       stopWatch?.();
       subscriptions.forEach((s) => s.dispose());
     });
+  }
+
+  /** Open a definition in another file (the webview jumps within its own). */
+  private async definition(document: vscode.TextDocument, position: vscode.Position) {
+    const [loc] = (await vscode.commands.executeCommand<(vscode.Location | vscode.LocationLink)[]>('vscode.executeDefinitionProvider', document.uri, position)) ?? [];
+    if (!loc) return;
+    const [uri, selection] = 'targetUri' in loc ? [loc.targetUri, loc.targetSelectionRange ?? loc.targetRange] : [loc.uri, loc.range];
+    vscode.window.showTextDocument(uri, { selection });
+  }
+
+  /** References across the project. VS Code's peek view needs a text editor, so pick one from a list. */
+  private async references(document: vscode.TextDocument, position: vscode.Position, post: (m: ToLive) => void) {
+    const locations = (await vscode.commands.executeCommand<vscode.Location[]>('vscode.executeReferenceProvider', document.uri, position)) ?? [];
+    const items = locations.map((location) => ({ label: `${vscode.workspace.asRelativePath(location.uri)}:${location.range.start.line + 1}`, location }));
+    const pick = await vscode.window.showQuickPick(items, { title: 'References' });
+    if (!pick) return;
+    const { uri, range } = pick.location;
+    if (uri.toString() === document.uri.toString()) post({ type: 'select', at: toPos(range.start) });
+    else vscode.window.showTextDocument(uri, { selection: range });
+  }
+
+  /** Rename across the project. The edit to this file comes back to the webview like any other change. */
+  private async rename(document: vscode.TextDocument, position: vscode.Position) {
+    const prepared = await vscode.commands
+      .executeCommand<{ range: vscode.Range; placeholder: string }>('vscode.prepareRename', document.uri, position)
+      .then((r) => r, () => undefined); // not something that can be renamed
+    if (!prepared) return;
+    const name = await vscode.window.showInputBox({ title: 'Rename', value: prepared.placeholder });
+    if (!name) return;
+    const edit = await vscode.commands.executeCommand<vscode.WorkspaceEdit>('vscode.executeDocumentRenameProvider', document.uri, position, name);
+    if (edit) await vscode.workspace.applyEdit(edit);
   }
 }

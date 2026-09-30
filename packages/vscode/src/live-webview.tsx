@@ -1,5 +1,6 @@
 import { markdown } from '@codemirror/lang-markdown';
-import { Compartment, Transaction, type Text } from '@codemirror/state';
+import { Compartment, Prec, Transaction, type Text } from '@codemirror/state';
+import { keymap } from '@codemirror/view';
 import { basicSetup, EditorView } from 'codemirror';
 import { myst } from 'codemirror-lang-myst';
 import { connectLsp, messageTransport } from '@myst-author/lsp/client';
@@ -23,8 +24,19 @@ let receive: (message: string) => void = () => {};
 /** Start a language client, talking to the server the extension started for this webview. */
 function connect(view: EditorView, root: string, uri: string) {
   const l = connectLsp(messageTransport((message) => vscode.postMessage({ type: 'lsp', message }), (r) => (receive = r)), root);
+  // A definition in another file opens in VS Code, which asks its own language client where it is.
+  l.client.workspace.displayFile = () => {
+    vscode.postMessage({ type: 'definition', at: toPos(view.state.doc, view.state.selection.main.head) });
+    return Promise.resolve(null);
+  };
   view.dispatch({ effects: lsp.reconfigure(l.client.plugin(uri, 'markdown')) });
 }
+
+/** F2 and Shift-F12 ask VS Code, which renames and finds references across the project, not only in this file. */
+const ask = (type: 'rename' | 'references') => (view: EditorView) => {
+  vscode.postMessage({ type, at: toPos(view.state.doc, view.state.selection.main.head) });
+  return true;
+};
 
 function create(text: string) {
   return new EditorView({
@@ -40,6 +52,7 @@ function create(text: string) {
       pageLook,
       EditorView.theme({ '&.cm-focused': { outline: 'none' } }),
       lsp.of([]),
+      Prec.high(keymap.of([{ key: 'F2', run: ask('rename') }, { key: 'Shift-F12', run: ask('references') }])),
       // Send VS Code each of our edits, but not the ones it sent us.
       EditorView.updateListener.of((u) => {
         for (const tr of u.transactions) {
@@ -76,6 +89,9 @@ window.addEventListener('message', ({ data: m }: MessageEvent<ToLive>) => {
     receive(m.message);
   } else if (m.type === 'built') {
     view.dispatch({ effects: showBuilt.of(m) }); // ignored if `text` no longer matches the editor
+  } else if (m.type === 'select') {
+    view.dispatch({ selection: { anchor: toOffset(view.state.doc, m.at) }, scrollIntoView: true });
+    view.focus();
   }
 });
 vscode.postMessage({ type: 'ready' });

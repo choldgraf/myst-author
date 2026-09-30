@@ -21,13 +21,16 @@ The editor features live in reusable packages, and each host (the web app, VS Co
   `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews embed.
   `@myst-author/preview/controller` runs in the extension and drives that page: it sends the current file and handles clicks.
   `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block with the cursor.
+  Its `pageLook` makes the editor read like the page, as in the web app and the VS Code live editor.
+  `@myst-author/preview/build` compiles the preview's CSS for hosts that bundle it.
   Each extension implements its `PreviewHost` interface to open files and look up labels.
 
 `packages/lsp` (`@myst-author/lsp`)
 : A language server for MyST references: completion, hover, go to definition, warnings, hints, and external references.
   It indexes mystmd's built pages (when it has a content server) plus the unsaved text of open files.
   `@myst-author/lsp/args` builds the command-line arguments that hosts start it with.
-  `@myst-author/lsp/client` is a browser client for it, used by the web app and JupyterLab; each host passes its own websocket URL and project root.
+  `@myst-author/lsp/spawn` starts a server process and relays its messages as strings.
+  `@myst-author/lsp/client` is the CodeMirror client that talks to it, over a websocket or any message channel; each host passes its own connection and project root.
   `@myst-author/lsp/labels` finds where a label is defined, which hosts use to follow preview links.
   See its [README](https://github.com/choldgraf/myst-author/tree/main/packages/lsp).
 
@@ -41,6 +44,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 `packages/vscode`
 : The VS Code extension.
   It runs the same language server and shows the same preview in a webview.
+  Its live editor is a custom editor: a webview running CodeMirror with the same live preview, whose language client talks to a server process of its own.
 
 `packages/jupyterlab` (`@myst-author/jupyterlab`)
 : The JupyterLab extension.
@@ -87,6 +91,16 @@ The VS Code extension does the same without the host server: it starts `myst sta
 The JupyterLab extension uses the host server, which jupyter-server-proxy runs inside Jupyter.
 Lab's editors connect to its `/lsp` bridge, and the preview panel is an iframe of its `preview.html`.
 Lab reads and saves the files itself, so it doesn't use `/api/files`.
+
+## Adding a host
+
+Everything about MyST lives in the packages; a host provides only what depends on where it runs:
+
+- **The document.** The editor's text, and edits to and from wherever the host keeps it (a file on disk, Lab's document model, VS Code's `TextDocument`).
+- **A language server.** Start one with `spawnLsp`, relay its messages to `connectLsp` (a websocket URL, or `messageTransport` over any message channel), and give the client a project root URI.
+- **Built pages.** Fetch them with `contentServer`, and pass the one for the open file to live preview with `showBuilt` once its hash matches the editor text.
+- **Opening a file at a line**, and finding a label, through `PreviewHost` for the preview and `workspace.displayFile` for the language client.
+- **Its own chrome.** Commands, toggles, and prompts in the host's own UI.
 
 ## Design choices
 
