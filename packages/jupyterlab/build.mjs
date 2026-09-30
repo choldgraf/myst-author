@@ -3,11 +3,10 @@
 // JupyterLab and CodeMirror stay external, so the extension shares Lab's copies (CodeMirror breaks with two).
 import { build } from 'esbuild';
 import { execFileSync } from 'node:child_process';
-import { createRequire } from 'node:module';
+import { buildCss } from '@myst-author/preview/build';
 
-// The preview's CSS, compiled as for the VS Code webview. index.ts imports it as text, for live preview's shadow roots.
-const resolve = createRequire(import.meta.url).resolve;
-execFileSync('npx', ['tailwindcss', '-c', resolve('@myst-author/preview/tailwind.config.cjs'), '-i', resolve('@myst-author/preview/page.css'), '-o', 'dist/live.css', '--minify'], { stdio: 'inherit' });
+// The preview's CSS, as for the VS Code webviews. index.ts imports it as text, for live preview's shadow roots.
+buildCss('dist/live.css');
 
 await build({
   entryPoints: ['src/index.ts'],

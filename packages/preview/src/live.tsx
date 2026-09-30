@@ -1,7 +1,9 @@
 import { createRoot, type Root } from 'react-dom/client';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { forEachDiagnostic } from '@codemirror/lint';
 import { Facet, Prec, StateEffect, StateField, type EditorState, type Extension, type Transaction } from '@codemirror/state';
 import { Decoration, EditorView, keymap, WidgetType, type DecorationSet } from '@codemirror/view';
+import { tags } from '@lezer/highlight';
 import type { BuiltPage } from '@myst-author/mystmd/built';
 import { fromBuiltPage, parseMyst, spans, withSourceLines, type Block, type ParseResult, type Span } from './parse.ts';
 import { INTERACTIVE, Preview } from './Preview.tsx';
@@ -186,3 +188,15 @@ export function livePreview({ css }: { css?: string } = {}): Extension {
   sheet.replaceSync(`${css.replaceAll(':root', ':host')}\n[data-line-start] > * { margin-top: 0; margin-bottom: 0 }`); // as the theme does outside shadow roots
   return [liveField, arrows, theme, shadowStyles.of(sheet)];
 }
+
+/**
+ * Live preview that reads like the page: a centred column, a proportional font (code stays monospace), and no gutters.
+ * The web app and the VS Code live editor use it; JupyterLab keeps Lab's editor look.
+ */
+export const pageLook: Extension = [
+  EditorView.theme({
+    '.cm-content': { maxWidth: '46rem', margin: '0 auto', padding: '2.5rem 1.5rem 30vh', fontFamily: 'system-ui, sans-serif', lineHeight: '1.6' },
+    '.cm-gutters': { display: 'none' },
+  }),
+  syntaxHighlighting(HighlightStyle.define([{ tag: tags.monospace, fontFamily: 'monospace' }])),
+];

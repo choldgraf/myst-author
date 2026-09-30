@@ -1,7 +1,7 @@
 // VS Code runs extensions on its own Node without TypeScript support, so bundle everything into dist/.
 import { build } from 'esbuild';
 import { buildServer } from '@myst-author/lsp/build';
-import { execFileSync } from 'node:child_process';
+import { buildCss } from '@myst-author/preview/build';
 import { cpSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
@@ -27,7 +27,7 @@ await Promise.all([
 ]);
 
 const resolve = createRequire(import.meta.url).resolve;
-execFileSync('npx', ['tailwindcss', '-c', resolve('@myst-author/preview/tailwind.config.cjs'), '-i', resolve('@myst-author/preview/page.css'), '-o', 'dist/webview.css', '--minify'], { stdio: 'inherit' });
+buildCss('dist/webview.css');
 // katex.min.css refers to its fonts relative to itself.
 const katex = dirname(resolve('katex/package.json'));
 cpSync(join(katex, 'dist/fonts'), 'dist/fonts', { recursive: true });
