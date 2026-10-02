@@ -10,8 +10,8 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 `packages/mystmd` (`@myst-author/mystmd`)
 : Starts and talks to mystmd.
-  It has no React dependency, so the language server can use it as well as the preview.
-  `@myst-author/mystmd/start` runs `myst start --headless`.
+  It has no React dependency, so the host server and the extensions can use it as well as the preview.
+  `@myst-author/mystmd/start` runs `myst start --headless`, or with the built site, `myst start`.
   `@myst-author/mystmd/built` reads built page JSON from mystmd's *content server*, the local HTTP server that `myst start --headless` runs.
   `@myst-author/mystmd/parse` parses a single page with mystmd's parser and transforms, and lists the directives and roles it knows.
 
@@ -83,7 +83,6 @@ flowchart TB
 4. The preview fetches the rebuilt page JSON through `/myst` and shows it if it matches the editor text.
    Until then it shows the fast in-browser render.
 5. Each browser connection to `/lsp` gets its own language server process.
-   In production it runs the bundle from `npm run build`, which starts faster than the TypeScript source.
    If the connection drops, the browser reconnects and re-opens its files.
    The host server starts it with the project folder and mystmd's address as arguments.
    The host server chooses mystmd's port before starting mystmd, so it can pass the address right away.

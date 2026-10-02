@@ -31,7 +31,7 @@ Reload open VS Code windows afterwards.
 
 - The extension starts when you open a Markdown file or a notebook in a MyST project, the folder of the nearest `myst.yml` above it.
   It runs `myst start --headless` there, and uses that project for the rest of the window's session.
-  Files outside a MyST project get no MyST features.
+  Files outside a MyST project only get MyST syntax highlighting.
   Set `MYST_BIN` if `myst` isn't on your `PATH`.
 - Without mystmd the extension still runs.
   The language server only knows the open files, and the preview only shows the fast render.
@@ -54,7 +54,7 @@ Reload open VS Code windows afterwards.
 
 - MyST syntax is highlighted on top of VS Code's Markdown grammar.
   The [MyST-Markdown](https://marketplace.visualstudio.com/items?itemName=ExecutableBookProject.myst-highlight) extension highlights the same syntax, so turn one of them off.
-- The extension turns off VS Code's own Markdown link suggestions (`markdown.suggest.paths.enabled`), which suggest GitHub-style heading slugs that mystmd doesn't use for labeled headings.
+- The extension turns off VS Code's own Markdown link suggestions (`markdown.suggest.paths.enabled`) in every Markdown file, since they suggest GitHub-style heading slugs that mystmd doesn't use for labeled headings.
   The language server completes files and labels instead.
 - mystmd's and the language server's output go to the **MyST** output channel; **MyST: Show Log** opens it.
 - **MyST: Open Built Site** shows the site `myst start` builds, with its theme, in VS Code's Simple Browser.
