@@ -16,7 +16,8 @@ The other top-level folders are:
 
 The packages are [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) written in TypeScript.
 Node 24 strips the types and runs them directly.
-Only the bundles have a build step: the web app, the language server, and the VS Code and JupyterLab extensions.
+Only the bundles have a build step: the web app, and the VS Code and JupyterLab extensions.
+The language server comes already bundled, from the `mystmd-lsp` npm package.
 
 ## Set up
 
