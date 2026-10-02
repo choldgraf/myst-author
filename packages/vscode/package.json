@@ -1,7 +1,7 @@
 {
   "name": "myst-author-vscode",
   "displayName": "MyST Author",
-  "description": "MyST reference intelligence and live preview.",
+  "description": "MyST language features, live preview and a live editor.",
   "version": "0.0.1",
   "private": true,
   "publisher": "myst-author",
@@ -14,7 +14,8 @@
   },
   "main": "dist/extension.js",
   "files": [
-    "dist"
+    "dist",
+    "syntaxes"
   ],
   "activationEvents": [
     "onLanguage:markdown",
@@ -42,6 +43,14 @@
         "command": "mystAuthor.toggleLive",
         "title": "MyST: Toggle Live Editor",
         "icon": "$(book)"
+      },
+      {
+        "command": "mystAuthor.openSite",
+        "title": "MyST: Open Built Site"
+      },
+      {
+        "command": "mystAuthor.showLog",
+        "title": "MyST: Show Log"
       }
     ],
     "menus": {
@@ -52,7 +61,29 @@
           "group": "navigation"
         }
       ]
-    }
+    },
+    "configuration": {
+      "title": "MyST Author",
+      "properties": {
+        "mystAuthor.serverPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to a mystmd-lsp server script, such as packages/mystmd-lsp/dist/server.cjs from a clone, to use instead of the bundled one. Reload the window after changing it."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "markdown.suggest.paths.enabled": false
+    },
+    "grammars": [
+      {
+        "scopeName": "text.myst.injection",
+        "path": "./syntaxes/myst.tmLanguage.json",
+        "injectTo": [
+          "text.html.markdown"
+        ]
+      }
+    ]
   },
   "scripts": {
     "build": "node build.mjs",

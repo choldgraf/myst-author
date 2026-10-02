@@ -1,6 +1,6 @@
 # MyST Author for VS Code
 
-Cross-reference help (from [`mystmd-lsp`](https://github.com/choldgraf/mystmd-lsp)) and a live preview (from `@myst-author/preview`) inside VS Code.
+MyST in VS Code: language features from the [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) language server, MyST syntax highlighting, a live preview, and a live editor.
 
 ## Build and run
 
@@ -49,14 +49,14 @@ code --install-extension packages/vscode/myst-author.vsix
 
 ## Notes
 
-- Syntax highlighting is VS Code's built-in Markdown grammar.
-  Install the [MyST-Markdown](https://marketplace.visualstudio.com/items?itemName=ExecutableBookProject.myst-highlight) extension for MyST highlighting.
-- VS Code's built-in Markdown support also suggests `[](#...)` links to headings, as GitHub-style slugs of the heading text.
-  mystmd doesn't use these slugs for headings that have a label, so the links may not resolve.
-  To see only MyST's labels, set `"markdown.suggest.paths.enabled": false` in your workspace settings.
-  MyST Author still completes file paths.
-- mystmd's output goes to the extension host console (**Help → Toggle Developer Tools**).
-- The language server logs to the **MyST Author** output channel.
+- MyST syntax is highlighted on top of VS Code's Markdown grammar.
+  The [MyST-Markdown](https://marketplace.visualstudio.com/items?itemName=ExecutableBookProject.myst-highlight) extension highlights the same syntax, so turn one of them off.
+- The extension turns off VS Code's own Markdown link suggestions (`markdown.suggest.paths.enabled`), which suggest GitHub-style heading slugs that mystmd doesn't use for labeled headings.
+  The language server completes files and labels instead.
+- mystmd's and the language server's output go to the **MyST** output channel; **MyST: Show Log** opens it.
+- **MyST: Open Built Site** shows the site `myst start` builds, with its theme, in VS Code's Simple Browser.
+  It starts a second mystmd that serves the site, so the first run is slower while mystmd downloads its theme.
+- To use your own build of the language server, set `mystAuthor.serverPath` to its script, such as `packages/mystmd-lsp/dist/server.cjs` in a mystmd-lsp clone, and reload the window.
 
 ## Develop
 

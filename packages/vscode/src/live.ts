@@ -6,6 +6,10 @@ import { contentServer, sha256, type BuiltPage } from '@myst-author/mystmd/built
 import type { startMyst } from '@myst-author/mystmd/start';
 import { webviewHtml } from './preview.ts';
 
+/** The language server script: `mystAuthor.serverPath`, or the copy of mystmd-lsp's bundle in dist/. */
+export const serverScript = (context: vscode.ExtensionContext) =>
+  vscode.workspace.getConfiguration('mystAuthor').get<string>('serverPath') || context.asAbsolutePath('dist/lsp.js');
+
 /** The MyST project the extension started: its folder and its mystmd. */
 export type Project = { root: string; myst: Awaited<ReturnType<typeof startMyst>> };
 
@@ -74,7 +78,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     const connect = ({ root, myst }: Project) => {
       if (disposed) return;
       // A server of its own, as each web app tab gets: lsp-client speaks raw LSP, which VS Code's language client can't pass on.
-      server = spawnLsp(this.context.asAbsolutePath('dist/lsp.js'), lspArgs(myst.url, root), (message) => post({ type: 'lsp', message }));
+      server = spawnLsp(serverScript(this.context), lspArgs(myst.url, root), (message) => post({ type: 'lsp', message }));
       post({ type: 'connect', root: vscode.Uri.file(root).toString(), uri: document.uri.toString() });
       // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.
       myst.ready.then(() => {
