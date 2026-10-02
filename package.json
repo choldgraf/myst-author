@@ -9,6 +9,7 @@
     "build": "npm run build -w packages/app",
     "serve": "NODE_ENV=production node packages/app/server/index.ts",
     "lab": "npm run build && npm run build -w packages/jupyterlab && node packages/jupyterlab/lab.mjs",
+    "vscode": "npm run package -w packages/vscode && code --install-extension packages/vscode/myst-author.vsix --force",
     "test": "npm test --workspaces --if-present",
     "build:docs": "cd docs && npx -y mystmd build --html",
     "docs:live": "cd docs && npx -y mystmd start"

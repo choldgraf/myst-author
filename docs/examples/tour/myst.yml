@@ -3,6 +3,7 @@ project:
   title: MyST Author tour
   references:
     python: https://docs.python.org/3/
+    myst: https://mystmd.org/guide
   toc:
     - file: index.md
     - file: live.md

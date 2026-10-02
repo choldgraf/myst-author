@@ -18,7 +18,7 @@
     "vscode-languageserver": "^10.1.2"
   },
   "devDependencies": {
-    "mystmd-lsp": "^0.0.1",
+    "mystmd-lsp": "^0.0.2",
     "vscode-languageserver-protocol": "^3.18.4"
   }
 }

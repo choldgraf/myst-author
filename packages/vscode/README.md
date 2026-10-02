@@ -24,6 +24,9 @@ npm run package -w packages/vscode   # from the repo root; writes packages/vscod
 code --install-extension packages/vscode/myst-author.vsix
 ```
 
+`npm run vscode` from the repo root does both, replacing any copy you installed before.
+Reload open VS Code windows afterwards.
+
 ## What works
 
 - The extension starts when you open a Markdown file or a notebook in a MyST project, the folder of the nearest `myst.yml` above it.
