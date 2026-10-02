@@ -25,14 +25,17 @@ The editor features live in reusable packages, and each host (the web app, VS Co
   `@myst-author/preview/build` compiles the preview's CSS for hosts that bundle it.
   Each extension implements its `PreviewHost` interface to open files and look up labels.
 
-`packages/lsp` (`@myst-author/lsp`)
-: A language server for MyST references: completion, hover, go to definition, warnings, hints, and external references.
-  It indexes mystmd's built pages (when it has a content server) plus the unsaved text of open files.
-  `@myst-author/lsp/args` builds the command-line arguments that hosts start it with.
-  `@myst-author/lsp/spawn` starts a server process and relays its messages as strings.
-  `@myst-author/lsp/client` is the CodeMirror client that talks to it, over a websocket or any message channel; each host passes its own connection and project root.
-  `@myst-author/lsp/labels` finds where a label is defined, which hosts use to follow preview links.
-  See its [README](https://github.com/choldgraf/myst-author/tree/main/packages/lsp).
+[`mystmd-lsp`](https://github.com/choldgraf/mystmd-lsp) (from npm)
+: The language server for MyST references: completion, hover, go to definition, warnings, hints, and external references.
+  It lives in its own repository and works in any LSP client; the hosts here are its editor integrations.
+  Each host runs its bundle, `mystmd-lsp/dist/server.cjs`, and passes it the address of the mystmd the host started, so that there's one mystmd per project.
+
+`packages/lsp-client` (`@myst-author/lsp-client`)
+: Connects the hosts to the language server.
+  `@myst-author/lsp-client/args` builds the command-line arguments that hosts start it with.
+  `@myst-author/lsp-client/spawn` starts a server process and relays its messages as strings.
+  `@myst-author/lsp-client/client` is the CodeMirror client that talks to the language server, over a websocket or any message channel; each host passes its own connection and project root.
+  `@myst-author/lsp-client/labels` finds where a label is defined, which hosts use to follow preview links.
 
 `packages/codemirror-lang-myst`
 : MyST syntax highlighting for CodeMirror 6, on top of the Markdown mode.
@@ -44,11 +47,11 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 `packages/vscode`
 : The VS Code extension.
   It runs the same language server and shows the same preview in a webview.
-  Its live editor is a custom editor: a webview running CodeMirror with the same live preview, whose language client talks to a server process of its own.
+  Its live editor is a custom editor: a webview running CodeMirror with the same live preview, whose language client talks to a server process of its own, since VS Code can't pass its language features into a webview.
 
 `packages/jupyterlab` (`@myst-author/jupyterlab`)
 : The JupyterLab extension.
-  It connects Lab's Markdown editors to the language server of the web app's host server (`packages/app/server`), and shows that server's preview page beside them.
+  It connects Lab's Markdown editors and notebooks' Markdown cells to the language server of the web app's host server (`packages/app/server`), adds live preview to them, and shows that server's preview page beside them.
 
 ## How the web app fits together
 
@@ -65,7 +68,7 @@ flowchart TB
   end
   editor -- "read / autosave" --> files
   editor -- "LSP over websocket" --> bridge
-  bridge -- stdio --> lsp["Language server<br/>@myst-author/lsp"]
+  bridge -- stdio --> lsp["Language server<br/>mystmd-lsp"]
   preview -- "built pages, rebuild events" --> proxy
   proxy --> myst["myst start --headless"]
   lsp -- "built pages" --> myst

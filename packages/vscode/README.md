@@ -1,6 +1,6 @@
 # MyST Author for VS Code
 
-Cross-reference help (from `@myst-author/lsp`) and a live preview (from `@myst-author/preview`) inside VS Code.
+Cross-reference help (from [`mystmd-lsp`](https://github.com/choldgraf/mystmd-lsp)) and a live preview (from `@myst-author/preview`) inside VS Code.
 
 ## Build and run
 
@@ -33,7 +33,7 @@ code --install-extension packages/vscode/myst-author.vsix
 - Without mystmd the extension still runs.
   The language server only knows the open files, and the preview only shows the fast render.
 - Completion, hints, hover, go to definition, warnings, find references, rename, and workspace symbols for references and citations in Markdown files and notebooks' Markdown cells, and a page outline (Outline view, breadcrumbs, Cmd+Shift+O).
-  See the [LSP README](https://github.com/choldgraf/myst-author/tree/main/packages/lsp).
+  See [mystmd-lsp's features](https://chrisholdgraf.com/mystmd-lsp/features/).
 - To open the preview, run **MyST: Open Preview to the Side** from the Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`).
   The preview follows the active Markdown editor, but not notebooks.
   It shows mystmd's build when it matches the editor text (badge `built ✓`), and a fast in-browser render otherwise.
@@ -62,7 +62,7 @@ code --install-extension packages/vscode/myst-author.vsix
 
 After changing any package, rebuild (`node build.mjs`) and reload the window (**Developer: Reload Window**).
 
-- `build.mjs`: bundles the extension, the language server (with `@myst-author/lsp/build`), and the webview with esbuild.
+- `build.mjs`: bundles the extension and the webviews with esbuild, and copies in mystmd-lsp's server bundle as `dist/lsp.js`.
   It also builds the webview CSS with Tailwind.
 - `src/extension.ts`: starts mystmd (with `@myst-author/mystmd/start`) and the language client.
 - `src/preview.ts`: the preview panel (extension side), which connects the editor to `@myst-author/preview/controller`.

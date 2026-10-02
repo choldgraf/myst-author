@@ -61,7 +61,7 @@ npm run lab -- docs/examples/tour
 The language server on its own, for any LSP client:
 
 ```bash
-node packages/lsp/src/server.ts --stdio
+node node_modules/mystmd-lsp/dist/server.cjs --stdio
 ```
 
 ## The docs

@@ -1,14 +1,13 @@
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { fileURLToPath } from 'node:url';
-import { lspArgs } from '@myst-author/lsp/args';
-import { spawnLsp } from '@myst-author/lsp/spawn';
+import { lspArgs } from '@myst-author/lsp-client/args';
+import { spawnLsp } from '@myst-author/lsp-client/spawn';
 import { WebSocketServer } from 'ws';
 
-// Production runs the bundle from `npm run build`, which answers `initialize` several times sooner than the TypeScript source.
-const serverScript = fileURLToPath(import.meta.resolve(process.env.NODE_ENV === 'production' ? '@myst-author/lsp/dist/server.cjs' : '@myst-author/lsp/server'));
+const serverScript = fileURLToPath(import.meta.resolve('mystmd-lsp/dist/server.cjs'));
 
-/** Returns an upgrade handler that bridges each websocket to its own `@myst-author/lsp` process (see `spawnLsp`). */
+/** Returns an upgrade handler that bridges each websocket to its own `mystmd-lsp` process (see `spawnLsp`). */
 export function lspBridge(root: string, contentServer: string) {
   const wss = new WebSocketServer({ noServer: true });
   wss.on('connection', (ws) => {

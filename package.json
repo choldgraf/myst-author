@@ -6,7 +6,7 @@
   "engines": { "node": ">=24" },
   "scripts": {
     "start": "node packages/app/server/index.ts",
-    "build": "npm run build -w packages/lsp -w packages/app",
+    "build": "npm run build -w packages/app",
     "serve": "NODE_ENV=production node packages/app/server/index.ts",
     "lab": "npm run build && npm run build -w packages/jupyterlab && node packages/jupyterlab/lab.mjs",
     "test": "npm test --workspaces --if-present",
