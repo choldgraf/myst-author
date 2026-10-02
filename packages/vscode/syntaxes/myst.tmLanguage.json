@@ -1,0 +1,199 @@
+{
+  "scopeName": "text.myst.injection",
+  "injectionSelector": "L:text.html.markdown -meta.embedded -markup.inline.raw",
+  "patterns": [
+    {
+      "include": "#backtick-directive"
+    },
+    {
+      "include": "#colon-directive"
+    },
+    {
+      "include": "#role"
+    },
+    {
+      "include": "#target"
+    },
+    {
+      "include": "#block-break"
+    },
+    {
+      "include": "#comment"
+    },
+    {
+      "include": "#substitution"
+    },
+    {
+      "include": "#footnote"
+    }
+  ],
+  "repository": {
+    "backtick-directive": {
+      "begin": "^\\s*(`{3,})\\s*(\\{)(?!(?:code|code-block|code-cell|sourcecode|math|mermaid|raw)\\})([\\w:.+-]+)(\\})(.*)$",
+      "end": "^\\s*\\1\\s*$",
+      "name": "meta.directive.myst",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.directive.myst"
+        },
+        "2": {
+          "name": "punctuation.definition.directive.myst"
+        },
+        "3": {
+          "name": "entity.name.function.directive.myst"
+        },
+        "4": {
+          "name": "punctuation.definition.directive.myst"
+        },
+        "5": {
+          "name": "string.unquoted.argument.myst"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.directive.myst"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#yaml-options"
+        },
+        {
+          "include": "#option"
+        },
+        {
+          "include": "text.html.markdown"
+        }
+      ]
+    },
+    "colon-directive": {
+      "begin": "^\\s*(:{3,})\\s*(\\{)([\\w:.+-]+)(\\})(.*)$",
+      "end": "^\\s*\\1\\s*$",
+      "name": "meta.directive.myst",
+      "beginCaptures": {
+        "1": {
+          "name": "punctuation.definition.directive.myst"
+        },
+        "2": {
+          "name": "punctuation.definition.directive.myst"
+        },
+        "3": {
+          "name": "entity.name.function.directive.myst"
+        },
+        "4": {
+          "name": "punctuation.definition.directive.myst"
+        },
+        "5": {
+          "name": "string.unquoted.argument.myst"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.directive.myst"
+        }
+      },
+      "patterns": [
+        {
+          "include": "#yaml-options"
+        },
+        {
+          "include": "#option"
+        },
+        {
+          "include": "text.html.markdown"
+        }
+      ]
+    },
+    "option": {
+      "match": "^\\s*(:)([\\w-]+)(:)(?=\\s|$)",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.option.myst"
+        },
+        "2": {
+          "name": "entity.other.attribute-name.myst"
+        },
+        "3": {
+          "name": "punctuation.definition.option.myst"
+        }
+      }
+    },
+    "role": {
+      "match": "(\\{)([\\w:.+-]+)(\\})(?=`)",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.role.myst"
+        },
+        "2": {
+          "name": "entity.name.function.role.myst"
+        },
+        "3": {
+          "name": "punctuation.definition.role.myst"
+        }
+      }
+    },
+    "target": {
+      "match": "^\\s*(\\()([^)\\s]+)(\\))(=)\\s*$",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.target.myst"
+        },
+        "2": {
+          "name": "entity.name.label.myst"
+        },
+        "3": {
+          "name": "punctuation.definition.target.myst"
+        },
+        "4": {
+          "name": "punctuation.definition.target.myst"
+        }
+      }
+    },
+    "block-break": {
+      "match": "^\\+\\+\\+.*$",
+      "name": "meta.separator.myst"
+    },
+    "comment": {
+      "match": "^\\s*%.*$",
+      "name": "comment.line.percentage.myst"
+    },
+    "yaml-options": {
+      "begin": "^\\s*---\\s*$",
+      "end": "^\\s*---\\s*$|(?=^\\s*:{3,}\\s*$)",
+      "contentName": "meta.embedded.block.yaml",
+      "beginCaptures": {
+        "0": {
+          "name": "punctuation.definition.options.myst"
+        }
+      },
+      "endCaptures": {
+        "0": {
+          "name": "punctuation.definition.options.myst"
+        }
+      },
+      "patterns": [
+        {
+          "include": "source.yaml"
+        }
+      ]
+    },
+    "substitution": {
+      "match": "(\\{\\{)([^}\\n]*)(\\}\\})",
+      "captures": {
+        "1": {
+          "name": "punctuation.definition.substitution.myst"
+        },
+        "2": {
+          "name": "variable.other.substitution.myst"
+        },
+        "3": {
+          "name": "punctuation.definition.substitution.myst"
+        }
+      }
+    },
+    "footnote": {
+      "match": "\\[\\^[^\\]\\s]+\\]",
+      "name": "constant.other.footnote.myst"
+    }
+  }
+}
