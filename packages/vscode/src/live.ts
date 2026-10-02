@@ -1,7 +1,7 @@
 import { relative, sep } from 'node:path';
 import * as vscode from 'vscode';
-import { lspArgs } from '@myst-author/lsp/args';
-import { spawnLsp } from '@myst-author/lsp/spawn';
+import { lspArgs } from '@myst-author/lsp-client/args';
+import { spawnLsp } from '@myst-author/lsp-client/spawn';
 import { contentServer, sha256, type BuiltPage } from '@myst-author/mystmd/built';
 import type { startMyst } from '@myst-author/mystmd/start';
 import { webviewHtml } from './preview.ts';

@@ -3,7 +3,7 @@ import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
 import { contentServer } from '@myst-author/mystmd/built';
 import { PreviewController, type PreviewHost } from '@myst-author/preview/controller';
-import { findLabel, type Request } from '@myst-author/lsp/labels';
+import { findLabel, type Request } from '@myst-author/lsp-client/labels';
 import type { startMyst } from '@myst-author/mystmd/start';
 
 // Markdown files, not notebook cells (which are Markdown documents too).

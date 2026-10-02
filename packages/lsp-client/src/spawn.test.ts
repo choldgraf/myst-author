@@ -10,7 +10,7 @@ test('spawnLsp relays JSON-RPC messages as strings', async () => {
   const rootUri = pathToFileURL(mkdtempSync(join(tmpdir(), 'lsp-'))).href;
   let server!: ReturnType<typeof spawnLsp>;
   const reply = new Promise<any>((resolve) => {
-    server = spawnLsp(fileURLToPath(new URL('./server.ts', import.meta.url)), [], (m) => {
+    server = spawnLsp(fileURLToPath(import.meta.resolve('mystmd-lsp/dist/server.cjs')), [], (m) => {
       const message = JSON.parse(m);
       if (message.id === 1) resolve(message);
     });

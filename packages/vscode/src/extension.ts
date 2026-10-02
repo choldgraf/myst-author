@@ -3,7 +3,7 @@ import { basename, dirname, join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
-import { lspArgs } from '@myst-author/lsp/args';
+import { lspArgs } from '@myst-author/lsp-client/args';
 import { startMyst } from '@myst-author/mystmd/start';
 import { LiveEditor, type Project } from './live.ts';
 import { MystPreview } from './preview.ts';

@@ -25,7 +25,7 @@ export type PreviewHost = {
   post(message: ToPage): void; // to the preview page
   open(path: string, line: number): void;
   openExternal(url: string): void;
-  findLabel(id: string): Promise<{ path: string; line: number } | undefined>; // hosts use `findLabel` from `@myst-author/lsp/labels`
+  findLabel(id: string): Promise<{ path: string; line: number } | undefined>; // hosts use `findLabel` from `@myst-author/lsp-client/labels`
   warn(message: string): void;
 };
 

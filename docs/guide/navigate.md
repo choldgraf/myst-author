@@ -21,7 +21,6 @@ To open the outline:
 - In VS Code, open the **Outline** view in the Explorer sidebar.
   VS Code may also show its own Markdown outline there; the MyST one is the one with figures and equations.
   The breadcrumbs above the editor show the section you're in, and {kbd}`Cmd+Shift+O` searches the outline.
-- In Neovim and other LSP clients, use their document symbols command, such as `vim.lsp.buf.document_symbol()`.
 
 ## Find a label anywhere
 

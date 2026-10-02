@@ -1,6 +1,5 @@
 // VS Code runs extensions on its own Node without TypeScript support, so bundle everything into dist/.
 import { build } from 'esbuild';
-import { buildServer } from '@myst-author/lsp/build';
 import { buildCss } from '@myst-author/preview/build';
 import { cpSync } from 'node:fs';
 import { createRequire } from 'node:module';
@@ -12,13 +11,14 @@ const node = { alias, bundle: true, platform: 'node', format: 'cjs', target: 'no
 const webview = { alias, bundle: true, platform: 'browser', format: 'iife', jsx: 'automatic', minify: true, define: { 'process.env.NODE_ENV': '"production"' }, logLevel: 'warning' };
 await Promise.all([
   build({ ...node, entryPoints: ['src/extension.ts'], outfile: 'dist/extension.js', external: ['vscode'] }),
-  buildServer('dist/lsp.js'),
   build({ ...webview, entryPoints: ['src/webview.tsx'], outfile: 'dist/webview.js' }),
   build({ ...webview, entryPoints: ['src/live-webview.tsx'], outfile: 'dist/live.js' }),
 ]);
 
 const resolve = createRequire(import.meta.url).resolve;
 buildCss('dist/webview.css');
+// The language server comes bundled already.
+cpSync(resolve('mystmd-lsp/dist/server.cjs'), 'dist/lsp.js');
 // katex.min.css refers to its fonts relative to itself.
 const katex = dirname(resolve('katex/package.json'));
 cpSync(join(katex, 'dist/fonts'), 'dist/fonts', { recursive: true });

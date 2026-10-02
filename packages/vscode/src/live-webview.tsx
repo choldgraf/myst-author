@@ -3,7 +3,7 @@ import { Compartment, Prec, Transaction, type Text } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { basicSetup, EditorView } from 'codemirror';
 import { myst } from 'codemirror-lang-myst';
-import { connectLsp, messageTransport } from '@myst-author/lsp/client';
+import { connectLsp, messageTransport } from '@myst-author/lsp-client/client';
 import { bodyStart, livePreview, pageLook, showBuilt } from '@myst-author/preview/live';
 import type { Change, FromLive, Pos, ToLive } from './live.ts';
 

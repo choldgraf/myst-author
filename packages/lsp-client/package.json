@@ -1,0 +1,24 @@
+{
+  "name": "@myst-author/lsp-client",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./args": "./src/args.ts",
+    "./client": "./src/client/index.ts",
+    "./labels": "./src/labels.ts",
+    "./spawn": "./src/spawn.ts"
+  },
+  "scripts": {
+    "test": "node --test src/*.test.ts"
+  },
+  "dependencies": {
+    "@codemirror/lsp-client": "^6.3.0",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.13",
+    "vscode-languageserver": "^10.1.2"
+  },
+  "devDependencies": {
+    "mystmd-lsp": "^0.0.1",
+    "vscode-languageserver-protocol": "^3.18.4"
+  }
+}
