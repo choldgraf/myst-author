@@ -12,7 +12,7 @@
     "@codemirror/state": "^6.7.6",
     "@lezer/highlight": "^1.2.1",
     "@myst-author/lsp-client": "*",
-    "mystmd-lsp": "^0.0.1",
+    "mystmd-lsp": "^0.0.2",
     "@myst-author/mystmd": "*",
     "@myst-author/preview": "*",
     "@myst-theme/styles": "^1.4.1",
