@@ -32,7 +32,6 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 `packages/lsp-client` (`@myst-author/lsp-client`)
 : Connects the hosts to the language server.
-  `@myst-author/lsp-client/args` builds the command-line arguments that hosts start it with.
   `@myst-author/lsp-client/spawn` starts a server process and relays its messages as strings.
   `@myst-author/lsp-client/client` is the CodeMirror client that talks to the language server, over a websocket or any message channel; each host passes its own connection and project root.
   `@myst-author/lsp-client/labels` finds where a label is defined, which hosts use to follow preview links.

@@ -1,7 +1,6 @@
 import type { IncomingMessage } from 'node:http';
 import type { Duplex } from 'node:stream';
 import { fileURLToPath } from 'node:url';
-import { lspArgs } from '@myst-author/lsp-client/args';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
 import { WebSocketServer } from 'ws';
 
@@ -11,7 +10,7 @@ const serverScript = fileURLToPath(import.meta.resolve('mystmd-lsp/dist/server.c
 export function lspBridge(root: string, contentServer: string) {
   const wss = new WebSocketServer({ noServer: true });
   wss.on('connection', (ws) => {
-    const { child, send } = spawnLsp(serverScript, lspArgs(contentServer, root), (m) => ws.send(m));
+    const { child, send } = spawnLsp(serverScript, [`--content-server=${contentServer}`, `--root=${root}`], (m) => ws.send(m));
     const stop = () => child.kill();
     process.on('exit', stop);
     child.on('exit', () => { process.off('exit', stop); ws.close(); });
