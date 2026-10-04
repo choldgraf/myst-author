@@ -19,6 +19,8 @@ const resolve = createRequire(import.meta.url).resolve;
 buildCss('dist/webview.css');
 // The language server comes bundled already.
 cpSync(resolve('mystmd-lsp/dist/server.cjs'), 'dist/lsp.js');
+// So is the MyST grammar, from myst-syntax.
+cpSync(resolve('myst-syntax/myst.tmLanguage.json'), 'dist/myst.tmLanguage.json');
 // katex.min.css refers to its fonts relative to itself.
 const katex = dirname(resolve('katex/package.json'));
 cpSync(join(katex, 'dist/fonts'), 'dist/fonts', { recursive: true });
