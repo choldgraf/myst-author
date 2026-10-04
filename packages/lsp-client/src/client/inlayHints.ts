@@ -37,7 +37,7 @@ async function refresh(view: EditorView) {
 }
 
 /**
- * Inlay hints ("Figure 1" after a reference), which @codemirror/lsp-client doesn't support yet.
+ * Inlay hints ("Figure 1" after a reference), which @codemirror/lsp-client doesn't support yet (upstream/U9).
  * The server re-publishes diagnostics whenever a document or the project index changes, so we refresh on those.
  */
 export function inlayHints(): LSPClientExtension {
