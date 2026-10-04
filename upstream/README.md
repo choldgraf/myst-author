@@ -11,6 +11,7 @@ These are proposals for the mystmd and myst-theme maintainers to decide on, not 
 | U5 | Reusable single-page browser preview (from `myst-demo`) | myst-theme | idea |
 | U6 | `baseurl` fix for sites served under a sub-path, e.g. on JupyterHub ([mystmd#302](https://github.com/jupyter-book/mystmd/issues/302)) | myst-theme | idea |
 | U7 | Column-accurate inline positions in myst-parser (large) | mystmd | idea |
+| U8 | Export a single-page parse (myst-parser, the default extensions and page transforms), a `myst start --headless` launcher, and a content-server client. MyST Author and mystmd-lsp each keep a copy of all three | mystmd | idea |
 
 ## Data and packaging gaps (candidates for small fixes)
 
