@@ -12,6 +12,8 @@ To show "Figure 3: Rainfall by month" for a label, a tool must fetch and walk th
 - Editors (autocomplete, hover cards) and other tools that want a cheap index of every label in a project.
 - Remote cross-references: `transformMystXRefs` fetches page JSON to compute link text for every remote xref.
 - Anyone scraping a MyST site via the documented `myst.xref.json` workflow.
+- Language servers: [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) refetches every page's JSON from `myst start` after each rebuild, so on every save, only to list each label's file, line, enumerator, and text.
+  With these fields and a source location (see open questions), and `myst start` rewriting `myst.xref.json` on rebuilds, it could fetch one file instead.
 
 ## Proposal
 
@@ -63,3 +65,5 @@ The file will get bigger (roughly one caption or heading string per entry).
 - Snippet for headings (first paragraph of the section): useful for hover cards, but needs a sibling walk and grows the file more.
   Proposal: leave it for a follow-up.
 - Should remote xref resolution use the new fields to skip fetching page JSON? That would be a separate follow-up.
+- Should entries also carry their source file and line, for editors' go to definition?
+  Page JSON already has the file as `location`, and target nodes have a `position`.

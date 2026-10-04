@@ -40,6 +40,12 @@ const sendDiagnostics = () =>
 
 For CI, add `warnings: session.store.getState().local.warnings` to `buildLog` before `writeJsonLogs`.
 
+### Also in page JSON
+
+Each page's own warnings could also go in its page JSON (`/content/{slug}.json`), for example as `warnings: BuildWarning[]`.
+Tools that already read page JSON then get them without a websocket client.
+For example, mystmd-lsp could forward mystmd's warnings as diagnostics instead of reimplementing checks such as unknown directives and missing targets.
+
 ## Where in the code
 
 - Socket and `sendJson`: [`build/site/start.ts:93-135`](https://github.com/jupyter-book/mystmd/blob/e64d019/packages/myst-cli/src/build/site/start.ts#L93-L135); the connection handler is at line 99.
