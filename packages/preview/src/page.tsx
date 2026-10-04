@@ -4,8 +4,11 @@ import type { Built } from '@myst-author/mystmd/built';
 import type { FromPage, ToPage } from './controller.ts';
 import { Preview, usePreview } from './Preview.tsx';
 
-/** A page that previews one file for a host editor (a VS Code webview, a JupyterLab iframe), driven by a `PreviewController`. */
-type Host = { postMessage(message: FromPage): void };
+/**
+ * A page that previews one file for a host editor (a VS Code webview, a JupyterLab panel), driven by a `PreviewController`.
+ * `postMessage` sends the host a message; `listen` registers the one function that receives the host's.
+ */
+type Host = { postMessage(message: FromPage): void; listen(receive: (message: ToPage) => void): void };
 
 type Doc = { path: string; text: string; dirty: boolean };
 
@@ -15,14 +18,12 @@ function App({ host }: { host: Host }) {
   const [topLine, setTopLine] = useState(1);
 
   useEffect(() => {
-    const onMessage = ({ data: m }: MessageEvent<ToPage>) => {
+    host.listen((m) => {
       if (m.type === 'text') setDoc(m);
       else if (m.type === 'built') setBuilt(m);
       else if (m.type === 'scroll') setTopLine(m.line);
-    };
-    window.addEventListener('message', onMessage);
+    });
     host.postMessage({ type: 'ready' });
-    return () => window.removeEventListener('message', onMessage);
   }, []);
 
   const { result, badge } = usePreview(doc?.path, doc?.text ?? '', !!doc?.dirty, built);
@@ -41,6 +42,8 @@ function App({ host }: { host: Host }) {
   );
 }
 
-export function mountPreviewPage(host: Host) {
-  createRoot(document.getElementById('root')!).render(<App host={host} />);
+export function mountPreviewPage(element: Element, host: Host) {
+  const root = createRoot(element);
+  root.render(<App host={host} />);
+  return root;
 }

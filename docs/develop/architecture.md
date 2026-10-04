@@ -18,7 +18,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 `packages/preview` (`@myst-author/preview`)
 : Renders a MyST page with `myst-to-react`, from the [fast in-browser parse or mystmd's built page](../guide/preview.md#fast-and-built-previews).
   Each rendered block keeps its source line range, which is what click-to-source and scroll sync use.
-  `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews embed.
+  `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews show.
   `@myst-author/preview/controller` runs in the extension and drives that page: it sends the current file and handles clicks.
   `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block with the cursor.
   Its `pageLook` makes the editor read like the page, as in the web app and the VS Code live editor.
@@ -51,7 +51,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 `packages/jupyterlab` (`@myst-author/jupyterlab`)
 : The JupyterLab extension.
-  It connects Lab's Markdown editors and notebooks' Markdown cells to the language server of the web app's host server (`packages/app/server`), adds live preview to them, and shows that server's preview page beside them.
+  It connects Lab's Markdown editors and notebooks' Markdown cells to the language server of the web app's host server (`packages/app/server`), adds live preview to them, and shows the preview page beside them.
 
 ## How the web app fits together
 
@@ -91,7 +91,7 @@ flowchart TB
 The VS Code extension does the same without the host server: it starts `myst start --headless` and the language server itself, and fetches built pages from mystmd directly.
 
 The JupyterLab extension uses the host server, which jupyter-server-proxy runs inside Jupyter.
-Lab's editors connect to its `/lsp` bridge, and the preview panel is an iframe of its `preview.html`.
+Lab's editors connect to its `/lsp` bridge, and live preview and the preview panel fetch built pages through its `/myst` proxy.
 Lab reads and saves the files itself, so it doesn't use `/api/files`.
 
 ## Adding a host
