@@ -65,7 +65,7 @@ test('a broken reference produces a message instead of throwing', () => {
 
 test('embeds show a placeholder until mystmd builds them', () => {
   const { blocks } = parseMyst('![](#a)\n\n```{embed} #b\n```\n');
-  assert.deepEqual(blocks.map((b) => [b.node.type, b.node.children[0].value]), [
+  assert.deepEqual(blocks.map((b) => [b.node.type, b.node.children![0].value]), [
     ['span', '#a is embedded after mystmd builds'],
     ['span', '#b is embedded after mystmd builds'],
   ]);
@@ -74,12 +74,12 @@ test('embeds show a placeholder until mystmd builds them', () => {
 test('a built page marks embeds that mystmd could not resolve', () => {
   const embed = { type: 'embed', key: 'e', source: { label: 'nope' } };
   const { blocks } = fromBuiltPage({ sha256: '', location: '/index.md', mdast: { type: 'root', children: [embed] } } as any);
-  assert.equal(blocks[0].node.children[0].value, "Broken embed: mystmd couldn't find #nope");
+  assert.equal(blocks[0].node.children![0].value, "Broken embed: mystmd couldn't find #nope");
 });
 
 test('references to other pages show their label until mystmd builds them', () => {
   const { blocks } = parseMyst('See [](#a), {ref}`b` and @c.\n');
-  const refs = blocks[0].node.children.filter((c: any) => c.type === 'span');
+  const refs = blocks[0].node.children!.filter((c: any) => c.type === 'span');
   assert.deepEqual(refs.map((c: any) => c.children[0].value), ['#a', '#b', '@c']);
 });
 
@@ -91,7 +91,7 @@ test('a built page marks references that mystmd could not resolve', () => {
     { type: 'crossReference', label: 'ok', resolved: true, children: [{ type: 'text', value: 'OK' }] },
   ] };
   const { blocks } = fromBuiltPage({ sha256: '', location: '/index.md', mdast: { type: 'root', children: [para] } } as any);
-  assert.deepEqual(blocks[0].node.children.map((c: any) => [c.type, c.children[0].value]), [['span', '⚠ #a'], ['span', '⚠ #b'], ['span', '⚠ @c'], ['crossReference', 'OK']]);
+  assert.deepEqual(blocks[0].node.children!.map((c: any) => [c.type, c.children[0].value]), [['span', '⚠ #a'], ['span', '⚠ #b'], ['span', '⚠ @c'], ['crossReference', 'OK']]);
 });
 
 test('a built page keeps its line ranges, using content positions for directive output', () => {

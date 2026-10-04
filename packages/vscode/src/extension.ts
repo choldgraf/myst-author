@@ -11,7 +11,7 @@ let client: LanguageClient | undefined;
 let myst: Awaited<ReturnType<typeof startMyst>> | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
-  const output = vscode.window.createOutputChannel('MyST');
+  const output = vscode.window.createOutputChannel('MyST', { log: true }); // the language client logs to it with `info`, `error`…
   let project: string | undefined;
   let preview: MystPreview | undefined;
   context.subscriptions.push(

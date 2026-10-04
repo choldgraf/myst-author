@@ -1,0 +1,16 @@
+{
+  // Typecheck only (`npm run typecheck`): Node runs the TypeScript directly, and esbuild and Vite bundle it.
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "module": "preserve",
+    "target": "es2024",
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "types": ["node"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["css.d.ts", "packages/*/src", "packages/*/server", "packages/*/vite.config.ts"]
+}

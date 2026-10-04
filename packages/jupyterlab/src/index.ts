@@ -127,7 +127,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         await cell.ready;
         attachEditor(cell.editor as CodeMirrorEditor, (l) => `${l.uri(nb.context.path)}#${cell.model.id}`);
         return true;
-      })).then((added) => added.includes(true) && sendBuiltCells(nb));
+      })).then((added) => { if (added.includes(true)) sendBuiltCells(nb); });
 
     // A notebook's build has one block per cell, and no hash to compare with, so cells use it while the notebook is saved: that's what mystmd built.
     const sendBuiltCells = async (nb: NotebookPanel) => {

@@ -26,5 +26,8 @@
     "./built": "./src/built.ts",
     "./parse": "./src/parse.ts",
     "./start": "./src/start.ts"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9"
   }
 }
