@@ -4,10 +4,11 @@ import { ArticleProvider, ThemeProvider } from '@myst-theme/providers';
 import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, MyST } from 'myst-to-react';
 import { mystmdMissing, sha256, type Built } from '@myst-author/mystmd/built';
-import { fromBuiltPage, parseMyst, type ParseResult } from './parse.ts';
+import { fromBuiltPage, parseMyst, withBuiltBlocks, withSourceLines, type ParseResult } from './parse.ts';
 
 /**
- * What to preview for a file's live text: mystmd's build when it matches the text exactly, otherwise the fast in-browser parse.
+ * What to preview for a file's live text: mystmd's build when it matches the text exactly, otherwise the fast in-browser parse,
+ * in which blocks you haven't changed since the last matching build keep that build.
  * `badge` says which one it is, and `builtMatch` is the matching build with the text it matches, for the live editor (`./live`).
  */
 export function usePreview(path: string | undefined, text: string, dirty: boolean, built: Built | null) {
@@ -23,7 +24,16 @@ export function usePreview(path: string | undefined, text: string, dirty: boolea
   const current = built?.path === path ? built : null;
   const page = current?.page?.sha256 === hashed.hash ? current.page : null;
   const builtMatch = useMemo(() => (page ? { page, text: hashed.text } : null), [page, hashed]);
-  const result = useMemo(() => (page ? fromBuiltPage(page) : parseMyst(deferred)), [page, deferred]);
+  // That build with the fast parse's lines (a copy: `fromBuiltPage` edits it), kept while you edit.
+  const matched = useMemo(() => builtMatch && { path, text: builtMatch.text, result: withSourceLines(fromBuiltPage(structuredClone(builtMatch.page)), parseMyst(builtMatch.text)) }, [builtMatch]);
+  const kept = useRef(matched);
+  if (matched) kept.current = matched;
+  const result = useMemo(() => {
+    if (page) return fromBuiltPage(page);
+    const fast = parseMyst(deferred);
+    const k = kept.current;
+    return k?.result && k.path === path ? withBuiltBlocks(fast, deferred, k.result, k.text) : fast;
+  }, [page, deferred]);
   const badge = current?.error === mystmdMissing ? 'no mystmd'
     : page ? 'built ✓'
     : dirty ? 'fast preview · unsaved'

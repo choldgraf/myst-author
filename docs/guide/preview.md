@@ -18,7 +18,8 @@ The cursor lands on the text you clicked.
 
 - Tabs, dropdowns, and buttons in a rendered block work without opening its source.
 - A block with a warning, such as a broken reference, has an orange bar on its left. Open it to see the warning.
-- Blocks render like the [fast preview](preview.md#fast-and-built-previews), so embeds and references to other pages show grey placeholders until mystmd has built your latest saved text.
+- Blocks render from mystmd's [build](preview.md#fast-and-built-previews) when it matches your text.
+  A block you've edited since renders like the fast preview, so its embeds and references to other pages show grey placeholders until mystmd has built your latest saved text.
   In a notebook, cells show the build while the notebook is saved.
 
 Live preview works in the web editor, in JupyterLab, where it also covers notebooks' Markdown cells while you edit them, and in VS Code.
@@ -37,6 +38,7 @@ There are two versions of the preview, shown in the same pane:
   Embeds and references whose label mystmd can't find show in red with a ⚠, instead of the blank mystmd leaves.
 
 The editor shows the built preview whenever mystmd's latest build matches the text in the editor, and the fast preview otherwise.
+In the fast preview, blocks you haven't changed since the last matching build still show that build.
 The badge in the toolbar tells you which one you're looking at:
 
 | Badge | Meaning |
