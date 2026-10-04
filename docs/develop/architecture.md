@@ -36,9 +36,6 @@ The editor features live in reusable packages, and each host (the web app, VS Co
   `@myst-author/lsp-client/client` is the CodeMirror client that talks to the language server, over a websocket or any message channel; each host passes its own connection and project root.
   `@myst-author/lsp-client/labels` finds where a label is defined, which hosts use to follow preview links.
 
-`packages/codemirror-lang-myst`
-: MyST syntax highlighting for CodeMirror 6, on top of the Markdown mode.
-
 `packages/app` (`myst-author`)
 : The web editor.
   A React app (CodeMirror editor, file list, preview) and a small Node server that hosts it.
@@ -57,7 +54,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 ```{mermaid}
 flowchart TB
   subgraph browser[Browser]
-    editor["Editor<br/>CodeMirror + codemirror-lang-myst"]
+    editor["Editor<br/>CodeMirror + myst-syntax"]
     preview["Preview<br/>@myst-author/preview"]
   end
   subgraph host["Host server (packages/app/server)"]

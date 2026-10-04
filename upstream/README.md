@@ -6,7 +6,7 @@ These are proposals for the mystmd, myst-theme, and CodeMirror maintainers to de
 |---|---|---|---|
 | U1 | [Richer xref entries: `title`, `enumerator`](U1-richer-xref-entries.md) | mystmd | written up |
 | U2 | [Structured diagnostics over `/socket` and in page JSON](U2-structured-diagnostics.md) | mystmd | written up |
-| U3 | `codemirror-lang-myst` | new package (jupyter-book org) | idea |
+| U3 | MyST syntax highlighting for CodeMirror and TextMate, now in [myst-syntax](https://github.com/choldgraf/myst-syntax) | jupyter-book org | moved out |
 | U4 | Language server | jupyter-book org | idea |
 | U5 | Reusable single-page browser preview (from `myst-demo`) | myst-theme | idea |
 | U6 | `baseurl` fix for sites served under a sub-path, e.g. on JupyterHub ([mystmd#302](https://github.com/jupyter-book/mystmd/issues/302)) | myst-theme | idea |

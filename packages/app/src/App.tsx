@@ -10,7 +10,7 @@ import { followLink } from '@myst-author/preview/controller';
 import { livePreview, pageLook, showBuilt } from '@myst-author/preview/live';
 import { listFiles, projectRoot, readFile, writeFile } from './api.ts';
 import { Editor } from './Editor.tsx';
-import { myst } from 'codemirror-lang-myst';
+import { myst } from 'myst-syntax/codemirror';
 import { type Item, QuickSwitcher } from './QuickSwitcher.tsx';
 
 type Doc = { path: string; text: string };

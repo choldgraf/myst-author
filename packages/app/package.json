@@ -17,7 +17,7 @@
     "@myst-author/preview": "*",
     "@myst-theme/styles": "^1.4.1",
     "codemirror": "^6.0.2",
-    "codemirror-lang-myst": "*",
+    "myst-syntax": "github:choldgraf/myst-syntax",
     "http-proxy-3": "^2.0.1",
     "katex": "^0.15.6",
     "react": "^19.0.0",
