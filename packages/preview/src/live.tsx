@@ -5,13 +5,13 @@ import { Facet, Prec, StateEffect, StateField, type EditorState, type Extension,
 import { Decoration, EditorView, keymap, WidgetType, type DecorationSet } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import type { BuiltPage } from '@myst-author/mystmd/built';
-import { fromBuiltPage, parseMyst, spans, withSourceLines, type Block, type ParseResult, type Span } from './parse.ts';
+import { fromBuiltPage, parseMyst, spans, withBuiltBlocks, withSourceLines, type Block, type ParseResult, type Span } from './parse.ts';
 import { INTERACTIVE, Preview } from './Preview.tsx';
 
 /** A span's character offsets in the editor, and an `id` for what it renders. (`start`/`end` are as of the last parse.) */
 type Located = Span & { from: number; to: number; id: string };
-/** The last parse, its spans moved through the edits since, and whether those edits left it `stale`. */
-type Live = { result: ParseResult; spans: Located[]; stale: boolean; decorations: DecorationSet };
+/** The last parse, its spans moved through the edits since, and whether those edits left it `stale`. `built` is the last build that matched the editor's text, and that text. */
+type Live = { result: ParseResult; spans: Located[]; stale: boolean; decorations: DecorationSet; built?: { result: ParseResult; text: string } };
 
 const mounted = new WeakMap<HTMLElement, { root: Root; resize: ResizeObserver }>();
 
@@ -100,13 +100,13 @@ function decorate(state: EditorState, result: ParseResult, located: Located[]) {
 
 /**
  * Render from mystmd's build of `text`, which resolves embeds and references to other pages, if the editor still has that text.
- * Until the next build, editing a block goes back to the fast parse, like the preview pane.
+ * Until the next build, a block you edit renders from the fast parse, like the preview pane; the others keep the build.
  */
 export const showBuilt = StateEffect.define<{ page: BuiltPage; text: string }>();
 
-function build(state: EditorState, result?: ParseResult): Live {
+function build(state: EditorState, result?: ParseResult, built?: Live['built']): Live {
   const text = state.doc.toString();
-  result ??= parseMyst(text);
+  result ??= built ? withBuiltBlocks(parseMyst(text), text, built.result, built.text) : parseMyst(text);
   const located = spans(result, text.split('\n'))
     .filter((s) => s.end <= state.doc.lines)
     .map((s) => ({
@@ -115,7 +115,7 @@ function build(state: EditorState, result?: ParseResult): Live {
       to: state.doc.line(s.end).to,
       id: s.blocks.length ? identity(s.blocks) : String(result.frontmatter.title),
     }));
-  return { result, spans: located, stale: false, decorations: decorate(state, result, located) };
+  return { result, spans: located, stale: false, decorations: decorate(state, result, located), built };
 }
 
 /**
@@ -129,7 +129,7 @@ function update(value: Live, tr: Transaction): Live {
   if (built && built.text === tr.state.doc.toString()) {
     // A copy: the preview pane renders the same page, and `fromBuiltPage` edits it.
     const result = withSourceLines(fromBuiltPage(structuredClone(built.page)), parseMyst(built.text));
-    if (result) return build(tr.state, result);
+    if (result) return build(tr.state, result, { result, text: built.text });
   }
   let local = true;
   tr.changes.iterChangedRanges((from, to) => {
@@ -138,7 +138,7 @@ function update(value: Live, tr: Transaction): Live {
   // Text typed at a span's edges joins it.
   const moved = tr.docChanged ? value.spans.map((s) => ({ ...s, from: tr.changes.mapPos(s.from, -1), to: tr.changes.mapPos(s.to, 1) })) : value.spans;
   const stale = value.stale || tr.docChanged;
-  if (stale && (!local || revealed(tr.startState, value.spans) !== revealed(tr.state, moved))) return build(tr.state);
+  if (stale && (!local || revealed(tr.startState, value.spans) !== revealed(tr.state, moved))) return build(tr.state, undefined, value.built);
   return { ...value, spans: moved, stale, decorations: decorate(tr.state, value.result, moved) };
 }
 

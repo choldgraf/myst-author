@@ -109,6 +109,24 @@ export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Sp
   return out;
 }
 
+/**
+ * `fast`, the fast parse of `text`, with the nodes of `built` wherever a span's source is the same as in `builtText`, the text `built` was built from.
+ * `built` needs the fast parse's lines (see `withSourceLines`). Editing a span then only renders that span from the fast parse until the next build.
+ * ponytail: unchanged spans keep the build's numbering and references, even when an edit elsewhere changes them, until the next build.
+ */
+export function withBuiltBlocks(fast: ParseResult, text: string, built: ParseResult, builtText: string): ParseResult {
+  const source = (s: Span, lines: string[]) => lines.slice(s.start - 1, s.end).join('\n');
+  const builtLines = builtText.split('\n');
+  const kept = Map.groupBy(spans(built, builtLines), (s) => source(s, builtLines));
+  const lines = text.split('\n');
+  const nodes = new Map<Block, GenericNode>();
+  for (const s of spans(fast, lines)) {
+    const match = kept.get(source(s, lines))?.shift();
+    if (match?.blocks.length === s.blocks.length) s.blocks.forEach((b, i) => nodes.set(b, match.blocks[i].node));
+  }
+  return { ...fast, references: built.references, blocks: fast.blocks.map((b) => ({ ...b, node: nodes.get(b) ?? b.node })) };
+}
+
 // Built pages drop positions on directive output (admonition, figure, tabs…); their content keeps them.
 // Included content carries the other file's lines, so don't look inside it.
 function firstPosition(node: GenericNode) {
