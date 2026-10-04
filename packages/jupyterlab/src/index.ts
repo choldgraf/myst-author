@@ -12,16 +12,16 @@ import { Widget } from '@lumino/widgets';
 import { connectLsp } from '@myst-author/lsp-client/client';
 import { findLabel } from '@myst-author/lsp-client/labels';
 import { contentServer, sha256 } from '@myst-author/mystmd/built';
-import { PreviewController } from '@myst-author/preview/controller';
+import { PreviewController, type ToPage } from '@myst-author/preview/controller';
 import { livePreview, showBuilt } from '@myst-author/preview/live';
-import liveCss from '../dist/live.css'; // the preview's CSS, for live blocks' shadow roots (see build.mjs)
+import { mountPreviewPage } from '@myst-author/preview/page';
+import liveCss from '../dist/live.css'; // the preview's CSS, for the shadow roots of live blocks and the preview panel (see build.mjs)
 
 type Editor = IDocumentWidget<FileEditor>;
 type Lsp = ReturnType<typeof connectLsp>;
 
 // The MyST Author server, which jupyter-server-proxy runs at <base>/myst-author/ (see binder/jupyter_server_config.py).
 const server = URLExt.join(PageConfig.getBaseUrl(), 'myst-author/');
-const serverOrigin = new URL(server, location.href).origin;
 // Jupyter's root folder as a file:// URI (set by jupyter-lsp, which ships with JupyterLab), to map Lab paths to document URIs.
 // The server's `/lsp` bridge starts the language server with the project folder, which overrides this root.
 const jupyterRoot = PageConfig.getOption('rootUri').replace(/\/$/, '');
@@ -32,6 +32,11 @@ const content = contentServer(server + 'myst');
 const live = livePreview({ css: `${liveCss}\n.article { font-size: var(--jp-content-font-size1); line-height: var(--jp-content-line-height) }` });
 const liveMode = new Compartment();
 let liveOn = true;
+// The preview panel also renders in a shadow root. A shadow root has no `:root`, so myst-theme's colour variables go on its host, as live preview does.
+// The inner div is the page's body. Lab lays out the panel with `contain: strict`, which keeps the badge's `position: fixed` inside it.
+const previewCss = new CSSStyleSheet();
+previewCss.replaceSync(`${liveCss.replaceAll(':root', ':host')}
+:host > div { position: relative; box-sizing: border-box; height: 100%; overflow: auto; padding: 1rem 2rem; background: white; color: black }`);
 
 const isMarkdown = (w: Editor | null): w is Editor => !!w && w.context.path.endsWith('.md');
 const cm = (w: Editor) => w.content.editor as CodeMirrorEditor;
@@ -179,16 +184,17 @@ const plugin: JupyterFrontEndPlugin<void> = {
   },
 };
 
-/** The shared preview page (served by the MyST Author server) in an iframe, following the current Markdown editor. */
+/** The preview page (`@myst-author/preview/page`, as in VS Code) in a shadow root, following the current Markdown editor. */
 class MystPreview extends Widget {
-  private iframe = document.createElement('iframe');
   private editor: Editor | null = null;
+  private receive: (m: ToPage) => void = () => {};
+  private root: ReturnType<typeof mountPreviewPage>;
   private preview = new PreviewController({
     current: async () => {
       const w = this.editor;
       return w ? { path: PathExt.relative(await this.project, w.context.path), text: w.content.model.sharedModel.getSource(), dirty: w.context.model.dirty, line: topLine(w) } : undefined;
     },
-    post: (m) => this.iframe.contentWindow?.postMessage(m, serverOrigin),
+    post: (m) => this.receive(m),
     open: async (path, line) => show(this.docs, PathExt.join(await this.project, path), line),
     openExternal: (url) => void window.open(url, '_blank', 'noopener'),
     findLabel: async (id) => {
@@ -204,16 +210,18 @@ class MystPreview extends Widget {
     super();
     this.title.label = 'MyST Preview';
     this.title.closable = true;
-    this.iframe.src = server + 'preview.html';
-    this.iframe.style.cssText = 'width: 100%; height: 100%; border: 0';
-    this.node.appendChild(this.iframe);
-    window.addEventListener('message', this.onMessage);
+    const shadow = this.node.attachShadow({ mode: 'open' });
+    shadow.adoptedStyleSheets = [previewCss];
+    this.root = mountPreviewPage(shadow.appendChild(document.createElement('div')), {
+      postMessage: (m) => this.preview.onMessage(m),
+      listen: (receive) => (this.receive = receive),
+    });
     tracker.currentChanged.connect((_, w) => this.follow(w), this);
     this.follow(tracker.currentWidget);
   }
 
   dispose() {
-    window.removeEventListener('message', this.onMessage);
+    this.root.unmount();
     this.editor && cm(this.editor).editor.scrollDOM.removeEventListener('scroll', this.onScroll);
     this.preview.dispose();
     Signal.clearData(this);
@@ -241,10 +249,6 @@ class MystPreview extends Widget {
   }
 
   private onScroll = () => this.editor && this.preview.scroll(topLine(this.editor));
-
-  private onMessage = ({ source, data }: MessageEvent) => {
-    if (source === this.iframe.contentWindow) this.preview.onMessage(data);
-  };
 }
 
 export default plugin;
