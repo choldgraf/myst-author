@@ -3,6 +3,8 @@ import { createServer, type AddressInfo } from 'node:net';
 import { createInterface } from 'node:readline';
 import { mystmdMissing } from './built.ts';
 
+// ponytail: mystmd-lsp (`src/mystmd/start.ts`) has a headless-only copy of this; port fixes between the two. A launcher exported by mystmd would replace both.
+
 /** A port that's free on 127.0.0.1 right now. */
 function freePort(): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -17,6 +19,7 @@ function freePort(): Promise<number> {
  * Run `myst start --headless` in `root`, or with `site`, `myst start`, which also serves the built site at `siteUrl`.
  * We pick the ports, so `url` (the content server) is known before the first build; `ready` resolves once it's serving, or with `site`, once the site is.
  * `ready` rejects with the message `mystmdMissing` if mystmd isn't installed.
+ * `exited` rejects if mystmd dies, including after `stop`.
  * mystmd's output goes to `log`, a line at a time.
  */
 export async function startMyst(root: string, log = console.log, { site = false } = {}) {
@@ -29,13 +32,17 @@ export async function startMyst(root: string, log = console.log, { site = false 
   const stop = () => child.kill();
   process.on('exit', stop);
 
+  // Rejects if mystmd dies, even after `ready` has resolved.
+  const exited = new Promise<never>((_, reject) => child.on('exit', (code) => reject(new Error(`myst exited with code ${code}`))));
+  exited.catch(() => {});
+
   const ready = new Promise<void>((resolve, reject) => {
     child.on('error', (err: NodeJS.ErrnoException) => {
       if (err.code !== 'ENOENT') return reject(err);
       log('mystmd not found; built preview disabled (install mystmd or set MYST_BIN)');
       reject(new Error(mystmdMissing));
     });
-    child.on('exit', (code) => reject(new Error(`myst exited with code ${code}`)));
+    exited.catch(reject);
     for (const stream of [child.stdout, child.stderr]) {
       createInterface({ input: stream }).on('line', (line) => {
         log(`[myst] ${line}`);
@@ -45,5 +52,5 @@ export async function startMyst(root: string, log = console.log, { site = false 
     }
   });
   ready.catch(() => {}); // callers that don't wait for mystmd mustn't crash when it's missing
-  return { url: `http://127.0.0.1:${port}`, siteUrl: `http://127.0.0.1:${sitePort}`, ready, stop };
+  return { url: `http://127.0.0.1:${port}`, siteUrl: `http://127.0.0.1:${sitePort}`, ready, exited, stop };
 }

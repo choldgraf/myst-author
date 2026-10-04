@@ -12,13 +12,15 @@ import { lspBridge } from './lsp.ts';
 const root = path.resolve(process.argv[2] ?? '.');
 const port = Number(process.env.PORT ?? 4321);
 
-// The content server for the built preview. Until it's up, /myst/* answers 503 with this reason.
+// The content server for the built preview. Until it's up, or once it stops, /myst/* answers 503 with this reason.
 const myst = await startMyst(root);
 let mystDown = 'myst starting';
-myst.ready.then(
-  () => (mystDown = ''),
-  (err) => (mystDown = err.message),
-);
+myst.ready
+  .then(() => {
+    mystDown = '';
+    return myst.exited;
+  })
+  .catch((err) => (mystDown = err.message));
 const lsp = lspBridge(root, myst.url); // the LSP loads the project once myst is up; until then it knows open documents
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => process.exit()); // runs the 'exit' hook that stops myst
 const proxy = createProxyServer();
