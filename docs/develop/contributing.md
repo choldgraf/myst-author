@@ -29,9 +29,12 @@ npm install
 
 ```bash
 npm test
+npm run typecheck
 ```
 
-This runs each package's tests with `node --test`.
+`npm test` runs each package's tests with `node --test`.
+`npm run typecheck` checks the types of every package with `tsc`, using the root `tsconfig.json`.
+CI runs both, and builds the web app and the VS Code and JupyterLab extensions.
 
 ## Run each host
 

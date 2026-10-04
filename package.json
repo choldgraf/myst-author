@@ -11,7 +11,9 @@
     "lab": "npm run build && npm run build -w packages/jupyterlab && node packages/jupyterlab/lab.mjs",
     "vscode": "npm run package -w packages/vscode && code --install-extension packages/vscode/myst-author.vsix --force",
     "test": "npm test --workspaces --if-present",
+    "typecheck": "tsc",
     "build:docs": "cd docs && npx -y mystmd build --html",
     "docs:live": "cd docs && npx -y mystmd start"
-  }
+  },
+  "devDependencies": { "typescript": "^7.0.2" }
 }

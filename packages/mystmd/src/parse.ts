@@ -47,7 +47,7 @@ export function parseMyst(md: string) {
   if (first?.type === 'code' && first.lang === 'yaml' && md.startsWith('---')) {
     tree.children.shift();
     try {
-      frontmatter = (load(first.value) as object) ?? {};
+      frontmatter = (load(first.value!) as object) ?? {};
     } catch {} // half-typed YAML is normal while editing
   }
 
