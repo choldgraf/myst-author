@@ -68,7 +68,7 @@
         "mystAuthor.serverPath": {
           "type": "string",
           "default": "",
-          "description": "Path to a mystmd-lsp server script, such as packages/mystmd-lsp/dist/server.cjs from a clone, to use instead of the bundled one. Reload the window after changing it."
+          "description": "Path to a mystmd-lsp server script, such as dist/server.cjs from a mystmd-lsp clone, to use instead of the bundled one. Reload the window after changing it."
         }
       }
     },
