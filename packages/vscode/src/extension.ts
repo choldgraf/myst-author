@@ -3,7 +3,6 @@ import { basename, dirname, join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
-import { lspArgs } from '@myst-author/lsp-client/args';
 import { startMyst } from '@myst-author/mystmd/start';
 import { LiveEditor, serverScript, type Project } from './live.ts';
 import { MystPreview } from './preview.ts';
@@ -43,7 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
     const lsp = new LanguageClient(
       'mystAuthor',
       'MyST Author',
-      { module: serverScript(context), transport: TransportKind.ipc, args: lspArgs(myst.url) },
+      { module: serverScript(context), transport: TransportKind.ipc, args: [`--content-server=${myst.url}`] },
       {
         documentSelector: [{ scheme: 'file', language: 'markdown' }],
         outputChannel: output,
