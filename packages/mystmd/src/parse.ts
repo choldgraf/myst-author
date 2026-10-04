@@ -28,7 +28,7 @@ import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 import { VFile } from 'vfile';
 
-// ponytail: the mystmd-lsp language server (mystmd-lsp `src/mystmd/parse.ts`) parses the same way; keep the two in step. A parse exported by mystmd would replace both.
+// ponytail: mystmd-lsp (`src/mystmd/parse.ts`) has a copy of this parse; keep the two in step. A parse exported by mystmd would replace both (upstream/README.md, U8).
 // The extensions mystmd enables by default, so the parse matches `myst build`.
 const extDirectives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
 const extRoles = [buttonRole];

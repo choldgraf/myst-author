@@ -1,5 +1,7 @@
 import type { GenericParent } from 'myst-common';
 
+// ponytail: mystmd-lsp (`src/mystmd/content-server.ts`) has a smaller copy of this client (`pages` and `watch`); port fixes between the two. A client exported by mystmd would replace both.
+
 /** The parts of a `myst start` page JSON (`/content/{slug}.json`) that we use. */
 export type BuiltPage = {
   sha256: string;
