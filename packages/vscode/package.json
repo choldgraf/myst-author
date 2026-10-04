@@ -45,10 +45,6 @@
         "icon": "$(book)"
       },
       {
-        "command": "mystAuthor.openSite",
-        "title": "MyST: Open Built Site"
-      },
-      {
         "command": "mystAuthor.showLog",
         "title": "MyST: Show Log"
       }
