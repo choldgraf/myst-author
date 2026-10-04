@@ -54,6 +54,9 @@ export function activate(context: vscode.ExtensionContext) {
     watch.forEach((w) => w.dispose());
     output.appendLine(`Starting mystmd in ${root}`);
     myst = await startMyst(root, (line) => output.appendLine(stripVTControlCharacters(line)));
+    // Failing to start is reported by the preview; this is for mystmd dying later, which otherwise looks like a build that never finishes.
+    const { ready, exited } = myst;
+    ready.then(() => exited.catch((e) => vscode.window.showWarningMessage(`MyST: mystmd stopped (${e.message}). See MyST: Show Log.`)), () => {});
     onStart({ root, myst });
     // The LSP loads the whole project once mystmd has built it; until then it knows the open files.
     const lsp = new LanguageClient(
