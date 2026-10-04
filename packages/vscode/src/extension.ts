@@ -10,7 +10,6 @@ import { MystPreview } from './preview.ts';
 
 let client: LanguageClient | undefined;
 let myst: Awaited<ReturnType<typeof startMyst>> | undefined;
-let site: Promise<Awaited<ReturnType<typeof startMyst>>> | undefined; // started on the first MyST: Open Built Site
 
 export function activate(context: vscode.ExtensionContext) {
   const output = vscode.window.createOutputChannel('MyST');
@@ -20,26 +19,8 @@ export function activate(context: vscode.ExtensionContext) {
     output,
     vscode.commands.registerCommand('mystAuthor.openPreview', () =>
       preview ? preview.open() : vscode.window.showInformationMessage('Open a Markdown file in a MyST project (a folder with myst.yml) to preview it.')),
-    vscode.commands.registerCommand('mystAuthor.openSite', openSite),
     vscode.commands.registerCommand('mystAuthor.showLog', () => output.show()),
   );
-
-  // The built site, from a second `myst start` that serves the theme too.
-  // ponytail: it isn't headless, so it builds the project again; serve the site from the main mystmd if that gets slow.
-  async function openSite() {
-    if (!project) return vscode.window.showInformationMessage('Open a Markdown file in a MyST project (a folder with myst.yml) to see its site.');
-    const root = project;
-    site ??= startMyst(root, (line) => output.appendLine(stripVTControlCharacters(line)), { site: true });
-    try {
-      const s = await site;
-      await s.ready;
-      const url = await vscode.env.asExternalUri(vscode.Uri.parse(s.siteUrl)); // forwarded in Codespaces and code-server
-      await vscode.commands.executeCommand('simpleBrowser.show', url.toString());
-    } catch (e) {
-      site = undefined;
-      vscode.window.showWarningMessage(`MyST: couldn't start the site (${(e as Error).message}). See MyST: Show Log.`);
-    }
-  }
 
   // The live editor waits for the project's mystmd; the first `start` settles this.
   let onStart!: (p: Project) => void;
@@ -97,7 +78,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 export async function deactivate() {
   myst?.stop();
-  site?.then((s) => s.stop());
   await client?.stop();
 }
 

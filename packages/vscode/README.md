@@ -57,8 +57,6 @@ Reload open VS Code windows afterwards.
 - The extension turns off VS Code's own Markdown link suggestions (`markdown.suggest.paths.enabled`) in every Markdown file, since they suggest GitHub-style heading slugs that mystmd doesn't use for labeled headings.
   The language server completes files and labels instead.
 - mystmd's and the language server's output go to the **MyST** output channel; **MyST: Show Log** opens it.
-- **MyST: Open Built Site** shows the site `myst start` builds, with its theme, in VS Code's Simple Browser.
-  It starts a second mystmd that serves the site, so the first run is slower while mystmd downloads its theme.
 - To use your own build of the language server, set `mystAuthor.serverPath` to its script, such as `dist/server.cjs` in a mystmd-lsp clone, and reload the window.
 
 ## Develop

@@ -3,7 +3,7 @@ import { createServer, type AddressInfo } from 'node:net';
 import { createInterface } from 'node:readline';
 import { mystmdMissing } from './built.ts';
 
-// ponytail: mystmd-lsp (`src/mystmd/start.ts`) has a headless-only copy of this; port fixes between the two. A launcher exported by mystmd would replace both.
+// ponytail: mystmd-lsp (`src/mystmd/start.ts`) has a copy of this; port fixes between the two. A launcher exported by mystmd would replace both.
 
 /** A port that's free on 127.0.0.1 right now. */
 function freePort(): Promise<number> {
@@ -16,18 +16,18 @@ function freePort(): Promise<number> {
 }
 
 /**
- * Run `myst start --headless` in `root`, or with `site`, `myst start`, which also serves the built site at `siteUrl`.
- * We pick the ports, so `url` (the content server) is known before the first build; `ready` resolves once it's serving, or with `site`, once the site is.
+ * Run `myst start --headless` in `root`.
+ * We pick the port, so `url` (the content server) is known before the first build; `ready` resolves once it's serving.
  * `ready` rejects with the message `mystmdMissing` if mystmd isn't installed.
  * `exited` rejects if mystmd dies, including after `stop`.
  * mystmd's output goes to `log`, a line at a time.
  */
-export async function startMyst(root: string, log = console.log, { site = false } = {}) {
-  const [port, sitePort] = await Promise.all([freePort(), freePort()]); // asked together, so they differ
+export async function startMyst(root: string, log = console.log) {
+  const port = await freePort();
   // myst reads PORT as its own theme-server port. Pin HOST so it doesn't bind IPv6-only `localhost`, which proxies like code-server's miss.
   const { PORT, ...rest } = process.env;
   const env = { ...rest, HOST: '127.0.0.1' };
-  const args = ['start', ...(site ? ['--port', String(sitePort)] : ['--headless']), '--server-port', String(port)];
+  const args = ['start', '--headless', '--server-port', String(port)];
   const child = spawn(process.env.MYST_BIN ?? 'myst', args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   const stop = () => child.kill();
   process.on('exit', stop);
@@ -46,11 +46,10 @@ export async function startMyst(root: string, log = console.log, { site = false 
     for (const stream of [child.stdout, child.stderr]) {
       createInterface({ input: stream }).on('line', (line) => {
         log(`[myst] ${line}`);
-        // With the site, mystmd doesn't report the content server, only the site once its theme is ready.
-        if (line.includes(site ? `started on port ${sitePort}!` : 'Content server started')) resolve();
+        if (line.includes('Content server started')) resolve();
       });
     }
   });
   ready.catch(() => {}); // callers that don't wait for mystmd mustn't crash when it's missing
-  return { url: `http://127.0.0.1:${port}`, siteUrl: `http://127.0.0.1:${sitePort}`, ready, exited, stop };
+  return { url: `http://127.0.0.1:${port}`, ready, exited, stop };
 }
