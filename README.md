@@ -33,7 +33,7 @@ To run it on your computer, you need Node 24 or newer.
 ```bash
 git clone https://github.com/choldgraf/myst-author && cd myst-author
 npm install
-npm start -- docs/examples/tour     # or the path to your own MyST project
+npm run demo                     # a copy of the tour; or `npm start -- path/to/your/project`
 ```
 
 To run it from any folder as `myst-author`, run `npm link -w packages/app` once.
