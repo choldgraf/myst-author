@@ -35,6 +35,11 @@ test('spans: the titled frontmatter, and each block with the label lines above i
   );
 });
 
+test('spans: a list leaves the blank line after it out, so it stays as spacing', () => {
+  const list = '- a\n- b\n\nAfter';
+  assert.deepEqual(spans(parseMyst(list), list.split('\n')).map((s) => [s.start, s.end]), [[1, 2], [4, 4]]);
+});
+
 test('withSourceLines: built blocks take the lines of the fast parse, or null if the blocks differ', () => {
   const fast = parseMyst(md);
   const built = { ...fast, blocks: fast.blocks.map((b) => ({ ...b, start: 1, end: 1 })) };

@@ -26,7 +26,6 @@ Each block shows its Markdown when the cursor reaches it, and renders again when
 ```{figure} https://raw.githubusercontent.com/jupyter-book/mystmd/main/docs/public/logo.svg
 :label: fig-live
 :width: 160px
-:
 
 A figure on this page.
 ```

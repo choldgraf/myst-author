@@ -101,10 +101,12 @@ export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Sp
     const last = out.at(-1);
     let start = b.start;
     while (start - 1 > (last?.end ?? 0) && LABEL.test(lines[start - 2])) start--;
+    let end = b.end;
+    while (end > start && !lines[end - 1]?.trim()) end--; // markdown-it ends a list after its trailing blank line
     if (last && start <= last.end) {
-      last.end = Math.max(last.end, b.end);
+      last.end = Math.max(last.end, end);
       last.blocks.push(b);
-    } else out.push({ start, end: b.end, blocks: [b] });
+    } else out.push({ start, end, blocks: [b] });
   }
   return out;
 }
