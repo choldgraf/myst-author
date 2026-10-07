@@ -1,7 +1,8 @@
-import { relative, sep } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
-import { contentServer, sha256, type BuiltPage } from '@myst-author/mystmd/built';
+import { contentServer, sha256, type BuiltPage, type ContentServer } from '@myst-author/mystmd/built';
+import { followLink } from '@myst-author/preview/controller';
 import type { startMyst } from '@myst-author/mystmd/start';
 import { webviewHtml } from './preview.ts';
 
@@ -30,7 +31,8 @@ export type FromLive =
   | { type: 'ready' }
   | { type: 'edit'; changes: Change[] } // one CodeMirror transaction: positions in the text before it, as in a WorkspaceEdit
   | { type: 'lsp'; message: string }
-  | { type: 'definition' | 'references' | 'rename'; at: Pos }; // cross-file actions, which VS Code handles
+  | { type: 'definition' | 'references' | 'rename'; at: Pos } // cross-file actions, which VS Code handles
+  | { type: 'follow'; href: string; line?: number }; // Cmd/Ctrl-click on a rendered link
 
 const toPos = (p: vscode.Position): Pos => ({ line: p.line, character: p.character });
 
@@ -72,6 +74,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
       }));
 
     let server: ReturnType<typeof spawnLsp> | undefined;
+    let content: ContentServer | undefined;
     let stopWatch: (() => void) | undefined;
     let disposed = false;
     const connect = ({ root, myst }: Project) => {
@@ -82,10 +85,10 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
       // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.
       myst.ready.then(() => {
         if (disposed) return;
-        const content = contentServer(myst.url, assets);
+        const built = (content = contentServer(myst.url, assets));
         const path = relative(root, document.uri.fsPath).split(sep).join('/');
-        stopWatch = content.watch(async () => {
-          const { page } = await content.built(path);
+        stopWatch = built.watch(async () => {
+          const { page } = await built.built(path);
           const text = document.getText();
           if (page && page.sha256 === (await sha256(text))) post({ type: 'built', page, text: text.replaceAll('\r\n', '\n') });
         });
@@ -104,6 +107,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
         else if (m.type === 'definition') this.definition(document, at(m.at));
         else if (m.type === 'references') this.references(document, at(m.at), post);
         else if (m.type === 'rename') this.rename(document, at(m.at));
+        else if (m.type === 'follow') project?.then(({ root }) => this.follow(document, root, content, m, post));
       }),
       // Edits from anywhere else (the text editor, its undo, a rename, git) go to the webview.
       vscode.workspace.onDidChangeTextDocument((e) => {
@@ -125,6 +129,27 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     if (!loc) return;
     const [uri, selection] = 'targetUri' in loc ? [loc.targetUri, loc.targetSelectionRange ?? loc.targetRange] : [loc.uri, loc.range];
     vscode.window.showTextDocument(uri, { selection });
+  }
+
+  /** Follow a rendered link as the preview does. A target in this file is selected in the webview; others open in a text editor, like `definition`. */
+  private follow(document: vscode.TextDocument, root: string, content: ContentServer | undefined, { href, line }: { href: string; line?: number }, post: (m: ToLive) => void) {
+    const projectPath = (uri: vscode.Uri) => relative(root, uri.fsPath).split(sep).join('/');
+    return followLink({
+      open: (path, line) => {
+        const uri = vscode.Uri.file(resolve(root, path));
+        if (uri.fsPath === document.uri.fsPath) post({ type: 'select', at: { line, character: 0 } });
+        else vscode.window.showTextDocument(uri, { selection: new vscode.Range(line, 0, line, 0) });
+      },
+      openExternal: (url) => vscode.env.openExternal(vscode.Uri.parse(url)),
+      // The server names each label's workspace symbol by the lowercased label (see lsp-client's `findLabel`).
+      findLabel: async (id) => {
+        const symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeWorkspaceSymbolProvider', id);
+        const s = symbols?.find((s) => s.name === id.toLowerCase());
+        return s && { path: projectPath(s.location.uri), line: s.location.range.start.line };
+      },
+      warn: (message) => vscode.window.showWarningMessage(message),
+      fileForSlug: (slug) => content?.fileForSlug(slug),
+    }, projectPath(document.uri), href, line);
   }
 
   /** References across the project. VS Code's peek view needs a text editor, so pick one from a list. */

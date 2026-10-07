@@ -20,7 +20,9 @@ type Lsp = ReturnType<typeof connectLsp>;
 const content = contentServer('myst');
 // Live preview in the editor, switched on and off without remounting it.
 const liveMode = new Compartment();
-const liveExtensions = [livePreview(), pageLook];
+// Cmd/Ctrl-click on a rendered link calls App's latest `follow`.
+const followRef: { current?: (href: string, line?: number) => void } = {};
+const liveExtensions = [livePreview({ onFollowLink: (href, line) => followRef.current?.(href, line) }), pageLook];
 
 export function App() {
   const [files, setFiles] = useState<string[]>([]);
@@ -182,6 +184,7 @@ export function App() {
       fileForSlug: content.fileForSlug,
     }, doc.path, href, line);
   }
+  followRef.current = follow;
 
   return (
     <div className="layout">
