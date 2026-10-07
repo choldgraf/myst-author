@@ -36,6 +36,7 @@ npm install
 npm start -- docs/examples/tour     # or the path to your own MyST project
 ```
 
+To run it from any folder as `myst-author`, run `npm link -w packages/app` once.
 See [Get started](https://choldgraf.github.io/myst-author/get-started) for more options.
 
 ## Documentation

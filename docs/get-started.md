@@ -22,6 +22,10 @@ Set `PORT` to use another port, for example `PORT=8000 npm start -- docs/example
 On macOS it also opens a browser tab; set `NO_OPEN=1` to stop that.
 If `myst` isn't on your `PATH`, set `MYST_BIN` to its location.
 
+To run it from any folder as `myst-author`, run `npm link -w packages/app` once in the clone.
+Then run `myst-author` in a project folder, or `myst-author path/to/project`.
+It runs your clone, so a `git pull` updates it.
+
 The editor still runs without mystmd, but it only knows about the open file.
 References to labels in other files aren't completed or checked, and you only get the [fast preview](guide/preview.md).
 
