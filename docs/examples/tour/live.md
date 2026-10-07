@@ -96,7 +96,7 @@ The dropdown above shows its Markdown, with the match selected.
 :::
 
 :::{tip} Try this: compare the views
-Click **Live** in the toolbar to see the plain Markdown, and click it again to come back.
+Click **Source** in the toolbar to see the plain Markdown, and **Live** to come back.
 Click **Preview** to see the whole page beside the editor.
 :::
 

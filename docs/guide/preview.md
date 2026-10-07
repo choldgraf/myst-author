@@ -5,10 +5,10 @@ description: Live preview in the editor, the fast and built previews, the badge,
 
 There are two ways to see the open file as a MyST page:
 
-- **Live** renders it inside the editor. It's on by default.
+- **Live** renders it inside the editor. It's the default.
 - **Preview** shows it in a pane beside the editor.
 
-Use the buttons in the toolbar to turn each one on or off.
+Switch between them, or to plain **Source**, with the buttons in the toolbar.
 
 ## Live preview
 

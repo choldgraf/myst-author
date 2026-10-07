@@ -30,8 +30,10 @@ export function App() {
   const [text, setText] = useState(''); // live editor content
   const [status, setStatus] = useState('');
   const [showFiles, setShowFiles] = useState(true);
-  const [showLive, setShowLive] = useState(true);
-  const [showPreview, setShowPreview] = useState(false);
+  // Source: plain Markdown. Live: rendered in the editor. Preview: plain Markdown beside the rendered page.
+  const [mode, setMode] = useState<'Source' | 'Preview' | 'Live'>('Live');
+  const showLive = mode === 'Live';
+  const showPreview = mode === 'Preview';
   const [switcher, setSwitcher] = useState(false);
   const [topLine, setTopLine] = useState(1);
   const [built, setBuilt] = useState<Built | null>(null); // mystmd's latest build of the open file
@@ -189,13 +191,19 @@ export function App() {
   return (
     <div className="layout">
       <div className="toolbar">
-        <button aria-pressed={showFiles} onClick={() => setShowFiles(!showFiles)}>Files</button>
-        <button onClick={() => setSwitcher(true)}>Open <kbd>⌘P</kbd></button>
-        <span className="title">{doc?.path}<span className="status">{status}</span></span>
-        <span className="badge" title="Preview source">{badge}</span>
-        <span className="toggles">
-          <button aria-pressed={showLive} onClick={() => setShowLive(!showLive)}>Live</button>
-          <button aria-pressed={showPreview} onClick={() => setShowPreview(!showPreview)}>Preview</button>
+        <span className="side">
+          <button aria-pressed={showFiles} onClick={() => setShowFiles(!showFiles)}>Files</button>
+          <button onClick={() => setSwitcher(true)}>Open <kbd>⌘P</kbd></button>
+        </span>
+        <span className="title">{doc?.path}</span>
+        <span className="side end">
+          <span className="status">{status}</span>
+          <span className="badge" title="Preview source">{badge}</span>
+          <span className="toggles">
+            {(['Source', 'Preview', 'Live'] as const).map((m) => (
+              <button key={m} aria-pressed={mode === m} onClick={() => setMode(m)}>{m}</button>
+            ))}
+          </span>
         </span>
       </div>
       <div className="panes">
