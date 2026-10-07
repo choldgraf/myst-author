@@ -28,7 +28,7 @@ export function App() {
   const [files, setFiles] = useState<string[]>([]);
   const [doc, setDoc] = useState<Doc | null>(null); // the file as loaded (editor's initial content)
   const [text, setText] = useState(''); // live editor content
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(''); // errors and warnings; the preview badge shows the save state
   const [showFiles, setShowFiles] = useState(true);
   // Source: plain Markdown. Live: rendered in the editor. Preview: plain Markdown beside the rendered page.
   const [mode, setMode] = useState<'Source' | 'Preview' | 'Live'>('Live');
@@ -84,10 +84,9 @@ export function App() {
 
   useEffect(() => {
     if (!doc || text === saved.current) return;
-    setStatus('unsaved');
     const t = setTimeout(() => {
       writeFile(doc.path, text)
-        .then(() => { saved.current = text; setStatus('saved'); })
+        .then(() => { saved.current = text; setStatus(''); })
         .catch((err) => setStatus(`save failed: ${err.message}`));
     }, 500);
     return () => clearTimeout(t);

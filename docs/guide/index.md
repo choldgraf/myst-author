@@ -23,7 +23,7 @@ The toolbar has four buttons:
   Start with `@` to jump to a label anywhere in the project, or `#` to jump within this page's [outline](navigate.md).
 - **Source**, **Preview** and **Live** switch how the page shows: plain Markdown, Markdown beside the [preview](preview.md) pane, or rendered [inside the editor](preview.md#live-preview) (the default).
 
-On the right of the toolbar are the open file, its save state, and the preview [badge](preview.md#fast-and-built-previews).
+The open file's name is in the middle of the toolbar, and the preview [badge](preview.md#fast-and-built-previews) is on the right.
 
 One file is open at a time.
 Changes save about 500 ms after you stop typing, and again when you close the tab.
