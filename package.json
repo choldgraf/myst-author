@@ -6,6 +6,7 @@
   "engines": { "node": ">=24" },
   "scripts": {
     "start": "node packages/app/server/index.ts",
+    "demo": "d=$(mktemp -d) && cp -R docs/examples/tour/. \"$d\" && npm start -- \"$d\"",
     "build": "npm run build -w packages/app",
     "serve": "NODE_ENV=production node packages/app/server/index.ts",
     "lab": "npm run build && npm run build -w packages/jupyterlab && node packages/jupyterlab/lab.mjs",

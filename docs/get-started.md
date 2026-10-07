@@ -14,11 +14,13 @@ You need Node 24 or newer.
 git clone https://github.com/choldgraf/myst-author
 cd myst-author
 npm install
-npm start -- docs/examples/tour
+npm run demo
 ```
 
+`npm run demo` opens a copy of the tour project in a temporary folder, so your edits don't touch the repository.
+
 The editor opens at <http://127.0.0.1:4321>.
-Set `PORT` to use another port, for example `PORT=8000 npm start -- docs/examples/tour`.
+Set `PORT` to use another port, for example `PORT=8000 npm run demo`.
 On macOS it also opens a browser tab; set `NO_OPEN=1` to stop that.
 If `myst` isn't on your `PATH`, set `MYST_BIN` to its location.
 
