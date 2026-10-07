@@ -19,7 +19,7 @@
     "@codemirror/view": "^6.43.13"
   },
   "devDependencies": {
-    "mystmd-lsp": "^0.0.2",
+    "mystmd-lsp": "^0.0.3",
     "vscode-languageserver-protocol": "^3.18.4"
   }
 }
