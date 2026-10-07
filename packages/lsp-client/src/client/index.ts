@@ -52,6 +52,18 @@ const definitionClick = EditorView.domEventHandlers({
   },
 });
 
+// Completion icons for MyST. lsp-client turns each LSP kind into a coarse CodeMirror type, and drops some (Reference, File, Operator, Snippet).
+// ponytail: types are shared, so figures and citations look alike; an lsp-client option to map kinds would separate them.
+const icon = (content: string, fontSize = '90%') => ({ '&:after': { content: `'${content}'`, fontSize } });
+const completionIcons = EditorView.theme({
+  '.cm-completionIcon:not([class*="cm-completionIcon-"])': icon('#'), // labels, equations, code, files
+  '.cm-completionIcon-namespace': icon('§'), // headings, external projects
+  '.cm-completionIcon-constant': icon('▣'), // figures, citations
+  '.cm-completionIcon-class': icon('▦'), // tables
+  '.cm-completionIcon-keyword': icon('{}', '70%'), // directives
+  '.cm-completionIcon-property': icon(':'), // directive options
+});
+
 /**
  * Connect to the language server at `server`: a websocket URL relative to the page (http(s) means ws(s)),
  * or a transport when the host relays messages itself (see `messageTransport`).
@@ -61,7 +73,7 @@ export function connectLsp(server: string | Transport, root: string) {
   const client = new LSPClient({
     rootUri: root,
     timeout: 20000, // the host starts a language server process per connection, which can take seconds on a busy host (e.g. Binder)
-    extensions: [inlayHints(), ...languageServerExtensions(), { editorExtension: definitionClick }], // inlayHints first: serverDiagnostics consumes the notification
+    extensions: [inlayHints(), ...languageServerExtensions(), { editorExtension: [definitionClick, completionIcons] }], // inlayHints first: serverDiagnostics consumes the notification
   });
   if (typeof server === 'string') keepConnected(client, new URL(server, location.href).href.replace(/^http/, 'ws'));
   else client.connect(server);
