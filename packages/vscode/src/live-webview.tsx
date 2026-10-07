@@ -48,7 +48,7 @@ function create(text: string) {
       markdown(),
       myst(),
       EditorView.lineWrapping,
-      livePreview(),
+      livePreview({ onFollowLink: (href, line) => vscode.postMessage({ type: 'follow', href, line }) }),
       pageLook,
       EditorView.theme({ '&.cm-focused': { outline: 'none' } }),
       lsp.of([]),

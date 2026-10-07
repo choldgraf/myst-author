@@ -18,6 +18,10 @@ const mounted = new WeakMap<HTMLElement, { root: Root; resize: ResizeObserver }>
 // The stylesheet for rendering blocks in shadow roots, when the host passes `css` (see `livePreview`).
 const shadowStyles = Facet.define<CSSStyleSheet, CSSStyleSheet | undefined>({ combine: (sheets) => sheets[0] });
 
+type FollowLink = (href: string, line?: number) => void;
+// What Cmd/Ctrl-click on a rendered link does, when the host passes `onFollowLink` (see `livePreview`).
+const linkFollower = Facet.define<FollowLink, FollowLink | undefined>({ combine: (fs) => fs[0] });
+
 // Node positions and keys change on every parse; leave them out so unchanged blocks keep their DOM.
 const identity = (blocks: Block[]) => JSON.stringify(blocks.map((b) => b.node), (k, v) => (k === 'position' || k === 'key' ? undefined : v));
 
@@ -41,14 +45,16 @@ class Rendered extends WidgetType {
     const shadow = sheet && dom.attachShadow({ mode: 'open' });
     if (shadow) shadow.adoptedStyleSheets = [sheet];
     const root = createRoot(shadow ? shadow.appendChild(document.createElement('div')) : dom);
-    root.render(<Preview result={page} />);
+    root.render(<Preview result={page} onFollowLink={view.state.facet(linkFollower)} />);
     // React renders after this returns, and images load and dropdowns open later: have CodeMirror measure the new height each time.
     const resize = new ResizeObserver(() => view.requestMeasure());
     resize.observe(dom);
     mounted.set(dom, { root, resize });
     // A click reveals the span's source, with the cursor on the clicked text.
     dom.addEventListener('mousedown', (e) => {
-      if (e.button !== 0 || (e.composedPath()[0] as Element).closest?.(INTERACTIVE)) return; // the target inside a shadow root
+      const target = e.composedPath()[0] as Element; // the target inside a shadow root
+      if (e.button !== 0 || target.closest?.(INTERACTIVE)) return;
+      if ((e.metaKey || e.ctrlKey) && target.closest?.('a[href]')) return; // Preview follows the link on click, as in the preview pane
       e.preventDefault();
       const span = view.state.field(liveField).spans.find((s) => s.from === view.posAtDOM(dom));
       if (!span) return;
@@ -180,13 +186,15 @@ const theme = EditorView.baseTheme({
  * Like `Preview`, blocks need myst-theme's and KaTeX's CSS. By default that's the page's CSS.
  * A host whose own CSS clashes with it (JupyterLab) passes the CSS as `css`: blocks then render in shadow roots that share it.
  * KaTeX's fonts still need its CSS on the page, because shadow roots ignore `@font-face`. The host sets the editor's font.
+ * `onFollowLink` handles Cmd/Ctrl-click on a rendered link, like `Preview`'s; a plain click shows the source.
  */
-export function livePreview({ css }: { css?: string } = {}): Extension {
-  if (!css) return [liveField, arrows, theme];
+export function livePreview({ css, onFollowLink }: { css?: string; onFollowLink?: FollowLink } = {}): Extension {
+  const base = [liveField, arrows, theme, onFollowLink ? linkFollower.of(onFollowLink) : []];
+  if (!css) return base;
   const sheet = new CSSStyleSheet();
   // A shadow root has no `:root`, so myst-theme's colour variables go on its host instead.
   sheet.replaceSync(`${css.replaceAll(':root', ':host')}\n[data-line-start] > * { margin-top: 0; margin-bottom: 0 }`); // as the theme does outside shadow roots
-  return [liveField, arrows, theme, shadowStyles.of(sheet)];
+  return [base, shadowStyles.of(sheet)];
 }
 
 /** Where the body starts, after any frontmatter. Editors start the cursor there, so live preview shows the page title rendered. */
@@ -194,13 +202,23 @@ export const bodyStart = (text: string) => /^---\n[\s\S]*?\n---\n/.exec(text)?.[
 
 /**
  * Live preview that reads like the page: a centred column, a proportional font (code stays monospace), and no gutters.
+ * Source text and headings use the rendered page's sizes, so showing a block's source doesn't reflow the page.
  * The web app and the VS Code live editor use it; JupyterLab keeps Lab's editor look.
  */
 export const pageLook: Extension = [
   EditorView.theme({
-    '.cm-content': { maxWidth: '46rem', margin: '0 auto', padding: '2.5rem 1.5rem 30vh', fontFamily: 'system-ui, sans-serif', lineHeight: '1.6' },
+    // myst-theme's body text (Tailwind typography's `prose`).
+    '.cm-content': { maxWidth: '46rem', margin: '0 auto', padding: '2.5rem 1.5rem 30vh', fontFamily: 'system-ui, sans-serif', fontSize: '16px', lineHeight: '1.75' },
     '.cm-gutters': { display: 'none' },
     '.cm-activeLine': { backgroundColor: 'transparent' }, // otherwise the blank line under the title, where the cursor starts, shows as a band
   }),
-  syntaxHighlighting(HighlightStyle.define([{ tag: tags.monospace, fontFamily: 'monospace' }])),
+  // `prose`'s heading sizes. ponytail: hard-coded to match myst-theme; read its CSS if they drift.
+  syntaxHighlighting(HighlightStyle.define([
+    { tag: tags.monospace, fontFamily: 'monospace' },
+    { tag: tags.heading1, fontSize: '2.25em', lineHeight: '1.11', fontWeight: '800' },
+    { tag: tags.heading2, fontSize: '1.5em', lineHeight: '1.33', fontWeight: '700' },
+    { tag: tags.heading3, fontSize: '1.25em', lineHeight: '1.6', fontWeight: '600' },
+    { tag: [tags.heading4, tags.heading5, tags.heading6], fontWeight: '600' },
+    { tag: tags.processingInstruction, color: '#9ca3af' }, // Markdown marks: `##`, `**`, `-`, `[]()`
+  ])),
 ];
