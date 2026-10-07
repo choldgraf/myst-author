@@ -105,6 +105,11 @@ Everything about MyST lives in the packages; a host provides only what depends o
 
 ## Design choices
 
+- **Each feature goes in the lowest layer that can hold it.**
+  First the language server, which every editor can use.
+  Then a CodeMirror extension in `packages/preview`, which the web app, JupyterLab and the VS Code live editor share.
+  A host adds only what's listed in [Adding a host](#adding-a-host).
+  The web app is the simplest host, not a full IDE: features that VS Code and JupyterLab already have, such as git or file management, are left to them.
 - **The preview uses mystmd's own code.** The fast preview uses mystmd's parser and transforms.
   The built preview is mystmd's output.
   There is no separate MyST parser to keep in sync.
