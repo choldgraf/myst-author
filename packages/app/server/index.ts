@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createProxyServer } from 'http-proxy-3';
 import sirv from 'sirv';
+import { sha256 } from '@myst-author/mystmd/built';
 import { startMyst } from '@myst-author/mystmd/start';
 import { listMarkdown, resolveInside } from './files.ts';
 import { lspBridge } from './lsp.ts';
@@ -65,6 +66,9 @@ const server = http.createServer(async (req, res) => {
     }
     const abs = resolveInside(root, rel);
     if (req.method === 'PUT') {
+      // Don't overwrite changes made on disk (by an LLM, git, another editor) since the browser last read or saved the file.
+      const base = req.headers['if-match'];
+      if (base && base !== (await sha256(await readFile(abs, 'utf8')))) return res.writeHead(409).end(`${rel} changed on disk`);
       await writeFile(abs, await readBody(req));
       res.statusCode = 204;
       return res.end();
