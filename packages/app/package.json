@@ -2,7 +2,9 @@
   "name": "myst-author",
   "private": true,
   "type": "module",
-  "bin": { "myst-author": "server/index.ts" },
+  "bin": {
+    "myst-author": "server/index.ts"
+  },
   "scripts": {
     "build": "vite build",
     "test": "node --test server/files.test.ts"
@@ -13,14 +15,14 @@
     "@codemirror/state": "^6.7.6",
     "@lezer/highlight": "^1.2.1",
     "@myst-author/lsp-client": "*",
-    "mystmd-lsp": "^0.0.2",
     "@myst-author/mystmd": "*",
     "@myst-author/preview": "*",
     "@myst-theme/styles": "^1.4.1",
     "codemirror": "^6.0.2",
-    "myst-syntax": "github:choldgraf/myst-syntax",
     "http-proxy-3": "^2.0.1",
     "katex": "^0.15.6",
+    "myst-syntax": "github:choldgraf/myst-syntax",
+    "mystmd-lsp": "^0.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sirv": "^3.0.2",
