@@ -1,15 +1,22 @@
+#!/usr/bin/env node
 import { spawn } from 'node:child_process';
 import { readFile, writeFile } from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { parseArgs } from 'node:util';
 import { createProxyServer } from 'http-proxy-3';
 import sirv from 'sirv';
 import { startMyst } from '@myst-author/mystmd/start';
 import { listMarkdown, resolveInside } from './files.ts';
 import { lspBridge } from './lsp.ts';
 
-const root = path.resolve(process.argv[2] ?? '.');
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { help: { type: 'boolean', short: 'h' } } });
+if (values.help || positionals.length > 1) {
+  console.log('Usage: myst-author [folder]\n\nEdit the MyST project in folder (default: the current folder).\nEnvironment: PORT, MYST_BIN, NO_OPEN=1');
+  process.exit(values.help ? 0 : 1);
+}
+const root = path.resolve(positionals[0] ?? '.');
 const port = Number(process.env.PORT ?? 4321);
 
 // The content server for the built preview. Until it's up, or once it stops, /myst/* answers 503 with this reason.
