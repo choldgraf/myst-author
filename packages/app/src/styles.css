@@ -26,6 +26,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .toolbar kbd { margin-left: 0.3rem; padding: 0 0.3rem; border: 1px solid var(--line); border-radius: 4px; font: 11px system-ui, sans-serif; color: var(--muted); }
 .toolbar .title { max-width: 40vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 .toolbar .status, .toolbar .badge { margin-right: 0.5rem; overflow: hidden; text-overflow: ellipsis; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.toolbar .conflict { flex-shrink: 0; overflow: visible; color: var(--text); }
 .toggles { display: flex; padding: 2px; border-radius: calc(var(--radius) + 2px); background: var(--panel); border: 1px solid var(--line); }
 .toggles button { padding: 0.15rem 0.65rem; }
 .toggles button[aria-pressed='true'] { background: white; box-shadow: 0 1px 2px #0000001f; }

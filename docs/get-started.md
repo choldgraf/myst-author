@@ -60,6 +60,7 @@ npm start -- path/to/your/project
 ```
 
 MyST Author edits your files in place and saves as you type.
+When another program changes the open file, such as an LLM or git, the editor shows the change; if you have unsaved edits, it asks which version to keep.
 It runs `myst start --headless` in that folder to build the preview and find the labels in every file.
 It edits `.md` files only.
 Other files, such as notebooks and `.bib` files, are still used by the build.

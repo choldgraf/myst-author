@@ -5,10 +5,11 @@ import type { DocumentSymbol, SymbolInformation } from 'vscode-languageserver-pr
 import { connectLsp } from '@myst-author/lsp-client/client';
 import { findLabel } from '@myst-author/lsp-client/labels';
 import { type Built, Preview, usePreview } from '@myst-author/preview';
-import { contentServer } from '@myst-author/mystmd/built';
+import { contentServer, sha256 } from '@myst-author/mystmd/built';
 import { followLink } from '@myst-author/preview/controller';
 import { livePreview, pageLook, showBuilt } from '@myst-author/preview/live';
 import { listFiles, projectRoot, readFile, writeFile } from './api.ts';
+import { minimalChange } from './change.ts';
 import { Editor } from './Editor.tsx';
 import { myst } from 'myst-syntax/codemirror';
 import { type Item, QuickSwitcher } from './QuickSwitcher.tsx';
@@ -29,6 +30,7 @@ export function App() {
   const [doc, setDoc] = useState<Doc | null>(null); // the file as loaded (editor's initial content)
   const [text, setText] = useState(''); // live editor content
   const [status, setStatus] = useState(''); // errors and warnings; the preview badge shows the save state
+  const [conflict, setConflict] = useState(false); // the file changed on disk while it had unsaved edits: autosave waits for a choice
   const [showFiles, setShowFiles] = useState(true);
   // Source: plain Markdown. Live: rendered in the editor. Preview: plain Markdown beside the rendered page.
   const [mode, setMode] = useState<'Source' | 'Preview' | 'Live'>('Live');
@@ -44,6 +46,25 @@ export function App() {
   const latest = useRef({ doc, text });
   latest.current = { doc, text };
 
+  // Save, unless the file changed on disk since we last read or saved it: then the server refuses, and we ask.
+  const save = useCallback(async (path: string, text: string) => {
+    try {
+      await writeFile(path, text, { base: await sha256(saved.current) });
+      saved.current = text;
+    } catch (err) {
+      if ((err as { status?: number }).status === 409) setConflict(true);
+      throw err;
+    }
+  }, []);
+
+  // Show `next` in the editor as the saved text, changing only what differs.
+  const replaceText = useCallback((next: string) => {
+    const view = viewRef.current;
+    if (!view) return;
+    saved.current = next;
+    view.dispatch({ changes: minimalChange(view.state.doc.toString(), next) });
+  }, []);
+
   const open = useCallback(async (path: string) => {
     setSwitcher(false);
     let loaded: string;
@@ -51,7 +72,7 @@ export function App() {
       loaded = await readFile(path);
       // Flush after loading, reading the ref, so keystrokes typed while the switch was in flight aren't lost.
       const cur = latest.current;
-      if (cur.doc && cur.text !== saved.current) await writeFile(cur.doc.path, cur.text);
+      if (cur.doc && cur.text !== saved.current) await save(cur.doc.path, cur.text);
     } catch (err) {
       setStatus(`couldn't open ${path}: ${(err as Error).message}`);
       return;
@@ -61,6 +82,7 @@ export function App() {
     setDoc({ path, text: loaded });
     setTopLine(1);
     setStatus('');
+    setConflict(false);
   }, []);
 
   useEffect(() => {
@@ -83,21 +105,20 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (!doc || text === saved.current) return;
+    if (!doc || conflict || text === saved.current) return;
     const t = setTimeout(() => {
-      writeFile(doc.path, text)
-        .then(() => { saved.current = text; setStatus(''); })
-        .catch((err) => setStatus(`save failed: ${err.message}`));
+      save(doc.path, text).then(() => setStatus(''), (err) => setStatus(`save failed: ${err.message}`));
     }, 500);
     return () => clearTimeout(t);
-  }, [doc, text]);
+  }, [doc, text, conflict]);
 
   // Last-chance save when the tab closes.
+  // ponytail: no conflict check, since hashing is async and the tab is closing; it only overwrites a change made in the last half second.
   useEffect(() => {
-    const flush = () => { if (doc && text !== saved.current) writeFile(doc.path, text, true); };
+    const flush = () => { if (doc && !conflict && text !== saved.current) writeFile(doc.path, text, { keepalive: true }); };
     window.addEventListener('beforeunload', flush);
     return () => window.removeEventListener('beforeunload', flush);
-  }, [doc, text]);
+  }, [doc, text, conflict]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -123,7 +144,23 @@ export function App() {
     content.built(path).then((b) => latest.current.doc?.path === path && setBuilt(b));
   }, []);
   useEffect(refreshBuilt, [doc]);
-  useEffect(() => content.watch(refreshBuilt), []);
+
+  // Show changes made on disk (by an LLM, git, another editor). mystmd's rebuild event is the signal.
+  // ponytail: without a myst.yml there are no rebuild events, so only the save check notices outside changes.
+  const reload = useCallback(async () => {
+    const path = latest.current.doc?.path;
+    if (!path) return;
+    const disk = await readFile(path).catch(() => null);
+    const cur = latest.current;
+    if (disk === null || cur.doc?.path !== path || disk === saved.current) return;
+    if (disk === cur.text) saved.current = disk; // our own save, still in flight
+    else if (cur.text === saved.current) replaceText(disk);
+    else setConflict(true);
+  }, []);
+  useEffect(() => content.watch(() => { refreshBuilt(); reload(); }), []);
+
+  const keepMine = () => doc && writeFile(doc.path, text).then(() => { saved.current = text; setConflict(false); setStatus(''); }, (err) => setStatus(`save failed: ${err.message}`));
+  const loadDisk = () => doc && readFile(doc.path).then((disk) => { replaceText(disk); setConflict(false); setStatus(''); }, (err) => setStatus(`couldn't read ${doc.path}: ${err.message}`));
 
   const { result, badge, builtMatch } = usePreview(doc?.path, text, text !== saved.current, built);
   // Live blocks render mystmd's build when it matches the text, as the preview pane does.
@@ -196,7 +233,9 @@ export function App() {
         </span>
         <span className="title">{doc?.path}</span>
         <span className="side end">
-          <span className="status">{status}</span>
+          {conflict
+            ? <span className="status conflict">Changed on disk <button onClick={keepMine}>Keep mine</button> <button onClick={loadDisk}>Load from disk</button></span>
+            : <span className="status">{status}</span>}
           <span className="badge" title="Preview source">{badge}</span>
           <span className="toggles">
             {(['Source', 'Preview', 'Live'] as const).map((m) => (

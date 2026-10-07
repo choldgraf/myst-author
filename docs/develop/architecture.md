@@ -78,7 +78,10 @@ flowchart TB
    It sends a reload event over its websocket, which the host proxies at `/myst/socket`.
 4. The preview fetches the rebuilt page JSON through `/myst` and shows it if it matches the editor text.
    Until then it shows the fast in-browser render.
-5. Each browser connection to `/lsp` gets its own language server process.
+5. On each reload event, the editor also re-reads the open file, to show changes made outside it, such as by an LLM or git.
+   A save sends the hash of the text it replaces, and the host server refuses it if the file has changed on disk since.
+   Either way, if you have unsaved edits, the editor asks whether to keep yours or load the file from disk.
+6. Each browser connection to `/lsp` gets its own language server process.
    If the connection drops, the browser reconnects and re-opens its files.
    The host server starts it with the project folder and mystmd's address as arguments.
    The host server chooses mystmd's port before starting mystmd, so it can pass the address right away.
