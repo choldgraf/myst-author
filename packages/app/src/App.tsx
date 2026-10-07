@@ -65,7 +65,10 @@ export function App() {
       // Go to definition in another file: open it, then hand lsp-client the new editor (see the effect below).
       l.client.workspace.displayFile = (uri) => {
         const path = l.path(uri);
-        if (!path) return Promise.resolve(null);
+        if (!path || !f.includes(path)) {
+          if (path) setStatus(`can't open ${path}: only .md files open here`);
+          return Promise.resolve(null);
+        }
         return new Promise((resolve) => { viewOpened.current = resolve; open(path); });
       };
       setLsp(l);
@@ -129,7 +132,7 @@ export function App() {
     const view = viewRef.current;
     if (!view) return;
     const pos = view.state.doc.line(Math.min(line, view.state.doc.lines)).from;
-    view.dispatch({ selection: { anchor: pos }, effects: EditorView.scrollIntoView(pos, { y: 'nearest' }) });
+    view.dispatch({ selection: { anchor: pos }, effects: EditorView.scrollIntoView(pos, { y: 'center' }) });
     view.focus();
   }
 
@@ -167,7 +170,7 @@ export function App() {
   function follow(href: string, line?: number) {
     if (!doc) return;
     followLink({
-      open: (path, line) => (files.includes(path) ? openAt(path, line + 1) : setStatus(`can't open ${path}`)),
+      open: (path, line) => (files.includes(path) ? openAt(path, line + 1) : setStatus(`can't open ${path}: only .md files open here`)),
       openExternal: (url) => void window.open(url, '_blank'),
       findLabel: async (id) => {
         if (!lsp) return undefined;

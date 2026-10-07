@@ -200,6 +200,7 @@ export const pageLook: Extension = [
   EditorView.theme({
     '.cm-content': { maxWidth: '46rem', margin: '0 auto', padding: '2.5rem 1.5rem 30vh', fontFamily: 'system-ui, sans-serif', lineHeight: '1.6' },
     '.cm-gutters': { display: 'none' },
+    '.cm-activeLine': { backgroundColor: 'transparent' }, // otherwise the blank line under the title, where the cursor starts, shows as a band
   }),
   syntaxHighlighting(HighlightStyle.define([{ tag: tags.monospace, fontFamily: 'monospace' }])),
 ];

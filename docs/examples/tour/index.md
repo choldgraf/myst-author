@@ -10,10 +10,6 @@ The tour uses a little MyST syntax for [cross-references](https://mystmd.org/gui
 A line like `(tour-basics)=` sets a label on the heading below it, and a figure's `:label:` option sets one on the figure.
 Roles like `{ref}`, `{numref}`, and `{eq}` link to a label.
 
-[](#eq-live)
-
-![](#eq-live)
-
 (tour-basics)=
 ## The basics
 
@@ -44,8 +40,6 @@ Click any paragraph in the preview: the editor jumps to the line it came from.
 The MyST logo.
 ```
 
-
-(euler)
 $$e^{i\pi}+1=0$$ (euler)
 
 {numref}`fig-logo` shows the logo and {eq}`euler` is Euler's identity.
