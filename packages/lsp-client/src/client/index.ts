@@ -53,7 +53,7 @@ const definitionClick = EditorView.domEventHandlers({
 });
 
 // Completion icons for MyST. lsp-client turns each LSP kind into a coarse CodeMirror type, and drops some (Reference, File, Operator, Snippet).
-// ponytail: types are shared, so figures and citations look alike; an lsp-client option to map kinds would separate them.
+// Types are shared, so figures and citations get the same icon; an lsp-client option to map kinds would separate them.
 const icon = (content: string, fontSize = '90%') => ({ '&:after': { content: `'${content}'`, fontSize } });
 const completionIcons = EditorView.theme({
   '.cm-completionIcon:not([class*="cm-completionIcon-"])': icon('#'), // labels, equations, code, files

@@ -18,17 +18,14 @@ Cross-references are completed and checked as you type, across the whole project
 The goals of this repository are to explore how much work we'd need to do in order to enable an editor-like experience with MyST.
 We want to identify the building blocks that could _enable_ this end result, and use this repository to build them out and see how complex it is.
 
-This organization is organized as a monorepo into subprojects, where the assumption is that each of those subprojects is probably _independently useful_.
-Most likely, individual packages will either be moved upstream, or moved into dedicated repositories / projects.
-
-So we should design with this in mind and not create too much local interdependence between the tools we build.
+The building blocks live in separate repositories that are each useful on their own; see [How the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories).
 
 ## Try it
 
 Click one of the badges above to open the [tour project](docs/examples/tour/) in your browser.
 
 To run it on your computer, you need Node 24 or newer.
-[mystmd](https://mystmd.org/guide/installing) is recommended: without it you get no built preview and no references to other files.
+[mystmd](https://mystmd.org/guide/installing) is recommended.
 
 ```bash
 git clone https://github.com/choldgraf/myst-author && cd myst-author
@@ -37,11 +34,11 @@ npm run demo                     # a copy of the tour; or `npm start -- path/to/
 ```
 
 To run it from any folder as `myst-author`, run `npm link -w packages/app` once.
-See [Get started](https://choldgraf.github.io/myst-author/get-started) for more options.
+See [Get started](https://chrisholdgraf.com/myst-author/get-started) for more options, and for what works without mystmd.
 
 ## Documentation
 
-See [the documentation](https://choldgraf.github.io/myst-author/) to get started, take the guided tour, and learn how the pieces fit together.
+See [the documentation](https://chrisholdgraf.com/myst-author/) to get started, take the guided tour, and learn how the pieces fit together.
 
 ## Development workflow
 

@@ -2,12 +2,13 @@
 
 Cross-reference help and live preview for Markdown in JupyterLab's editor.
 It uses Lab's own file browser and editor.
+Install it from source, as below, or try it on [Binder](https://chrisholdgraf.com/myst-author/get-started#open-it-on-binder).
 
 ## How it works
 
 The extension is a frontend only.
-It talks to the MyST Author server (`packages/app/server`), which runs mystmd and the language server for one project.
-[jupyter-server-proxy](https://jupyter-server-proxy.readthedocs.io) runs that server at `<jupyter>/myst-author/`.
+It talks to the web app's host server (`packages/app/server`), which runs mystmd and the language server for one project.
+[jupyter-server-proxy](https://jupyter-server-proxy.readthedocs.io) runs that server at `/myst-author/` under the Jupyter server's URL.
 See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) for the setup; `MYST_AUTHOR_PROJECT` sets the project folder.
 
 ## Try it
@@ -21,7 +22,7 @@ npm run lab                        # the tour
 npm run lab -- path/to/project     # or your own MyST project
 ```
 
-`npm run lab` builds the server and the extension, then starts JupyterLab in the project folder with both.
+`npm run lab` builds the web app and the extension, then starts JupyterLab in the project folder with both.
 It loads the extension from `packages/jupyterlab/dist/`, so your own JupyterLab setup doesn't change.
 Options after the project go to `jupyter lab`, for example `npm run lab -- . --port 9000`.
 Run it again after changes.
@@ -45,11 +46,10 @@ Rebuild and reload the page after changes.
 - Completion, hints, hover, go to definition, and warnings for references in Markdown files and notebooks' Markdown cells, as in the web editor.
 - Live preview in Markdown files, and in notebooks' Markdown cells while you edit them, as in the web editor.
   Turn it on or off with **MyST: Live Preview** in the Command Palette.
-  The preview panel only follows Markdown files.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.
-  It follows the current Markdown editor, scrolls with it, and clicking a block reveals its source line.
-  Cmd-click (or Ctrl-click) a link to follow it.
-- Files outside the server's project folder get the fast preview and open-file references only.
+  It follows the current Markdown editor, but not notebooks.
+  It works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
+- Files outside the server's project folder get the fast preview, and references only to labels in files you have open.
 - The language features need jupyter-lsp, which ships with JupyterLab.
   Without it, the extension logs a warning in the browser console, and only the preview works.
 

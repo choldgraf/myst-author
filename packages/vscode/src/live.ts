@@ -61,7 +61,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     webview.html = webviewHtml(webview, dist, 'live', assets);
 
     // Edits from the webview, one at a time, so each one's positions match the document.
-    // ponytail: an edit made elsewhere while one of these is in flight can put the two out of sync; send document versions if that bites.
+    // An edit made elsewhere while one of these is in flight can put the two out of sync; send document versions if that bites.
     let queue = Promise.resolve();
     let applying = 0;
     const apply = (changes: Change[]) =>

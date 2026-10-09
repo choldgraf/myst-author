@@ -118,7 +118,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
     // Each Markdown cell is a document `<notebook URI>#<cell id>`.
     // Attach to every cell, not just the one being edited: once a notebook has open cells, the server only knows their labels.
-    // ponytail: a cell is attached once it first renders, so with Lab's `full` windowing mode, off-screen cells wait until they're scrolled to.
+    // A cell is attached once it first renders, so with Lab's `full` windowing mode, off-screen cells wait until they're scrolled to.
     const attached = new WeakSet<object>();
     const attachCells = (nb: NotebookPanel) =>
       Promise.all(nb.content.widgets.map(async (cell) => {

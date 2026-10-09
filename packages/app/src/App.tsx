@@ -113,7 +113,7 @@ export function App() {
   }, [doc, text, conflict]);
 
   // Last-chance save when the tab closes.
-  // ponytail: no conflict check, since hashing is async and the tab is closing; it only overwrites a change made in the last half second.
+  // No conflict check, since hashing is async and the tab is closing; it only overwrites a change made in the last half second.
   useEffect(() => {
     const flush = () => { if (doc && !conflict && text !== saved.current) writeFile(doc.path, text, { keepalive: true }); };
     window.addEventListener('beforeunload', flush);
@@ -146,7 +146,7 @@ export function App() {
   useEffect(refreshBuilt, [doc]);
 
   // Show changes made on disk (by an LLM, git, another editor). mystmd's rebuild event is the signal.
-  // ponytail: without a myst.yml there are no rebuild events, so only the save check notices outside changes.
+  // Without a myst.yml there are no rebuild events, so only the save check notices outside changes.
   const reload = useCallback(async () => {
     const path = latest.current.doc?.path;
     if (!path) return;

@@ -6,14 +6,14 @@ These are proposals for the mystmd, myst-theme, and CodeMirror maintainers to de
 |---|---|---|---|
 | U1 | [Richer xref entries: `title`, `enumerator`](U1-richer-xref-entries.md) | mystmd | written up |
 | U2 | [Structured diagnostics over `/socket` and in page JSON](U2-structured-diagnostics.md) | mystmd | written up |
-| U3 | MyST syntax highlighting for CodeMirror and TextMate, now in [myst-syntax](https://github.com/choldgraf/myst-syntax) | jupyter-book org | moved out |
-| U4 | Language server | jupyter-book org | idea |
+| U3 | MyST syntax highlighting for CodeMirror and TextMate: [myst-syntax](https://github.com/choldgraf/myst-syntax) | jupyter-book org | own repository |
+| U4 | Language server: [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) | jupyter-book org | own repository |
 | U5 | Reusable single-page browser preview (from `myst-demo`) | myst-theme | idea |
 | U6 | `baseurl` fix for sites served under a sub-path, e.g. on JupyterHub ([mystmd#302](https://github.com/jupyter-book/mystmd/issues/302)) | myst-theme | idea |
 | U7 | Column-accurate inline positions in myst-parser (large) | mystmd | idea |
-| U8 | Export a single-page parse (myst-parser, the default extensions and page transforms), a `myst start --headless` launcher, and a content-server client. MyST Author and mystmd-lsp each keep a copy of all three | mystmd | idea |
-| U9 | [Inlay hints and requests from the server](U9-lsp-client-inlay-hints.md) | @codemirror/lsp-client | written up |
-| U10 | [An mdast → mystmd adapter, to adopt a micromark parser](U10-mdast-adapter.md) | mystmd | idea |
+| U8 | Export the helpers that MyST Author and mystmd-lsp each copy: a single-page parse, a `myst start --headless` launcher, and a content-server client | mystmd | idea |
+| U9 | [Inlay hints and requests from the server](U9-lsp-client-inlay-hints.md) | `@codemirror/lsp-client` | written up |
+| U10 | [An mdast → mystmd adapter, to adopt a micromark parser](U10-mdast-adapter.md) | mystmd | written up |
 
 ## Data and packaging gaps (candidates for small fixes)
 

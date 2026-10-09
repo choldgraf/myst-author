@@ -1,21 +1,19 @@
 ---
 title: Directives and roles
-description: Completing directive names, roles, and directive options, plus syntax highlighting and its limits.
+description: Completing directive names, roles, and directive options, and syntax highlighting.
 ---
 
-Typing ```` ```{ ````, `:::{` or `{` completes directive and role names, and `:` under a directive completes its options.
-Hovering a name or option shows mystmd's description of it, and directive file arguments, such as a figure's image, complete and are checked.
-This comes from [mystmd-lsp](https://chrisholdgraf.com/mystmd-lsp/features/), which uses mystmd's own directive and role specs.
+The editor completes directive names, role names, and directive options, and shows mystmd's description of each on hover.
+This comes from [mystmd-lsp](https://chrisholdgraf.com/mystmd-lsp/features), whose features page lists what it completes and checks.
 
 ![Completing a directive option](../images/option-completion.png)
 
 ## Syntax highlighting
 
-The editor colours MyST syntax on top of normal Markdown highlighting.
-This covers roles, directive names, directive options, labels like `(my-label)=`, inline math, and citations like `@smith2020`.
+The web editor and VS Code highlight MyST syntax with [myst-syntax](https://github.com/choldgraf/myst-syntax), which lists what it covers.
+JupyterLab uses its own Markdown highlighting.
 
 ## Known limits
 
-- Highlighting works one line at a time, so any line that looks like an option, such as `:width: 200px`, is coloured as one, even outside a directive.
-- Plugin directives and roles from your `myst.yml` aren't in the completion lists, and the fast preview doesn't render them.
-  The built preview does.
+Plugin directives and roles from your `myst.yml` aren't in the completion lists, and the fast preview doesn't render them.
+The built preview does.

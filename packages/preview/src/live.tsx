@@ -77,7 +77,8 @@ class Rendered extends WidgetType {
 
 /**
  * The source position of the clicked text: where the clicked text node's text appears in the span's source.
- * ponytail: the first match wins, so a repeated phrase can land on the wrong copy; falls back to the span's start.
+ * The first match wins, so a repeated phrase can land on the wrong copy.
+ * Falls back to the span's start.
  */
 function sourceAt(state: EditorState, { from, to }: Located, e: MouseEvent, shadow: ShadowRoot | null) {
   const caret = document.caretPositionFromPoint?.(e.clientX, e.clientY, { shadowRoots: shadow ? [shadow] : [] });
@@ -127,7 +128,7 @@ function build(state: EditorState, result?: ParseResult, built?: Live['built']):
 /**
  * Typing in the revealed span keeps the last parse and only moves the other spans, which haven't changed.
  * Anything else reparses: an edit outside it (undo, rename, replace all), or leaving it after editing, so an edited span renders its current text.
- * ponytail: a page parses in ~50 ms per 1,500 lines, a pause when you leave an edited block of a long page. Parse in a worker if that bites.
+ * A long page takes a noticeable pause to parse when you leave an edited block. Parse in a worker if that bites.
  */
 function update(value: Live, tr: Transaction): Live {
   if (!tr.docChanged && !tr.selection && !tr.effects.length) return value; // effects include new diagnostics
@@ -212,7 +213,7 @@ export const pageLook: Extension = [
     '.cm-gutters': { display: 'none' },
     '.cm-activeLine': { backgroundColor: 'transparent' }, // otherwise the blank line under the title, where the cursor starts, shows as a band
   }),
-  // `prose`'s heading sizes. ponytail: hard-coded to match myst-theme; read its CSS if they drift.
+  // `prose`'s heading sizes, hard-coded to match myst-theme; read its CSS if they drift.
   syntaxHighlighting(HighlightStyle.define([
     { tag: tags.monospace, fontFamily: 'monospace' },
     { tag: tags.heading1, fontSize: '2.25em', lineHeight: '1.11', fontWeight: '800' },

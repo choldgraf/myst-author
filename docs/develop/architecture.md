@@ -4,13 +4,14 @@ description: The packages that make up MyST Author and how they talk to each oth
 ---
 
 MyST Author is a set of small packages in one repository.
+For how it fits with mystmd-lsp, myst-syntax and the other repositories, see [How the repositories fit together](repositories.md).
 The editor features live in reusable packages, and each host (the web app, VS Code, JupyterLab) wires them together.
 
 ## Packages
 
 `packages/mystmd` (`@myst-author/mystmd`)
 : Starts and talks to mystmd.
-  It has no React dependency, so the host server and the extensions can use it as well as the preview.
+  It has no React dependency, so the web app's host server (`packages/app/server`) and the extensions can use it as well as the preview.
   `@myst-author/mystmd/start` runs `myst start --headless`.
   `@myst-author/mystmd/built` reads built page JSON from mystmd's *content server*, the local HTTP server that `myst start --headless` runs.
   `@myst-author/mystmd/parse` parses a single page with mystmd's parser and transforms, and lists the directives and roles it knows.
@@ -21,19 +22,21 @@ The editor features live in reusable packages, and each host (the web app, VS Co
   `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews show.
   `@myst-author/preview/controller` runs in the extension and drives that page: it sends the current file and handles clicks.
   `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block with the cursor.
-  Its `pageLook` makes the editor read like the page, as in the web app and the VS Code live editor.
+  Its `pageLook` extension makes the editor read like the page, as in the web app and the VS Code live editor.
   `@myst-author/preview/build` compiles the preview's CSS for hosts that bundle it.
-  Each extension implements its `PreviewHost` interface to open files and look up labels.
+  Each extension implements the preview's `PreviewHost` interface to open files and look up labels.
 
 [`mystmd-lsp`](https://github.com/choldgraf/mystmd-lsp) (from npm)
 : The language server for MyST references: completion, hover, go to definition, warnings, hints, and external references.
   It lives in its own repository and works in any LSP client; the hosts here are its editor integrations.
-  Each host runs its bundle, `mystmd-lsp/dist/server.cjs`, and passes it the address of the mystmd the host started, so that there's one mystmd per project.
+  Each host runs its bundle, `mystmd-lsp/dist/server.cjs`.
+  [How the repositories fit together](repositories.md#what-each-one-owns) explains why the host starts mystmd for it.
 
 `packages/lsp-client` (`@myst-author/lsp-client`)
 : Connects the hosts to the language server.
   `@myst-author/lsp-client/spawn` starts a server process and relays its messages as strings.
-  `@myst-author/lsp-client/client` is the CodeMirror client that talks to the language server, over a websocket or any message channel; each host passes its own connection and project root.
+  `@myst-author/lsp-client/client` is the CodeMirror client that talks to the language server, over a websocket or any message channel.
+  Each host passes it a connection and a project root.
   `@myst-author/lsp-client/labels` finds where a label is defined, which hosts use to follow preview links.
 
 `packages/app` (`myst-author`)
@@ -43,11 +46,13 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 `packages/vscode`
 : The VS Code extension.
   It runs the language server through VS Code's language client, adds a MyST grammar, and shows the same preview in a webview.
-  Its live editor is a custom editor: a webview running CodeMirror with the same live preview, whose language client talks to a server process of its own, since VS Code can't pass its language features into a webview.
+  Its live editor is a custom editor: a webview that runs CodeMirror with the same live preview.
+  VS Code can't pass its language features into a webview, so the live editor's language client talks to a server process of its own.
 
 `packages/jupyterlab` (`@myst-author/jupyterlab`)
 : The JupyterLab extension.
-  It connects Lab's Markdown editors and notebooks' Markdown cells to the language server of the web app's host server (`packages/app/server`), adds live preview to them, and shows the preview page beside them.
+  It connects Lab's Markdown editors and notebooks' Markdown cells to the host server's `/lsp` bridge.
+  It adds live preview to them, and shows the preview page beside them.
 
 ## How the web app fits together
 
@@ -81,11 +86,9 @@ flowchart TB
 5. On each reload event, the editor also re-reads the open file, to show changes made outside it, such as by an LLM or git.
    A save sends the hash of the text it replaces, and the host server refuses it if the file has changed on disk since.
    Either way, if you have unsaved edits, the editor asks whether to keep yours or load the file from disk.
-6. Each browser connection to `/lsp` gets its own language server process.
+6. Each browser connection to `/lsp` gets its own language server process, started with the project folder and mystmd's address.
    If the connection drops, the browser reconnects and re-opens its files.
-   The host server starts it with the project folder and mystmd's address as arguments.
-   The host server chooses mystmd's port before starting mystmd, so it can pass the address right away.
-   The server loads the project once mystmd is up, and reloads its index on each rebuild.
+   mystmd-lsp's [How it works](https://chrisholdgraf.com/mystmd-lsp/how-it-works) explains how the server uses mystmd.
 
 The VS Code extension does the same without the host server: it starts `myst start --headless` and the language server itself, and fetches built pages from mystmd directly.
 
@@ -106,14 +109,11 @@ Everything about MyST lives in the packages; a host provides only what depends o
 ## Design choices
 
 - **Each feature goes in the lowest layer that can hold it.**
-  First the language server, which every editor can use.
-  Then a CodeMirror extension in `packages/preview`, which the web app, JupyterLab and the VS Code live editor share.
-  A host adds only what's listed in [Adding a host](#adding-a-host).
+  See [Where a feature goes](repositories.md#where-a-feature-goes).
   The web app is the simplest host, not a full IDE: features that VS Code and JupyterLab already have, such as git or file management, are left to them.
 - **The preview uses mystmd's own code.** The fast preview uses mystmd's parser and transforms.
   The built preview is mystmd's output.
   There is no separate MyST parser to keep in sync.
 - **Markdown is the source of truth.** Changes go one way, from the Markdown to the preview.
-- **Reuse mystmd's index.** The language server reads mystmd's built pages instead of building its own index of the project.
 - **Stock mystmd.** Everything works with released mystmd.
   Changes that would make it better are written up as [upstream proposals](upstream.md).

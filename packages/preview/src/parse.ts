@@ -114,7 +114,7 @@ export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Sp
 /**
  * `fast`, the fast parse of `text`, with the nodes of `built` wherever a span's source is the same as in `builtText`, the text `built` was built from.
  * `built` needs the fast parse's lines (see `withSourceLines`). Editing a span then only renders that span from the fast parse until the next build.
- * ponytail: unchanged spans keep the build's numbering and references, even when an edit elsewhere changes them, until the next build.
+ * Unchanged spans keep the build's numbering and references, even when an edit elsewhere changes them, until the next build.
  */
 export function withBuiltBlocks(fast: ParseResult, text: string, built: ParseResult, builtText: string): ParseResult {
   const source = (s: Span, lines: string[]) => lines.slice(s.start - 1, s.end).join('\n');

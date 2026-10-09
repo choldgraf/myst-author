@@ -5,7 +5,7 @@ description: Completion, hints, hover, go to definition, and warnings for cross-
 
 The editor helps you write cross-references: it completes them, shows what they point to, and warns about broken ones.
 This help comes from [mystmd-lsp](https://chrisholdgraf.com/mystmd-lsp/), a language server that indexes the labels in your project.
-Its [features page](https://chrisholdgraf.com/mystmd-lsp/features/) lists everything it does and its limits, including citations and external references (`xref:`).
+Its [features page](https://chrisholdgraf.com/mystmd-lsp/features) lists everything it does and its limits, including citations and external references (`xref:`).
 
 ## Completion
 
@@ -26,7 +26,8 @@ Hover a reference to see what it points to and which file it's in.
 - Cmd-click (or Ctrl-click) a reference, or press {kbd}`F12`, to go to its target.
 - Press {kbd}`Shift+F12` on a reference or a label's definition to list every reference to that label.
 - Press {kbd}`F2` to rename a label and every reference to it.
-  In the web editor, rename only changes the file you have open; use VS Code to rename across files.
+  The web editor only has one file open, so rename there changes only that file.
+  Use VS Code to rename across files.
 
 ## Warnings
 
@@ -35,5 +36,4 @@ Hover it to read the warning.
 
 ![A warning on a broken reference](../images/diagnostic.png)
 
-Warnings start once mystmd's first build has loaded.
-Without mystmd, the editor only knows the open file, and doesn't warn about unknown labels.
+Warnings for unknown labels start once mystmd's first build has loaded, so you don't get them [without mystmd](../get-started.md#run-it-locally).

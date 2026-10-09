@@ -25,6 +25,7 @@ project:
         - file: guide/jupyterlab.md
     - file: develop/index.md
       children:
+        - file: develop/repositories.md
         - file: develop/architecture.md
         - file: develop/contributing.md
         - file: develop/upstream.md

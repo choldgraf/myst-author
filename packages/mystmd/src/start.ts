@@ -3,7 +3,7 @@ import { createServer, type AddressInfo } from 'node:net';
 import { createInterface } from 'node:readline';
 import { mystmdMissing } from './built.ts';
 
-// ponytail: mystmd-lsp (`src/mystmd/start.ts`) has a copy of this; port fixes between the two. A launcher exported by mystmd would replace both.
+// mystmd-lsp (`src/mystmd/start.ts`) has a copy of this; port fixes between the two. A launcher exported by mystmd would replace both.
 
 /** A port that's free on 127.0.0.1 right now. */
 function freePort(): Promise<number> {

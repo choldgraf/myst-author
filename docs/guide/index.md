@@ -15,10 +15,10 @@ These pages explain what each part of the editor does and where its limits are.
 
 ## The layout
 
-The toolbar has four buttons:
+The toolbar has these buttons:
 
 - **Files** shows or hides the file list.
-- **Open… (⌘P)** opens a file by name.
+- **Open ⌘P** opens a file by name.
   {kbd}`Cmd+P` and {kbd}`Ctrl+P` both work, on any system.
   Start with `@` to jump to a label anywhere in the project, or `#` to jump within this page's [outline](navigate.md).
 - **Source**, **Preview** and **Live** switch how the page shows: plain Markdown, Markdown beside the [preview](preview.md) pane, or rendered [inside the editor](preview.md#live-preview) (the default).
