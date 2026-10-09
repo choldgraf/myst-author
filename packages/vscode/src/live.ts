@@ -1,7 +1,7 @@
 import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
-import { contentServer, sha256, type BuiltPage, type ContentServer } from '@myst-author/mystmd/built';
+import { contentServer, type BuiltPage, type ContentServer } from '@myst-author/mystmd/built';
 import { followLink } from '@myst-author/preview/controller';
 import type { startMyst } from '@myst-author/mystmd/start';
 import { webviewHtml } from './preview.ts';
@@ -23,7 +23,7 @@ export type ToLive =
   | { type: 'changes'; changes: Change[] } // edits made outside the webview, to apply one after another
   | { type: 'connect'; root: string; uri: string } // start the language client: the project folder's URI, and this file's
   | { type: 'lsp'; message: string }
-  | { type: 'built'; page: BuiltPage; text: string } // mystmd's build of `text` (with \n line breaks)
+  | { type: 'built'; page: BuiltPage } // mystmd's latest build of this file, which may not match the text
   | { type: 'select'; at: Pos };
 
 /** Messages from the webview. */
@@ -89,8 +89,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
         const path = relative(root, document.uri.fsPath).split(sep).join('/');
         stopWatch = built.watch(async () => {
           const { page } = await built.built(path);
-          const text = document.getText();
-          if (page && page.sha256 === (await sha256(text))) post({ type: 'built', page, text: text.replaceAll('\r\n', '\n') });
+          if (page) post({ type: 'built', page });
         });
       }, () => {}); // no mystmd: blocks keep the fast render
     };

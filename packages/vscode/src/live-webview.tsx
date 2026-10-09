@@ -4,7 +4,7 @@ import { keymap } from '@codemirror/view';
 import { basicSetup, EditorView } from 'codemirror';
 import { myst } from 'myst-syntax/codemirror';
 import { connectLsp, messageTransport } from '@myst-author/lsp-client/client';
-import { bodyStart, livePreview, pageLook, showBuilt } from '@myst-author/preview/live';
+import { bodyStart, livePreview, offerBuilt, pageLook } from '@myst-author/preview/live';
 import type { Change, FromLive, Pos, ToLive } from './live.ts';
 
 declare function acquireVsCodeApi(): { postMessage(message: FromLive): void };
@@ -88,7 +88,7 @@ window.addEventListener('message', ({ data: m }: MessageEvent<ToLive>) => {
   } else if (m.type === 'lsp') {
     receive(m.message);
   } else if (m.type === 'built') {
-    view.dispatch({ effects: showBuilt.of(m) }); // ignored if `text` no longer matches the editor
+    offerBuilt(view, m.page);
   } else if (m.type === 'select') {
     view.dispatch({ selection: { anchor: toOffset(view.state.doc, m.at) }, scrollIntoView: true });
     view.focus();

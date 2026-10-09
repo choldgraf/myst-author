@@ -11,9 +11,9 @@ import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { connectLsp } from '@myst-author/lsp-client/client';
 import { findLabel } from '@myst-author/lsp-client/labels';
-import { contentServer, sha256 } from '@myst-author/mystmd/built';
+import { contentServer } from '@myst-author/mystmd/built';
 import { PreviewController, type ToPage } from '@myst-author/preview/controller';
-import { livePreview, showBuilt } from '@myst-author/preview/live';
+import { livePreview, offerBuilt, showBuilt } from '@myst-author/preview/live';
 import { mountPreviewPage } from '@myst-author/preview/page';
 import liveCss from '../dist/live.css'; // the preview's CSS, for the shadow roots of live blocks and the preview panel (see build.mjs)
 
@@ -102,9 +102,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
     // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.
     const sendBuilt = async (w: Editor) => {
-      const text = w.content.model.sharedModel.getSource();
       const { page } = await content.built(PathExt.relative(await project, w.context.path));
-      if (page && page.sha256 === (await sha256(text))) cm(w).editor.dispatch({ effects: showBuilt.of({ page, text }) });
+      if (page) offerBuilt(cm(w).editor, page);
     };
 
     const attach = async (w: Editor) => {

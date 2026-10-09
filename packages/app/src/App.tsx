@@ -7,7 +7,7 @@ import { findLabel } from '@myst-author/lsp-client/labels';
 import { type Built, Preview, usePreview } from '@myst-author/preview';
 import { contentServer, sha256 } from '@myst-author/mystmd/built';
 import { followLink } from '@myst-author/preview/controller';
-import { livePreview, pageLook, showBuilt } from '@myst-author/preview/live';
+import { livePreview, offerBuilt, pageLook } from '@myst-author/preview/live';
 import { listFiles, projectRoot, readFile, writeFile } from './api.ts';
 import { minimalChange } from './change.ts';
 import { Editor } from './Editor.tsx';
@@ -162,11 +162,12 @@ export function App() {
   const keepMine = () => doc && writeFile(doc.path, text).then(() => { saved.current = text; setConflict(false); setStatus(''); }, (err) => setStatus(`save failed: ${err.message}`));
   const loadDisk = () => doc && readFile(doc.path).then((disk) => { replaceText(disk); setConflict(false); setStatus(''); }, (err) => setStatus(`couldn't read ${doc.path}: ${err.message}`));
 
-  const { result, badge, builtMatch } = usePreview(doc?.path, text, text !== saved.current, built);
+  const { result, badge } = usePreview(doc?.path, text, text !== saved.current, built);
   // Live blocks render mystmd's build when it matches the text, as the preview pane does.
   useEffect(() => {
-    if (builtMatch) viewRef.current?.dispatch({ effects: showBuilt.of(builtMatch) });
-  }, [builtMatch, showLive]);
+    const view = viewRef.current;
+    if (view && built?.page && built.path === latest.current.doc?.path) offerBuilt(view, built.page);
+  }, [built, showLive]);
 
   function gotoLine(line: number) {
     const view = viewRef.current;

@@ -9,7 +9,7 @@ import { fromBuiltPage, parseMyst, withBuiltBlocks, withSourceLines, type ParseR
 /**
  * What to preview for a file's live text: mystmd's build when it matches the text exactly, otherwise the fast in-browser parse,
  * in which blocks you haven't changed since the last matching build keep that build.
- * `badge` says which one it is, and `builtMatch` is the matching build with the text it matches, for the live editor (`./live`).
+ * `badge` says which one it is.
  */
 export function usePreview(path: string | undefined, text: string, dirty: boolean, built: Built | null) {
   // Parses on the main thread; deferring the text lets React keep typing responsive while it runs.
@@ -39,7 +39,7 @@ export function usePreview(path: string | undefined, text: string, dirty: boolea
     : dirty ? 'fast preview · unsaved'
     : current?.page ? 'building…'
     : 'fast preview';
-  return { result, badge, builtMatch };
+  return { result, badge };
 }
 
 /** Controls in a rendered page that handle their own clicks (tabs, dropdowns, buttons), so a click on them doesn't jump to the source. */

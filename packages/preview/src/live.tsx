@@ -1,10 +1,10 @@
 import { createRoot, type Root } from 'react-dom/client';
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import { forEachDiagnostic } from '@codemirror/lint';
-import { Facet, Prec, StateEffect, StateField, type EditorState, type Extension, type Transaction } from '@codemirror/state';
+import { Facet, Prec, StateField, type EditorState, type Extension, type Transaction } from '@codemirror/state';
 import { Decoration, EditorView, keymap, WidgetType, type DecorationSet } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
-import type { BuiltPage } from '@myst-author/mystmd/built';
+import { showBuilt } from './built-match.ts';
 import { fromBuiltPage, parseMyst, spans, withBuiltBlocks, withSourceLines, type Block, type ParseResult, type Span } from './parse.ts';
 import { INTERACTIVE, Preview } from './Preview.tsx';
 
@@ -105,11 +105,7 @@ function decorate(state: EditorState, result: ParseResult, located: Located[]) {
     Decoration.replace({ block: true, widget: new Rendered(result, s, warned(s)) }).range(s.from, s.to)));
 }
 
-/**
- * Render from mystmd's build of `text`, which resolves embeds and references to other pages, if the editor still has that text.
- * Until the next build, a block you edit renders from the fast parse, like the preview pane; the others keep the build.
- */
-export const showBuilt = StateEffect.define<{ page: BuiltPage; text: string }>();
+export { offerBuilt, showBuilt } from './built-match.ts';
 
 function build(state: EditorState, result?: ParseResult, built?: Live['built']): Live {
   const text = state.doc.toString();
