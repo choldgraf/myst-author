@@ -21,6 +21,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
   Each rendered block keeps its source line range, which is what click-to-source and scroll sync use.
   `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews show.
   `@myst-author/preview/controller` runs in the extension and drives that page: it sends the current file and handles clicks.
+  Its `findLabel` finds where a label is defined, through the language server's workspace symbols.
   `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block with the cursor.
   Its `pageLook` extension makes the editor read like the page, as in the web app and the VS Code live editor.
   `@myst-author/preview/build` compiles the preview's CSS for hosts that bundle it.
@@ -37,7 +38,6 @@ The editor features live in reusable packages, and each host (the web app, VS Co
   `@myst-author/lsp-client/spawn` starts a server process and relays its messages as strings.
   `@myst-author/lsp-client/client` is the CodeMirror client that talks to the language server, over a websocket or any message channel.
   Each host passes it a connection and a project root.
-  `@myst-author/lsp-client/labels` finds where a label is defined, which hosts use to follow preview links.
 
 `packages/app` (`myst-author`)
 : The web editor.

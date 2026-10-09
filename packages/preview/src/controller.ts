@@ -25,7 +25,7 @@ export type PreviewHost = {
   post(message: ToPage): void; // to the preview page
   open(path: string, line: number): void;
   openExternal(url: string): void;
-  findLabel(id: string): Promise<{ path: string; line: number } | undefined>; // hosts use `findLabel` from `@myst-author/lsp-client/labels`
+  findLabel(id: string): Promise<{ path: string; line: number } | undefined>; // hosts use `findLabel` below
   warn(message: string): void;
 };
 
@@ -122,4 +122,16 @@ export async function followLink(host: LinkHost, here: string, href: string, lin
     : decodeURIComponent(new URL(path, `http://x/${here}`).pathname.slice(1));
   if (target === undefined) host.warn(`Can't follow ${href}`);
   else host.open(target, 0);
+}
+
+/** Sends an LSP request, e.g. CodeMirror's `client.request` or vscode-languageclient's `sendRequest`. */
+export type Request = (method: string, params: unknown) => Promise<unknown>;
+
+type WorkspaceSymbol = { name: string; location: { uri: string; range: { start: { line: number } } } };
+
+/** Where label `id` is defined, from the language server's workspace symbols. The server names each symbol by its lowercased label. */
+export async function findLabel(request: Request, id: string): Promise<{ uri: string; line: number } | undefined> {
+  const symbols = (await request('workspace/symbol', { query: id })) as WorkspaceSymbol[] | null;
+  const s = symbols?.find((s) => s.name === id.toLowerCase());
+  return s && { uri: s.location.uri, line: s.location.range.start.line };
 }

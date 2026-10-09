@@ -2,7 +2,7 @@ import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
 import { contentServer, type BuiltPage, type ContentServer } from '@myst-author/mystmd/built';
-import { followLink } from '@myst-author/preview/controller';
+import { findLabel, followLink, type Request } from '@myst-author/preview/controller';
 import type { startMyst } from '@myst-author/mystmd/start';
 import { webviewHtml } from './preview.ts';
 
@@ -10,8 +10,8 @@ import { webviewHtml } from './preview.ts';
 export const serverScript = (context: vscode.ExtensionContext) =>
   vscode.workspace.getConfiguration('mystAuthor').get<string>('serverPath') || context.asAbsolutePath('dist/lsp.js');
 
-/** The MyST project the extension started: its folder and its mystmd. */
-export type Project = { root: string; myst: Awaited<ReturnType<typeof startMyst>> };
+/** The MyST project the extension started: its folder, its mystmd, and requests to its language server. */
+export type Project = { root: string; myst: Awaited<ReturnType<typeof startMyst>>; request: Request };
 
 /** A position as VS Code and LSP count it (0-based). Not an offset: CodeMirror counts a CRLF as one character, VS Code as two. */
 export type Pos = { line: number; character: number };
@@ -106,7 +106,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
         else if (m.type === 'definition') this.definition(document, at(m.at));
         else if (m.type === 'references') this.references(document, at(m.at), post);
         else if (m.type === 'rename') this.rename(document, at(m.at));
-        else if (m.type === 'follow') project?.then(({ root }) => this.follow(document, root, content, m, post));
+        else if (m.type === 'follow') project?.then((p) => this.follow(document, p, content, m, post));
       }),
       // Edits from anywhere else (the text editor, its undo, a rename, git) go to the webview.
       vscode.workspace.onDidChangeTextDocument((e) => {
@@ -131,7 +131,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
   }
 
   /** Follow a rendered link as the preview does. A target in this file is selected in the webview; others open in a text editor, like `definition`. */
-  private follow(document: vscode.TextDocument, root: string, content: ContentServer | undefined, { href, line }: { href: string; line?: number }, post: (m: ToLive) => void) {
+  private follow(document: vscode.TextDocument, { root, request }: Project, content: ContentServer | undefined, { href, line }: { href: string; line?: number }, post: (m: ToLive) => void) {
     const projectPath = (uri: vscode.Uri) => relative(root, uri.fsPath).split(sep).join('/');
     return followLink({
       open: (path, line) => {
@@ -140,11 +140,9 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
         else vscode.window.showTextDocument(uri, { selection: new vscode.Range(line, 0, line, 0) });
       },
       openExternal: (url) => vscode.env.openExternal(vscode.Uri.parse(url)),
-      // The server names each label's workspace symbol by the lowercased label (see lsp-client's `findLabel`).
       findLabel: async (id) => {
-        const symbols = await vscode.commands.executeCommand<vscode.SymbolInformation[]>('vscode.executeWorkspaceSymbolProvider', id);
-        const s = symbols?.find((s) => s.name === id.toLowerCase());
-        return s && { path: projectPath(s.location.uri), line: s.location.range.start.line };
+        const s = await findLabel(request, id);
+        return s && { path: projectPath(vscode.Uri.parse(s.uri)), line: s.line };
       },
       warn: (message) => vscode.window.showWarningMessage(message),
       fileForSlug: (slug) => content?.fileForSlug(slug),

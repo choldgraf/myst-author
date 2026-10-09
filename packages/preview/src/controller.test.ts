@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mystmdMissing } from '@myst-author/mystmd/built';
-import { PreviewController, type PreviewHost } from './controller.ts';
+import { findLabel, PreviewController, type PreviewHost } from './controller.ts';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve));
 
@@ -84,4 +84,14 @@ test('follows preview links to files, labels, and slugs', async () => {
     ['open', 'index.md', 0],
     ['warn', "Can't follow /missing"],
   ]);
+});
+
+test('findLabel picks the symbol named by the lowercased label', async () => {
+  const at = (name: string, line: number) => ({ name, location: { uri: `file:///p/${name}.md`, range: { start: { line } } } });
+  const request = async (method: string, params: unknown) => {
+    assert.deepEqual([method, params], ['workspace/symbol', { query: 'My-Fig' }]);
+    return [at('my-fig-2', 1), at('my-fig', 4)];
+  };
+  assert.deepEqual(await findLabel(request, 'My-Fig'), { uri: 'file:///p/my-fig.md', line: 4 });
+  assert.equal(await findLabel(async () => null, 'x'), undefined);
 });

@@ -37,7 +37,6 @@ export function activate(context: vscode.ExtensionContext) {
     // Failing to start is reported by the preview; this is for mystmd dying later, which otherwise looks like a build that never finishes.
     const { ready, exited } = myst;
     ready.then(() => exited.catch((e) => vscode.window.showWarningMessage(`MyST: mystmd stopped (${e.message}). See MyST: Show Log.`)), () => {});
-    onStart({ root, myst });
     // The LSP loads the whole project once mystmd has built it; until then it knows the open files.
     const lsp = new LanguageClient(
       'mystAuthor',
@@ -50,7 +49,9 @@ export function activate(context: vscode.ExtensionContext) {
       },
     );
     client = lsp;
-    preview = new MystPreview(context, root, myst, (method, params) => lsp.sendRequest(method, params));
+    const request = (method: string, params: unknown) => lsp.sendRequest(method, params);
+    onStart({ root, myst, request });
+    preview = new MystPreview(context, root, myst, request);
     await lsp.start();
   };
   // The live editor starts the project too, for when it opens before any text editor (a restored tab).

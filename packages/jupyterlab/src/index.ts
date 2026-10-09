@@ -10,9 +10,8 @@ import { INotebookTracker, type NotebookPanel } from '@jupyterlab/notebook';
 import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { connectLsp } from '@myst-author/lsp-client/client';
-import { findLabel } from '@myst-author/lsp-client/labels';
 import { contentServer } from '@myst-author/mystmd/built';
-import { PreviewController, type ToPage } from '@myst-author/preview/controller';
+import { findLabel, PreviewController, type ToPage } from '@myst-author/preview/controller';
 import { livePreview, offerBuilt, showBuilt } from '@myst-author/preview/live';
 import { mountPreviewPage } from '@myst-author/preview/page';
 import liveCss from '../dist/live.css'; // the preview's CSS, for the shadow roots of live blocks and the preview panel (see build.mjs)
