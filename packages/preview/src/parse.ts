@@ -62,10 +62,11 @@ function markUnresolved(tree: GenericParent, built: boolean) {
 }
 
 function toBlocks(tree: GenericParent): Block[] {
-  const nodes = tree.children.flatMap((c) => (c.type === 'block' ? (c.children ?? []) : [c]));
+  // A code cell is a block whose code and outputs have no position, so they take the block's.
+  const nodes = tree.children.flatMap((c) => (c.type === 'block' ? (c.children ?? []) : [c]).map((node) => ({ node, outer: c.position })));
   let last = 1;
-  return nodes.map((node) => {
-    const pos = node.position ?? firstPosition(node);
+  return nodes.map(({ node, outer }) => {
+    const pos = node.position ?? firstPosition(node) ?? outer;
     const start = pos?.start.line ?? last;
     const end = pos?.end.line ?? start;
     last = end;

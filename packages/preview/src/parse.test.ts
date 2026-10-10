@@ -35,6 +35,11 @@ test('spans: the titled frontmatter, and each block with the label lines above i
   );
 });
 
+test('a code cell keeps its lines', () => {
+  const src = '---\ntitle: Hi\n---\n\n```{code-cell} python\nx\n```';
+  assert.deepEqual(spans(parseMyst(src), src.split('\n')).map((s) => [s.start, s.end, s.blocks.map((b) => b.node.type)]), [[1, 3, []], [5, 7, ['code', 'outputs']]]);
+});
+
 test('spans: a list leaves the blank line after it out, so it stays as spacing', () => {
   const list = '- a\n- b\n\nAfter';
   assert.deepEqual(spans(parseMyst(list), list.split('\n')).map((s) => [s.start, s.end]), [[1, 2], [4, 4]]);
