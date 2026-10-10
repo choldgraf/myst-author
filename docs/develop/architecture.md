@@ -11,10 +11,11 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 `packages/mystmd` (`@myst-author/mystmd`)
 : Starts and talks to mystmd.
-  It has no React dependency, so the web app's host server (`packages/app/server`) and the extensions can use it as well as the preview.
+  mystmd could export these helpers itself (U8 in [upstream proposals](upstream.md)).
+  mystmd-lsp keeps its own copies in `src/mystmd/`.
   `@myst-author/mystmd/start` runs `myst start --headless`.
   `@myst-author/mystmd/built` reads built page JSON from mystmd's *content server*, the local HTTP server that `myst start --headless` runs.
-  `@myst-author/mystmd/parse` parses a single page with mystmd's parser and transforms, and lists the directives and roles it knows.
+  `@myst-author/mystmd/parse` parses a single page with mystmd's parser and transforms.
 
 `packages/preview` (`@myst-author/preview`)
 : Renders a MyST page with `myst-to-react`, from the [fast in-browser parse or mystmd's built page](../guide/preview.md#fast-and-built-previews).

@@ -14,8 +14,6 @@ import {
   ReferenceState,
   resolveReferencesPlugin,
 } from 'myst-transforms';
-import { defaultDirectives } from 'myst-directives';
-import { defaultRoles } from 'myst-roles';
 import { buttonRole } from 'myst-ext-button';
 import { cardDirective } from 'myst-ext-card';
 import { exerciseDirectives } from 'myst-ext-exercise';
@@ -33,9 +31,6 @@ import { VFile } from 'vfile';
 // The extensions mystmd enables by default, so the parse matches `myst build`.
 const extDirectives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
 const extRoles = [buttonRole];
-/** Every directive and role the parser knows: myst-parser's defaults plus the extensions. */
-export const directives = [...defaultDirectives, ...extDirectives];
-export const roles = [...defaultRoles, ...extRoles];
 
 /** Parse and transform a single MyST page, without the rest of the project. */
 export function parseMyst(md: string) {
