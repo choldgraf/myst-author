@@ -32,10 +32,10 @@ const live = livePreview({ css: `${liveCss}\n.article { font-size: var(--jp-cont
 const liveMode = new Compartment();
 let liveOn = true;
 // The preview panel also renders in a shadow root. A shadow root has no `:root`, so myst-theme's colour variables go on its host, as live preview does.
-// The inner div is the page's body. Lab lays out the panel with `contain: strict`, which keeps the badge's `position: fixed` inside it.
+// The inner div is the page's body, and scrolls. It has no top padding, so the badge bar sticks to its very top.
 const previewCss = new CSSStyleSheet();
 previewCss.replaceSync(`${liveCss.replaceAll(':root', ':host')}
-:host > div { position: relative; box-sizing: border-box; height: 100%; overflow: auto; padding: 1rem 2rem; background: white; color: black }`);
+:host > div { position: relative; box-sizing: border-box; height: 100%; overflow: auto; padding: 0 2rem 1rem; background: white; color: black }`);
 
 const isMarkdown = (w: Editor | null): w is Editor => !!w && w.context.path.endsWith('.md');
 const cm = (w: Editor) => w.content.editor as CodeMirrorEditor;

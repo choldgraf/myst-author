@@ -31,7 +31,7 @@ function App({ host }: { host: Host }) {
   if (!doc) return <p>Open a markdown file to preview it.</p>;
   return (
     <>
-      <span className="badge" title="Preview source">{badge}</span>
+      <div className="badge-bar"><span className="badge" title="Preview source">{badge}</span></div>
       <Preview
         result={result}
         topLine={topLine}

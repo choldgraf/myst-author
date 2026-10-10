@@ -212,6 +212,7 @@ export const pageLook: Extension = [
   // `prose`'s heading sizes, hard-coded to match myst-theme; read its CSS if they drift.
   syntaxHighlighting(HighlightStyle.define([
     { tag: tags.monospace, fontFamily: 'monospace' },
+    { tag: tags.labelName, fontFamily: 'monospace' }, // a code fence's info string, such as `{figure} path`, like the code below it
     { tag: tags.heading1, fontSize: '2.25em', lineHeight: '1.11', fontWeight: '800' },
     { tag: tags.heading2, fontSize: '1.5em', lineHeight: '1.33', fontWeight: '700' },
     { tag: tags.heading3, fontSize: '1.25em', lineHeight: '1.6', fontWeight: '600' },
