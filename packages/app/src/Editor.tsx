@@ -18,7 +18,7 @@ export function Editor({ initial, onChange, onTopLine, viewRef, extensions }: Pr
   useEffect(() => {
     const view = new EditorView({
       doc: initial,
-      selection: { anchor: bodyStart(initial.replaceAll('\r\n', '\n')) }, // CodeMirror counts a CRLF as one character
+      selection: { anchor: bodyStart(initial) },
       parent: host.current!,
       extensions: [
         basicSetup,

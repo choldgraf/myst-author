@@ -49,7 +49,7 @@ Rebuild and reload the page after changes.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.
   It follows the current Markdown editor, but not notebooks.
   It works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
-- Files outside the server's project folder get the fast preview, and references only to labels in files you have open.
+- Files outside the server's project folder get only the fast preview, and reference help only for labels in open files.
 - The language features need jupyter-lsp, which ships with JupyterLab.
   Without it, the extension logs a warning in the browser console, and only the preview works.
 

@@ -11,8 +11,6 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 `packages/mystmd` (`@myst-author/mystmd`)
 : Starts and talks to mystmd.
-  mystmd could export these helpers itself (U8 in [upstream proposals](upstream.md)).
-  mystmd-lsp keeps its own copies in `src/mystmd/`.
   `@myst-author/mystmd/start` runs `myst start --headless`.
   `@myst-author/mystmd/built` reads built page JSON from mystmd's *content server*, the local HTTP server that `myst start --headless` runs.
   `@myst-author/mystmd/parse` parses a single page with mystmd's parser and transforms.

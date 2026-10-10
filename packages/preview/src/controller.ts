@@ -102,7 +102,7 @@ export class PreviewController {
 }
 
 /** What following a preview link needs from the host. */
-export type LinkHost = Pick<PreviewHost, 'open' | 'openExternal' | 'findLabel' | 'warn'> & {
+type LinkHost = Pick<PreviewHost, 'open' | 'openExternal' | 'findLabel' | 'warn'> & {
   fileForSlug(slug: string): string | undefined; // see `ContentServer`
 };
 

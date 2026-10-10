@@ -1,6 +1,5 @@
 name: Deploy docs to GitHub Pages
 
-# Pull requests build the docs to catch errors. Pushes to main and manual runs also deploy them.
 on:
   push:
     branches: [main]

@@ -201,8 +201,8 @@ export function shadowSheet(css: string) {
 /** The (1-based) line at the top of the editor's viewport. */
 export const topLine = (view: EditorView) => view.state.doc.lineAt(view.lineBlockAtHeight(view.scrollDOM.scrollTop).from).number;
 
-/** Where the body starts, after any frontmatter. Editors start the cursor there, so live preview shows the page title rendered. */
-export const bodyStart = (text: string) => /^---\n[\s\S]*?\n---\n/.exec(text)?.[0].length ?? 0;
+/** Where the body starts, after any frontmatter, as a CodeMirror offset (CodeMirror counts a CRLF as one character). Editors start the cursor there, so live preview shows the page title rendered. */
+export const bodyStart = (text: string) => /^---\n[\s\S]*?\n---\n/.exec(text.replaceAll('\r\n', '\n'))?.[0].length ?? 0;
 
 /**
  * Live preview that reads like the page: a centred column, a proportional font (code stays monospace), and no gutters.

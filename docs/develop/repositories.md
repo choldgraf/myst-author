@@ -3,8 +3,7 @@ title: How the repositories fit together
 description: The repositories behind MyST Author, what each one owns, and where a new feature should go.
 ---
 
-MyST Author is one of four related repositories.
-Each is a standalone project that is useful without the others, and MyST Author is where they come together.
+MyST Author is built from several repositories that are each useful on their own.
 This page is the source of truth for how they relate; each repository documents its own interface.
 
 ```{mermaid}

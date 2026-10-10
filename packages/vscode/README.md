@@ -29,7 +29,8 @@ Reload open VS Code windows afterwards.
 
 ## What works
 
-- The extension starts when you open a Markdown file or a notebook in a MyST project, the folder of the nearest `myst.yml` above it.
+- The extension starts when you open a Markdown file or notebook in a MyST project.
+  The project is the folder of the nearest `myst.yml` above that file.
   It runs `myst start --headless` there, and uses that project for the rest of the window's session.
   Files outside a MyST project only get MyST syntax highlighting.
   Set `MYST_BIN` if `myst` isn't on your `PATH`.
@@ -40,9 +41,9 @@ Reload open VS Code windows afterwards.
   The preview follows the active Markdown editor, but not notebooks.
   It works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
 - To edit with live preview, click the book button in a Markdown file's toolbar, or run **MyST: Toggle Live Editor**.
-  It's the web editor's live preview, with the same language features, on the same file: save and undo work as usual, and you can keep the text editor open beside it.
-  Rename (F2), find references (Shift+F12), and go to definition in another file hand off to VS Code's own commands.
-  That's why they work across the whole project.
+  It's the web editor's live preview, with the same language features.
+  It edits the same file as the text editor, so save and undo work as usual and you can keep both open.
+  Rename (F2), find references (Shift+F12), and go to definition in another file use VS Code's own commands, so they work across the project.
   VS Code's own editor features don't reach it: its outline and breadcrumbs, Copilot suggestions, and extensions such as Vim.
   Notebooks' Markdown cells don't get it.
 

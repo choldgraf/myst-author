@@ -21,7 +21,9 @@ The toolbar has these buttons:
 - **Open ⌘P** opens a file by name.
   {kbd}`Cmd+P` and {kbd}`Ctrl+P` both work, on any system.
   Start with `@` to jump to a label anywhere in the project, or `#` to jump within this page's [outline](navigate.md).
-- **Source**, **Preview** and **Live** switch how the page shows: plain Markdown, Markdown beside the [preview](preview.md) pane, or rendered [inside the editor](preview.md#live-preview) (the default).
+- **Source** shows plain Markdown.
+- **Preview** shows Markdown beside the [preview](preview.md) pane.
+- **Live**, the default, renders the page [inside the editor](preview.md#live-preview).
 
 The open file's name is in the middle of the toolbar, and the preview [badge](preview.md#fast-and-built-previews) is on the right.
 

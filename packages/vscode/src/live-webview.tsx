@@ -41,7 +41,7 @@ const ask = (type: 'rename' | 'references') => (view: EditorView) => {
 function create(text: string) {
   return new EditorView({
     doc: text,
-    selection: { anchor: bodyStart(text.replaceAll('\r\n', '\n')) }, // CodeMirror counts a CRLF as one character
+    selection: { anchor: bodyStart(text) },
     parent: document.getElementById('root')!,
     extensions: [
       basicSetup,

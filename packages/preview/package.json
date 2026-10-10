@@ -27,7 +27,7 @@
     "react-dom": "^19.0.0"
   },
   "exports": {
-    ".": "./src/index.ts",
+    ".": "./src/Preview.tsx",
     "./parse": "./src/parse.ts",
     "./controller": "./src/controller.ts",
     "./live": "./src/live.tsx",

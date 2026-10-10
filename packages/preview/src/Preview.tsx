@@ -23,9 +23,8 @@ export function usePreview(path: string | undefined, text: string, dirty: boolea
 
   const current = built?.path === path ? built : null;
   const page = current?.page?.sha256 === hashed.hash ? current.page : null;
-  const builtMatch = useMemo(() => (page ? { page, text: hashed.text } : null), [page, hashed]);
   // That build with the fast parse's lines, kept while you edit.
-  const matched = useMemo(() => builtMatch && { path, text: builtMatch.text, result: builtWithLines(builtMatch.page, builtMatch.text) }, [builtMatch]);
+  const matched = useMemo(() => page && { path, text: hashed.text, result: builtWithLines(page, hashed.text) }, [page, hashed]);
   const kept = useRef(matched);
   if (matched) kept.current = matched;
   const result = useMemo(() => {

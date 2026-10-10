@@ -19,7 +19,7 @@ Changes save automatically about half a second after you stop typing.
 :::{tip} Try this: edit a block
 Click a word in this sentence and change it.
 Click outside the box and it renders again.
-The badge in the top right says `fast preview` while you type and `built ✓` once mystmd has rebuilt the page.
+The badge in the top right changes while you type, and says `built ✓` once mystmd has rebuilt the page.
 
 [](#tour-basics)
 
