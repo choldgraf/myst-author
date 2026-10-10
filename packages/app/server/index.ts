@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
@@ -18,7 +18,8 @@ if (values.help || positionals.length > 1) {
   console.log('Usage: myst-author [folder]\n\nEdit the MyST project in folder (default: the current folder).\nEnvironment: PORT, MYST_BIN, NO_OPEN=1');
   process.exit(values.help ? 0 : 1);
 }
-const root = path.resolve(positionals[0] ?? '.');
+// Use real path (what Jupyter reports), so document URIs match in JupyterLab when the folder is reached through a symlink.
+const root = realpathSync(path.resolve(positionals[0] ?? '.'));
 const port = Number(process.env.PORT ?? 4321);
 
 // The content server for the built preview. Until it's up, or once it stops, /myst/* answers 503 with this reason.
