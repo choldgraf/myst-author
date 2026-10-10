@@ -33,9 +33,9 @@ flowchart LR
 |---|---|---|
 | [mystmd](https://github.com/jupyter-book/mystmd) | What MyST means: parsing, transforms, builds, and the content server | Everyone |
 | [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) | What an editor knows about a MyST project: references, labels, completion, hover, warnings | Any LSP editor (Neovim, Helix) |
-| [myst-syntax](https://github.com/choldgraf/myst-syntax) | Highlighting MyST syntax, for CodeMirror and TextMate | Any editor or docs site |
+| [myst-syntax](https://github.com/choldgraf/myst-syntax) | Highlighting MyST syntax, for CodeMirror and TextMate | VS Code extensions and CodeMirror editors |
 | [myst-parser-unified](https://github.com/choldgraf/myst-parser-unified) | Parsing MyST with micromark, and how its trees differ from mystmd's | People using the unified Markdown tools (remark), and mystmd as a possible future parser |
-| [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview |
+| [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview, once it's published |
 | [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
 
 Hosts start mystmd themselves and pass its address to mystmd-lsp, even though mystmd-lsp can start it.
