@@ -86,7 +86,8 @@ export function withSourceLines(built: ParseResult, fast: ParseResult): ParseRes
 /** Source lines (1-based, inclusive) that the live editor (`./live`) renders and reveals as one unit, and the blocks from them. */
 export type Span = { start: number; end: number; blocks: Block[] };
 
-const LABEL = /^\([^)\s]+\)=\s*$/;
+// Label characters follow mystmd's TARGET_PATTERN (markdown-it-myst).
+const LABEL = /^\s*\([a-zA-Z0-9|@<>*./_\-+:]+\)=\s*$/;
 
 /**
  * Group a page's blocks into spans for the live editor, given the page's source lines.

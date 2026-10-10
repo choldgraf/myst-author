@@ -40,6 +40,11 @@ test('spans: a list leaves the blank line after it out, so it stays as spacing',
   assert.deepEqual(spans(parseMyst(list), list.split('\n')).map((s) => [s.start, s.end]), [[1, 2], [4, 4]]);
 });
 
+test('spans: label lines take the characters mystmd accepts', () => {
+  const src = '  (fig.1|a)=\nText';
+  assert.deepEqual(spans(parseMyst(src), src.split('\n')).map((s) => [s.start, s.end]), [[1, 2]]);
+});
+
 test('withSourceLines: built blocks take the lines of the fast parse, or null if the blocks differ', () => {
   const fast = parseMyst(md);
   const built = { ...fast, blocks: fast.blocks.map((b) => ({ ...b, start: 1, end: 1 })) };

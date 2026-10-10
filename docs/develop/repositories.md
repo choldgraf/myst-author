@@ -59,9 +59,8 @@ Put each feature in the lowest repository that can hold it:
 - Repositories depend on each other only through packages, from npm or git, never by path.
 - A rule that one repository relies on is part of the other's documented interface.
   For example, MyST Author follows preview links to labels through mystmd-lsp's workspace symbols, so mystmd-lsp [documents how it names them](https://chrisholdgraf.com/mystmd-lsp/features#symbols).
-- Repositories should share test cases, not code.
-  When two of them recognise the same syntax, each one should check it against the same cases.
-  For example, myst-syntax and mystmd-lsp both find roles and directives.
+- When repositories recognise the same syntax, each one follows mystmd's rule and names where that rule lives, instead of copying another repository.
+  For example, myst-syntax, mystmd-lsp and MyST Author's preview all find labels like `(intro)=` with the characters from mystmd's `TARGET_PATTERN`.
 - Code copied between repositories says where its twin is, and why there's a copy.
   The only copies are the mystmd helpers that start mystmd, read its content server, and parse one page.
   mystmd-lsp and MyST Author both need them until mystmd exports them (U8 in [upstream proposals](upstream.md)).
