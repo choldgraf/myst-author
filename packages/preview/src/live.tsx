@@ -5,7 +5,7 @@ import { Facet, Prec, StateField, type EditorState, type Extension, type Transac
 import { Decoration, EditorView, keymap, WidgetType, type DecorationSet } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { showBuilt } from './built-match.ts';
-import { fromBuiltPage, parseMyst, spans, withBuiltBlocks, withSourceLines, type Block, type ParseResult, type Span } from './parse.ts';
+import { builtWithLines, parseMyst, spans, withBuiltBlocks, type Block, type ParseResult, type Span } from './parse.ts';
 import { INTERACTIVE, Preview } from './Preview.tsx';
 
 /** A span's character offsets in the editor, and an `id` for what it renders. (`start`/`end` are as of the last parse.) */
@@ -130,8 +130,7 @@ function update(value: Live, tr: Transaction): Live {
   if (!tr.docChanged && !tr.selection && !tr.effects.length) return value; // effects include new diagnostics
   const built = tr.effects.find((e) => e.is(showBuilt))?.value;
   if (built && built.text === tr.state.doc.toString()) {
-    // A copy: the preview pane renders the same page, and `fromBuiltPage` edits it.
-    const result = withSourceLines(fromBuiltPage(structuredClone(built.page)), parseMyst(built.text));
+    const result = builtWithLines(built.page, built.text);
     if (result) return build(tr.state, result, { result, text: built.text });
   }
   let local = true;
@@ -188,11 +187,19 @@ const theme = EditorView.baseTheme({
 export function livePreview({ css, onFollowLink }: { css?: string; onFollowLink?: FollowLink } = {}): Extension {
   const base = [liveField, arrows, theme, onFollowLink ? linkFollower.of(onFollowLink) : []];
   if (!css) return base;
-  const sheet = new CSSStyleSheet();
-  // A shadow root has no `:root`, so myst-theme's colour variables go on its host instead.
-  sheet.replaceSync(`${css.replaceAll(':root', ':host')}\n[data-line-start] > * { margin-top: 0; margin-bottom: 0 }`); // as the theme does outside shadow roots
+  const sheet = shadowSheet(`${css}\n[data-line-start] > * { margin-top: 0; margin-bottom: 0 }`); // as the theme does outside shadow roots
   return [base, shadowStyles.of(sheet)];
 }
+
+/** The preview's CSS as a stylesheet for a shadow root. A shadow root has no `:root`, so myst-theme's colour variables go on its host instead. */
+export function shadowSheet(css: string) {
+  const sheet = new CSSStyleSheet();
+  sheet.replaceSync(css.replaceAll(':root', ':host'));
+  return sheet;
+}
+
+/** The (1-based) line at the top of the editor's viewport. */
+export const topLine = (view: EditorView) => view.state.doc.lineAt(view.lineBlockAtHeight(view.scrollDOM.scrollTop).from).number;
 
 /** Where the body starts, after any frontmatter. Editors start the cursor there, so live preview shows the page title rendered. */
 export const bodyStart = (text: string) => /^---\n[\s\S]*?\n---\n/.exec(text)?.[0].length ?? 0;

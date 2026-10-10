@@ -61,7 +61,7 @@ function markUnresolved(tree: GenericParent, built: boolean) {
   });
 }
 
-export function toBlocks(tree: GenericParent): Block[] {
+function toBlocks(tree: GenericParent): Block[] {
   const nodes = tree.children.flatMap((c) => (c.type === 'block' ? (c.children ?? []) : [c]));
   let last = 1;
   return nodes.map((node) => {
@@ -83,6 +83,11 @@ export function withSourceLines(built: ParseResult, fast: ParseResult): ParseRes
   return { ...built, blocks: built.blocks.map((b, i) => ({ ...b, start: fast.blocks[i].start, end: fast.blocks[i].end })) };
 }
 
+/** mystmd's build of `text`, with the fast parse's lines (see `withSourceLines`). Works on a copy: hosts render the same page elsewhere, and `fromBuiltPage` edits it. */
+export function builtWithLines(page: BuiltPage, text: string) {
+  return withSourceLines(fromBuiltPage(structuredClone(page)), parseMyst(text));
+}
+
 /** Source lines (1-based, inclusive) that the live editor (`./live`) renders and reveals as one unit, and the blocks from them. */
 export type Span = { start: number; end: number; blocks: Block[] };
 
@@ -96,7 +101,8 @@ const LABEL = /^\s*\([a-zA-Z0-9|@<>*./_\-+:]+\)=\s*$/;
  */
 export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Span[] {
   const out: Span[] = [];
-  const close = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
+  const fence = (line: string) => /^---\r?$/.test(line); // `\r` when the text has CRLF line breaks
+  const close = fence(lines[0]) ? lines.findIndex((l, i) => i > 0 && fence(l)) : -1;
   if (close > 0 && frontmatter.title) out.push({ start: 1, end: close + 1, blocks: [] });
   for (const b of blocks) {
     const last = out.at(-1);
@@ -141,6 +147,13 @@ function firstPosition(node: GenericNode) {
     return EXIT;
   });
   return pos;
+}
+
+/** A notebook's build split into one page per cell: mystmd builds each cell as one block. Null if the build doesn't have `cells` blocks. */
+export function cellPages(page: BuiltPage, cells: number): BuiltPage[] | null {
+  const blocks = page.mdast.children;
+  if (blocks.length !== cells) return null;
+  return blocks.map((b) => ({ ...page, mdast: { type: 'root', children: b.children ?? [] } }));
 }
 
 /** Render a page built by mystmd the same way as the fast in-browser parse. */

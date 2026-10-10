@@ -4,7 +4,7 @@ import { ArticleProvider, ThemeProvider } from '@myst-theme/providers';
 import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, MyST } from 'myst-to-react';
 import { mystmdMissing, sha256, type Built } from '@myst-author/mystmd/built';
-import { fromBuiltPage, parseMyst, withBuiltBlocks, withSourceLines, type ParseResult } from './parse.ts';
+import { builtWithLines, fromBuiltPage, parseMyst, withBuiltBlocks, type ParseResult } from './parse.ts';
 
 /**
  * What to preview for a file's live text: mystmd's build when it matches the text exactly, otherwise the fast in-browser parse,
@@ -24,8 +24,8 @@ export function usePreview(path: string | undefined, text: string, dirty: boolea
   const current = built?.path === path ? built : null;
   const page = current?.page?.sha256 === hashed.hash ? current.page : null;
   const builtMatch = useMemo(() => (page ? { page, text: hashed.text } : null), [page, hashed]);
-  // That build with the fast parse's lines (a copy: `fromBuiltPage` edits it), kept while you edit.
-  const matched = useMemo(() => builtMatch && { path, text: builtMatch.text, result: withSourceLines(fromBuiltPage(structuredClone(builtMatch.page)), parseMyst(builtMatch.text)) }, [builtMatch]);
+  // That build with the fast parse's lines, kept while you edit.
+  const matched = useMemo(() => builtMatch && { path, text: builtMatch.text, result: builtWithLines(builtMatch.page, builtMatch.text) }, [builtMatch]);
   const kept = useRef(matched);
   if (matched) kept.current = matched;
   const result = useMemo(() => {

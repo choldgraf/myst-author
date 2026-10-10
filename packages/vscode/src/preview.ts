@@ -5,6 +5,12 @@ import { contentServer } from '@myst-author/mystmd/built';
 import { findLabel, PreviewController, type PreviewHost, type Request } from '@myst-author/preview/controller';
 import type { startMyst } from '@myst-author/mystmd/start';
 
+/** Project-relative path with `/` separators, matching the content server's page `location`. */
+export const projectPath = (root: string, uri: vscode.Uri) => relative(root, uri.fsPath).split(sep).join('/');
+
+/** mystmd's `url` as webviews reach it: in Codespaces and code-server they run in the browser, so images need the forwarded URL. */
+export const webviewUrl = (url: string) => vscode.env.asExternalUri(vscode.Uri.parse(url)).then((u) => u.toString().replace(/\/$/, ''));
+
 // Markdown files, not notebook cells (which are Markdown documents too).
 const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.document.languageId === 'markdown' && e.document.uri.scheme === 'file';
 
@@ -18,26 +24,25 @@ export class MystPreview {
     current: () => {
       const doc = this.panel && this.editor?.document;
       const top = this.editor?.visibleRanges[0];
-      return doc && { path: this.path(doc.uri), text: doc.getText(), dirty: doc.isDirty, line: top && top.start.line + 1 };
+      return doc && { path: projectPath(this.root, doc.uri), text: doc.getText(), dirty: doc.isDirty, line: top && top.start.line + 1 };
     },
     post: (m) => this.panel?.webview.postMessage(m),
-    open: (path, line) => this.show(vscode.Uri.file(resolve(this.root ?? '/', path)), line),
+    open: (path, line) => this.show(vscode.Uri.file(resolve(this.root, path)), line),
     openExternal: (url) => vscode.env.openExternal(vscode.Uri.parse(url)),
     findLabel: async (id) => {
       const s = await findLabel(this.request, id);
-      return s && { path: this.path(vscode.Uri.parse(s.uri)), line: s.line };
+      return s && { path: projectPath(this.root, vscode.Uri.parse(s.uri)), line: s.line };
     },
     warn: (message) => vscode.window.showWarningMessage(message),
   };
 
   constructor(
     private context: vscode.ExtensionContext,
-    private root: string | undefined,
+    private root: string,
     myst: Awaited<ReturnType<typeof startMyst>>,
     private request: Request, // to the language server
   ) {
-    // In Codespaces and code-server the webview runs in the browser, so images need the forwarded URL.
-    this.assets = vscode.env.asExternalUri(vscode.Uri.parse(myst.url)).then((u) => u.toString().replace(/\/$/, ''));
+    this.assets = webviewUrl(myst.url);
     this.preview = new PreviewController(this.host, myst.ready.then(async () => contentServer(myst.url, await this.assets)));
     context.subscriptions.push(
       this.preview,
@@ -81,11 +86,6 @@ export class MystPreview {
 
   private retitle() {
     if (this.panel && this.editor) this.panel.title = `MyST: ${this.editor.document.uri.path.split('/').pop()}`;
-  }
-
-  /** Project-relative path with `/` separators, matching the content server's page `location`. */
-  private path(uri: vscode.Uri) {
-    return relative(this.root ?? '/', uri.fsPath).split(sep).join('/');
   }
 }
 

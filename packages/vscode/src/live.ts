@@ -1,10 +1,10 @@
-import { relative, resolve, sep } from 'node:path';
+import { resolve } from 'node:path';
 import * as vscode from 'vscode';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
 import { contentServer, type BuiltPage, type ContentServer } from '@myst-author/mystmd/built';
 import { findLabel, followLink, type Request } from '@myst-author/preview/controller';
 import type { startMyst } from '@myst-author/mystmd/start';
-import { webviewHtml } from './preview.ts';
+import { projectPath, webviewHtml, webviewUrl } from './preview.ts';
 
 /** The language server script: `mystAuthor.serverPath`, or the copy of mystmd-lsp's bundle in dist/. */
 export const serverScript = (context: vscode.ExtensionContext) =>
@@ -52,10 +52,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     const post = (m: ToLive) => webview.postMessage(m);
     const at = (p: Pos) => new vscode.Position(p.line, p.character);
     const project = this.project(document.uri);
-    // In Codespaces and code-server the webview runs in the browser, so images need the forwarded URL.
-    const assets = await project
-      ?.then(({ myst }) => vscode.env.asExternalUri(vscode.Uri.parse(myst.url)))
-      .then((u) => u.toString().replace(/\/$/, ''));
+    const assets = await project?.then(({ myst }) => webviewUrl(myst.url));
     const dist = vscode.Uri.joinPath(this.context.extensionUri, 'dist');
     webview.options = { enableScripts: true, localResourceRoots: [dist] };
     webview.html = webviewHtml(webview, dist, 'live', assets);
@@ -86,7 +83,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
       myst.ready.then(() => {
         if (disposed) return;
         const built = (content = contentServer(myst.url, assets));
-        const path = relative(root, document.uri.fsPath).split(sep).join('/');
+        const path = projectPath(root, document.uri);
         stopWatch = built.watch(async () => {
           const { page } = await built.built(path);
           if (page) post({ type: 'built', page });
@@ -132,7 +129,6 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
 
   /** Follow a rendered link as the preview does. A target in this file is selected in the webview; others open in a text editor, like `definition`. */
   private follow(document: vscode.TextDocument, { root, request }: Project, content: ContentServer | undefined, { href, line }: { href: string; line?: number }, post: (m: ToLive) => void) {
-    const projectPath = (uri: vscode.Uri) => relative(root, uri.fsPath).split(sep).join('/');
     return followLink({
       open: (path, line) => {
         const uri = vscode.Uri.file(resolve(root, path));
@@ -142,11 +138,11 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
       openExternal: (url) => vscode.env.openExternal(vscode.Uri.parse(url)),
       findLabel: async (id) => {
         const s = await findLabel(request, id);
-        return s && { path: projectPath(vscode.Uri.parse(s.uri)), line: s.line };
+        return s && { path: projectPath(root, vscode.Uri.parse(s.uri)), line: s.line };
       },
       warn: (message) => vscode.window.showWarningMessage(message),
       fileForSlug: (slug) => content?.fileForSlug(slug),
-    }, projectPath(document.uri), href, line);
+    }, projectPath(root, document.uri), href, line);
   }
 
   /** References across the project. VS Code's peek view needs a text editor, so pick one from a list. */

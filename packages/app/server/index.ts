@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
 import { existsSync, realpathSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createProxyServer } from 'http-proxy-3';
 import sirv from 'sirv';
-import { sha256 } from '@myst-author/mystmd/built';
 import { startMyst } from '@myst-author/mystmd/start';
-import { listMarkdown, resolveInside } from './files.ts';
+import { listMarkdown, resolveInside, writeUnlessChanged } from './files.ts';
 import { lspBridge } from './lsp.ts';
 
 const { values, positionals } = parseArgs({ allowPositionals: true, options: { help: { type: 'boolean', short: 'h' } } });
@@ -67,10 +66,7 @@ const server = http.createServer(async (req, res) => {
     }
     const abs = resolveInside(root, rel);
     if (req.method === 'PUT') {
-      // Don't overwrite changes made on disk (by an LLM, git, another editor) since the browser last read or saved the file.
-      const base = req.headers['if-match'];
-      if (base && base !== (await sha256(await readFile(abs, 'utf8')))) return res.writeHead(409).end(`${rel} changed on disk`);
-      await writeFile(abs, await readBody(req));
+      if (!(await writeUnlessChanged(abs, await readBody(req), req.headers['if-match']))) return res.writeHead(409).end(`${rel} changed on disk`);
       res.statusCode = 204;
       return res.end();
     }

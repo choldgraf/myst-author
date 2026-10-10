@@ -12,8 +12,9 @@ import { Widget } from '@lumino/widgets';
 import { connectLsp } from '@myst-author/lsp-client/client';
 import { contentServer } from '@myst-author/mystmd/built';
 import { findLabel, PreviewController, type ToPage } from '@myst-author/preview/controller';
-import { livePreview, offerBuilt, showBuilt } from '@myst-author/preview/live';
+import { livePreview, offerBuilt, shadowSheet, showBuilt, topLine } from '@myst-author/preview/live';
 import { mountPreviewPage } from '@myst-author/preview/page';
+import { cellPages } from '@myst-author/preview/parse';
 import liveCss from '../dist/live.css'; // the preview's CSS, for the shadow roots of live blocks and the preview panel (see build.mjs)
 
 type Editor = IDocumentWidget<FileEditor>;
@@ -31,20 +32,13 @@ const content = contentServer(server + 'myst');
 const live = livePreview({ css: `${liveCss}\n.article { font-size: var(--jp-content-font-size1); line-height: var(--jp-content-line-height) }` });
 const liveMode = new Compartment();
 let liveOn = true;
-// The preview panel also renders in a shadow root. A shadow root has no `:root`, so myst-theme's colour variables go on its host, as live preview does.
+// The preview panel also renders in a shadow root.
 // The inner div is the page's body, and scrolls. It has no top padding, so the badge bar sticks to its very top.
-const previewCss = new CSSStyleSheet();
-previewCss.replaceSync(`${liveCss.replaceAll(':root', ':host')}
+const previewCss = shadowSheet(`${liveCss}
 :host > div { position: relative; box-sizing: border-box; height: 100%; overflow: auto; padding: 0 2rem 1rem; background: white; color: black }`);
 
 const isMarkdown = (w: Editor | null): w is Editor => !!w && w.context.path.endsWith('.md');
 const cm = (w: Editor) => w.content.editor as CodeMirrorEditor;
-
-/** The (1-based) line at the top of the editor's viewport. */
-function topLine(w: Editor) {
-  const view = cm(w).editor;
-  return view.state.doc.lineAt(view.lineBlockAtHeight(view.scrollDOM.scrollTop).from).number;
-}
 
 /** Open the notebook at `path` and edit its cell `id`, returning the cell's CodeMirror view. */
 async function editCell(docs: IDocumentManager, path: string, id: string) {
@@ -130,12 +124,11 @@ const plugin: JupyterFrontEndPlugin<void> = {
     // A notebook's build has one block per cell, and no hash to compare with, so cells use it while the notebook is saved: that's what mystmd built.
     const sendBuiltCells = async (nb: NotebookPanel) => {
       const { page } = await content.built(PathExt.relative(await project, nb.context.path));
-      const blocks = page?.mdast.children ?? [];
-      if (!page || nb.context.model.dirty || blocks.length !== nb.content.widgets.length) return;
+      const pages = page && cellPages(page, nb.content.widgets.length);
+      if (!pages || nb.context.model.dirty) return;
       nb.content.widgets.forEach((cell, i) => {
         if (!attached.has(cell) || !cell.editor) return;
-        const cellPage = { ...page, mdast: { type: 'root', children: blocks[i].children ?? [] } };
-        (cell.editor as CodeMirrorEditor).editor.dispatch({ effects: showBuilt.of({ page: cellPage, text: cell.model.sharedModel.getSource() }) });
+        (cell.editor as CodeMirrorEditor).editor.dispatch({ effects: showBuilt.of({ page: pages[i], text: cell.model.sharedModel.getSource() }) });
       });
     };
     content.watch(() => {
@@ -190,7 +183,7 @@ class MystPreview extends Widget {
   private preview = new PreviewController({
     current: async () => {
       const w = this.editor;
-      return w ? { path: PathExt.relative(await this.project, w.context.path), text: w.content.model.sharedModel.getSource(), dirty: w.context.model.dirty, line: topLine(w) } : undefined;
+      return w ? { path: PathExt.relative(await this.project, w.context.path), text: w.content.model.sharedModel.getSource(), dirty: w.context.model.dirty, line: topLine(cm(w).editor) } : undefined;
     },
     post: (m) => this.receive(m),
     open: async (path, line) => show(this.docs, PathExt.join(await this.project, path), line),
@@ -223,6 +216,7 @@ class MystPreview extends Widget {
     this.editor && cm(this.editor).editor.scrollDOM.removeEventListener('scroll', this.onScroll);
     this.preview.dispose();
     Signal.clearData(this);
+    Signal.clearData(this.preview); // disconnects the editor's signals, which call the controller directly
     super.dispose();
   }
 
@@ -230,23 +224,19 @@ class MystPreview extends Widget {
   private follow(w: Editor | null) {
     if (!isMarkdown(w) || w === this.editor) return;
     if (this.editor) {
-      this.editor.content.model.sharedModel.changed.disconnect(this.sendText, this);
-      this.editor.context.model.stateChanged.disconnect(this.sendText, this);
+      this.editor.content.model.sharedModel.changed.disconnect(this.preview.sendText, this.preview);
+      this.editor.context.model.stateChanged.disconnect(this.preview.sendText, this.preview);
       cm(this.editor).editor.scrollDOM.removeEventListener('scroll', this.onScroll);
     }
     this.editor = w;
     this.title.label = `MyST: ${PathExt.basename(w.context.path)}`;
-    w.content.model.sharedModel.changed.connect(this.sendText, this);
-    w.context.model.stateChanged.connect(this.sendText, this); // the dirty flag
+    w.content.model.sharedModel.changed.connect(this.preview.sendText, this.preview);
+    w.context.model.stateChanged.connect(this.preview.sendText, this.preview); // the dirty flag
     cm(w).editor.scrollDOM.addEventListener('scroll', this.onScroll);
     this.preview.sendFile();
   }
 
-  private sendText() {
-    this.preview.sendText();
-  }
-
-  private onScroll = () => this.editor && this.preview.scroll(topLine(this.editor));
+  private onScroll = () => this.editor && this.preview.scroll(topLine(cm(this.editor).editor));
 }
 
 export default plugin;

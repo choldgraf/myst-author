@@ -1,7 +1,4 @@
 # @myst-author/lsp-client
 
 Connects the web app, JupyterLab, and VS Code to the [`mystmd-lsp`](https://github.com/choldgraf/mystmd-lsp) language server.
-
-- `src/client/` (`@myst-author/lsp-client/client`): `connectLsp`, a `@codemirror/lsp-client` with inlay hints and Cmd/Ctrl-click to go to definition.
-  The host passes it a websocket URL or a `messageTransport`, and the root for document URIs.
-- `src/spawn.ts` (`@myst-author/lsp-client/spawn`): `spawnLsp`, which starts the server from Node and relays its messages as strings.
+See [Architecture](../../docs/develop/architecture.md#packages).

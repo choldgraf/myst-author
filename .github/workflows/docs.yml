@@ -1,8 +1,10 @@
 name: Deploy docs to GitHub Pages
 
+# Pull requests build the docs to catch errors. Pushes to main and manual runs also deploy them.
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -11,7 +13,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }} # so a pull request doesn't cancel a deploy
   cancel-in-progress: true
 
 jobs:
@@ -31,6 +33,7 @@ jobs:
           path: docs/_build/html
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

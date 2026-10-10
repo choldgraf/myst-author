@@ -13,7 +13,7 @@ export type FromPage =
   | { type: 'follow'; href: string; line?: number };
 
 /** The file the preview follows. `line` is the (1-based) line at the top of the editor. */
-export type HostFile = { path: string; text: string; dirty: boolean; line?: number };
+type HostFile = { path: string; text: string; dirty: boolean; line?: number };
 
 /**
  * What a host editor (VS Code, JupyterLab) provides to the preview.

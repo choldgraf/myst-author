@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fromBuiltPage, parseMyst, spans, withBuiltBlocks, withSourceLines } from './parse.ts';
+import { cellPages, fromBuiltPage, parseMyst, spans, withBuiltBlocks, withSourceLines } from './parse.ts';
 
 const md = [
   '---', 'title: Hi', '---',          // 1-3
@@ -58,6 +58,13 @@ test('withBuiltBlocks: unchanged spans keep the built nodes, at their new lines;
   const text = md.replace('See {numref}', 'Now see {numref}').replace('```\n\n', '```\n\nNew.\n\n');
   const { blocks } = withBuiltBlocks(parseMyst(text), text, built, md);
   assert.deepEqual(blocks.map((b) => [b.node.type, b.start]), [['built', 4], ['paragraph', 6], ['built', 8], ['paragraph', 13], ['built', 15]]);
+});
+
+test('cellPages: one page per notebook cell, or null if the cell count differs', () => {
+  const cell = (value: string) => ({ type: 'block', children: [{ type: 'text', value }] });
+  const page = { sha256: '', location: '/nb.ipynb', mdast: { type: 'root', children: [cell('a'), cell('b')] } } as any;
+  assert.deepEqual(cellPages(page, 2)!.map((p) => p.mdast.children[0].value), ['a', 'b']);
+  assert.equal(cellPages(page, 3), null);
 });
 
 test('@label resolves to a label on the page, like [](#label)', () => {

@@ -1,8 +1,8 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import { markdown } from '@codemirror/lang-markdown';
-import type { Extension } from '@codemirror/state';
+import { EditorState, type Extension } from '@codemirror/state';
 import { basicSetup, EditorView } from 'codemirror';
-import { bodyStart } from '@myst-author/preview/live';
+import { bodyStart, topLine } from '@myst-author/preview/live';
 
 type Props = {
   initial: string;
@@ -18,17 +18,18 @@ export function Editor({ initial, onChange, onTopLine, viewRef, extensions }: Pr
   useEffect(() => {
     const view = new EditorView({
       doc: initial,
-      selection: { anchor: bodyStart(initial) },
+      selection: { anchor: bodyStart(initial.replaceAll('\r\n', '\n')) }, // CodeMirror counts a CRLF as one character
       parent: host.current!,
       extensions: [
         basicSetup,
         markdown(),
         EditorView.lineWrapping,
+        initial.includes('\r\n') ? EditorState.lineSeparator.of('\r\n') : [], // keep a CRLF file's line breaks
         extensions,
-        EditorView.updateListener.of((u) => u.docChanged && onChange(u.state.doc.toString())),
+        EditorView.updateListener.of((u) => u.docChanged && onChange(u.state.sliceDoc())),
       ],
     });
-    const onScroll = () => onTopLine(view.state.doc.lineAt(view.lineBlockAtHeight(view.scrollDOM.scrollTop).from).number);
+    const onScroll = () => onTopLine(topLine(view));
     view.scrollDOM.addEventListener('scroll', onScroll);
     viewRef.current = view;
     view.focus();

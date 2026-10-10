@@ -32,7 +32,6 @@
     "./controller": "./src/controller.ts",
     "./live": "./src/live.tsx",
     "./page": "./src/page.tsx",
-    "./page.css": "./src/page.css",
     "./tailwind.config.cjs": "./tailwind.config.cjs",
     "./build": "./build.mjs"
   }

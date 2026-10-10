@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Compartment } from '@codemirror/state';
+import { Compartment, Text } from '@codemirror/state';
 import { EditorView } from 'codemirror';
 import type { DocumentSymbol, SymbolInformation } from 'vscode-languageserver-protocol';
 import { connectLsp } from '@myst-author/lsp-client/client';
-import { type Built, Preview, usePreview } from '@myst-author/preview';
-import { contentServer, sha256 } from '@myst-author/mystmd/built';
+import { Preview, usePreview } from '@myst-author/preview';
+import { contentServer, sha256, type Built } from '@myst-author/mystmd/built';
 import { findLabel, followLink } from '@myst-author/preview/controller';
 import { livePreview, offerBuilt, pageLook } from '@myst-author/preview/live';
 import { listFiles, projectRoot, readFile, writeFile } from './api.ts';
@@ -61,7 +61,9 @@ export function App() {
     const view = viewRef.current;
     if (!view) return;
     saved.current = next;
-    view.dispatch({ changes: minimalChange(view.state.doc.toString(), next) });
+    // Diff in CodeMirror's terms, where a line break is one character even in a CRLF file (see Editor).
+    const { from, to, insert } = minimalChange(view.state.doc.toString(), next.replaceAll('\r\n', '\n'));
+    view.dispatch({ changes: { from, to, insert: Text.of(insert.split('\n')) } });
   }, []);
 
   const open = useCallback(async (path: string) => {
@@ -74,6 +76,8 @@ export function App() {
       if (cur.doc && cur.text !== saved.current) await save(cur.doc.path, cur.text);
     } catch (err) {
       setStatus(`couldn't open ${path}: ${(err as Error).message}`);
+      viewOpened.current?.(null);
+      viewOpened.current = null;
       return;
     }
     saved.current = loaded;
@@ -83,6 +87,9 @@ export function App() {
     setStatus('');
     setConflict(false);
   }, []);
+
+  // Open `path`, resolving to its editor once it shows, or null if it didn't open.
+  const openView = useCallback((path: string) => new Promise<EditorView | null>((resolve) => { viewOpened.current = resolve; open(path); }), []);
 
   useEffect(() => {
     Promise.all([listFiles(), projectRoot()]).then(([f, root]) => {
@@ -94,7 +101,7 @@ export function App() {
           if (path) setStatus(`can't open ${path}: only .md files open here`);
           return Promise.resolve(null);
         }
-        return new Promise((resolve) => { viewOpened.current = resolve; open(path); });
+        return openView(path);
       };
       setLsp(l);
       setFiles(f);
@@ -178,7 +185,7 @@ export function App() {
 
   function openAt(path: string, line: number) {
     if (path === doc?.path) return gotoLine(line);
-    new Promise((resolve) => { viewOpened.current = resolve; open(path); }).then(() => gotoLine(line));
+    openView(path).then((view) => view && gotoLine(line));
   }
 
   // The switcher: `@label` searches the project's labels (as in MyST's `@label` references), `#` this page's outline, anything else file names.

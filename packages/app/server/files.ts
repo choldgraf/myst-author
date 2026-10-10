@@ -1,5 +1,6 @@
-import { readdir } from 'node:fs/promises';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { sha256 } from '@myst-author/mystmd/built';
 
 const SKIP = new Set(['node_modules', '_build']);
 
@@ -21,4 +22,14 @@ export function resolveInside(root: string, rel: string): string {
   const abs = path.resolve(base, rel);
   if (!abs.startsWith(base + path.sep) || !abs.endsWith('.md')) throw new Error(`Refusing path: ${rel}`);
   return abs;
+}
+
+/**
+ * Write `text` to `abs`, unless the file changed on disk (by an LLM, git, another editor) since the browser read it.
+ * `base` is the hash of what the browser last read or saved; without it, always writes. Returns whether it wrote.
+ */
+export async function writeUnlessChanged(abs: string, text: string, base?: string) {
+  if (base && base !== (await sha256(await readFile(abs, 'utf8')))) return false;
+  await writeFile(abs, text);
+  return true;
 }
