@@ -17,7 +17,7 @@ The other top-level folders are:
 The packages are [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) written in TypeScript.
 Node 24 strips the types and runs them directly.
 Only the bundles have a build step: the web app, and the VS Code and JupyterLab extensions.
-The language server comes already bundled, from the `mystmd-lsp` npm package.
+The language server comes already bundled, from the [`mystmd-lsp`](https://github.com/choldgraf/mystmd-lsp) npm package; its docs say how to run it on its own.
 
 ## Set up
 
@@ -60,12 +60,6 @@ The JupyterLab extension, built and running in JupyterLab (see [JupyterLab](../g
 
 ```bash
 npm run lab -- docs/examples/tour
-```
-
-The language server on its own, for any LSP client:
-
-```bash
-node node_modules/mystmd-lsp/dist/server.cjs --stdio
 ```
 
 ## The docs
