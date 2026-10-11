@@ -17,6 +17,7 @@
     "myst-common": "^1.10.1",
     "myst-spec-ext": "^1.10.1",
     "myst-to-react": "^1.4.1",
+    "swr": "^2.1.5",
     "unist-util-visit": "^4.1.2"
   },
   "peerDependencies": {

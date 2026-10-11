@@ -3,10 +3,11 @@ import { Theme } from '@myst-theme/common';
 import { ArticleProvider, ThemeProvider } from '@myst-theme/providers';
 import Anser from 'anser';
 import { escapeCarriageReturn } from 'escape-carriage';
+import { SWRConfig, type Middleware } from 'swr';
 import type { GenericNode } from 'myst-common';
 import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, Details, MyST } from 'myst-to-react';
-import { mystmdMissing, sha256, type Built } from '@myst-author/mystmd/built';
+import { mystmdMissing, rebaseUrls, sha256, type Built } from '@myst-author/mystmd/built';
 import { builtWithLines, fromBuiltPage, parseMyst, withBuiltBlocks, type ParseResult } from './parse.ts';
 
 /**
@@ -118,6 +119,16 @@ type Props = {
   onFollowLink?: (href: string, line?: number) => void;
 };
 
+// A cross-reference's hover card fetches its page from the content server, at `<base>/content/<slug>.json` (see `rebaseUrls`).
+// myst-to-react fetches it with SWR, so this rebases that page's URLs too, and its images load (if myst-to-react stops using SWR, they break again).
+const rebaseHoverPages: Middleware = (useSWRNext) => (key, fetcher, config) =>
+  useSWRNext(key, fetcher && (async (url: string) => {
+    const page: any = await fetcher(url);
+    const i = url.lastIndexOf('/content/');
+    if (i >= 0 && page?.mdast) rebaseUrls(page.mdast, url.slice(0, i));
+    return page;
+  }), config);
+
 /** Render a parsed page block-by-block; each block carries its source line range for sync. */
 export function Preview({ result, topLine, onLineClick, onFollowLink }: Props) {
   const article = useRef<HTMLElement>(null);
@@ -148,21 +159,23 @@ export function Preview({ result, topLine, onLineClick, onFollowLink }: Props) {
   }
 
   return (
-    <ThemeProvider theme={Theme.light} setTheme={() => {}} renderers={renderers}>
-      <ArticleProvider
-        kind={SourceFileKind.Article}
-        references={{ ...result.references, article: result.tree }}
-        frontmatter={result.frontmatter}
-      >
-        <article className="article" onClick={onClick} ref={article}>
-          {result.frontmatter.title && <h1 data-line-start={1}>{String(result.frontmatter.title)}</h1>}
-          {result.blocks.map((b) => (
-            <div key={b.node.key} data-line-start={b.start} data-line-end={b.end}>
-              <MyST ast={b.node} />
-            </div>
-          ))}
-        </article>
-      </ArticleProvider>
-    </ThemeProvider>
+    <SWRConfig value={{ use: [rebaseHoverPages] }}>
+      <ThemeProvider theme={Theme.light} setTheme={() => {}} renderers={renderers}>
+        <ArticleProvider
+          kind={SourceFileKind.Article}
+          references={{ ...result.references, article: result.tree }}
+          frontmatter={result.frontmatter}
+        >
+          <article className="article" onClick={onClick} ref={article}>
+            {result.frontmatter.title && <h1 data-line-start={1}>{String(result.frontmatter.title)}</h1>}
+            {result.blocks.map((b) => (
+              <div key={b.node.key} data-line-start={b.start} data-line-end={b.end}>
+                <MyST ast={b.node} />
+              </div>
+            ))}
+          </article>
+        </ArticleProvider>
+      </ThemeProvider>
+    </SWRConfig>
   );
 }
