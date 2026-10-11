@@ -67,16 +67,12 @@ export function contentServer(base: string, assets = base) {
   }
 
   return {
-    pages,
-
-    page,
-
     /** `page(path)` as a `Built`, with any failure as its `error`. */
     built(path: string): Promise<Built> {
       return page(path).then((p) => ({ path, page: p }), (err) => ({ path, page: null, error: err.message }));
     },
 
-    /** The project-relative file for a page slug (`''` for the index page), as of the last `page()` or `pages()`. */
+    /** The project-relative file for a page slug (`''` for the index page), as of the last `built()`. */
     fileForSlug(slug: string) {
       for (const [location, s] of slugs) if (s === slug || !slug) return location.slice(1);
     },
