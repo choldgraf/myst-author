@@ -1,17 +1,20 @@
 import { resolve } from 'node:path';
 import * as vscode from 'vscode';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
-import { contentServer, type BuiltPage, type ContentServer } from '@myst-author/mystmd/built';
+import type { BuiltPage, ContentServer } from '@myst-author/mystmd/built';
 import { findLabel, followLink, type Request } from '@myst-author/preview/controller';
-import type { startMyst } from '@myst-author/mystmd/start';
-import { projectPath, webviewHtml, webviewUrl } from './preview.ts';
+import type { Myst } from '@myst-author/mystmd/start';
+import { projectPath, webviewHtml } from './preview.ts';
 
 /** The language server script: `mystAuthor.serverPath`, or the copy of mystmd-lsp's bundle in dist/. */
 export const serverScript = (context: vscode.ExtensionContext) =>
   vscode.workspace.getConfiguration('mystAuthor').get<string>('serverPath') || context.asAbsolutePath('dist/lsp.js');
 
-/** The MyST project the extension started: its folder, its mystmd, and requests to its language server. */
-export type Project = { root: string; myst: Awaited<ReturnType<typeof startMyst>>; request: Request };
+/**
+ * The MyST project the extension started: its folder, its mystmd, and requests to its language server.
+ * `assets` is mystmd's URL as webviews reach it, and `content` its content server once mystmd is up.
+ */
+export type Project = { root: string; myst: Myst; request: Request; assets: Thenable<string>; content: Promise<ContentServer> };
 
 /** A position as VS Code and LSP count it (0-based). Not an offset: CodeMirror counts a CRLF as one character, VS Code as two. */
 export type Pos = { line: number; character: number };
@@ -52,7 +55,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     const post = (m: ToLive) => webview.postMessage(m);
     const at = (p: Pos) => new vscode.Position(p.line, p.character);
     const project = this.project(document.uri);
-    const assets = await project?.then(({ myst }) => webviewUrl(myst.url));
+    const assets = await project?.then((p) => p.assets);
     const dist = vscode.Uri.joinPath(this.context.extensionUri, 'dist');
     webview.options = { enableScripts: true, localResourceRoots: [dist] };
     webview.html = webviewHtml(webview, dist, 'live', assets);
@@ -74,16 +77,16 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     let content: ContentServer | undefined;
     let stopWatch: (() => void) | undefined;
     let disposed = false;
-    const connect = ({ root, myst }: Project) => {
+    const connect = (p: Project) => {
       if (disposed) return;
       // A server of its own, as each web app tab gets: lsp-client speaks raw LSP, which VS Code's language client can't pass on.
-      server = spawnLsp(serverScript(this.context), [`--content-server=${myst.url}`, `--root=${root}`], (message) => post({ type: 'lsp', message }));
-      post({ type: 'connect', root: vscode.Uri.file(root).toString(), uri: document.uri.toString() });
+      server = spawnLsp(serverScript(this.context), [`--content-server=${p.myst.url}`, `--root=${p.root}`], (message) => post({ type: 'lsp', message }));
+      post({ type: 'connect', root: vscode.Uri.file(p.root).toString(), uri: document.uri.toString() });
       // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.
-      myst.ready.then(() => {
+      p.content.then((built) => {
         if (disposed) return;
-        const built = (content = contentServer(myst.url, assets));
-        const path = projectPath(root, document.uri);
+        content = built;
+        const path = projectPath(p.root, document.uri);
         stopWatch = built.watch(async () => {
           const { page } = await built.built(path);
           if (page) post({ type: 'built', page });

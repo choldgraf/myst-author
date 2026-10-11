@@ -3,12 +3,13 @@ import { basename, dirname, join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
-import { startMyst } from '@myst-author/mystmd/start';
+import { contentServer } from '@myst-author/mystmd/built';
+import { startMyst, type Myst } from '@myst-author/mystmd/start';
 import { LiveEditor, serverScript, type Project } from './live.ts';
-import { MystPreview } from './preview.ts';
+import { MystPreview, webviewUrl } from './preview.ts';
 
 let client: LanguageClient | undefined;
-let myst: Awaited<ReturnType<typeof startMyst>> | undefined;
+let myst: Myst | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
   const output = vscode.window.createOutputChannel('MyST', { log: true }); // the language client logs to it with `info`, `error`…
@@ -36,7 +37,7 @@ export function activate(context: vscode.ExtensionContext) {
     const execute = vscode.workspace.getConfiguration('mystAuthor').get<boolean>('execute');
     myst = await startMyst(root, (line) => output.appendLine(stripVTControlCharacters(line)), execute ? ['--execute'] : []);
     // Failing to start is reported by the preview; this is for mystmd dying later, which otherwise looks like a build that never finishes.
-    const { ready, exited } = myst;
+    const { url, ready, exited } = myst;
     ready.then(() => exited.catch((e) => vscode.window.showWarningMessage(`MyST: mystmd stopped (${e.message}). See MyST: Show Log.`)), () => {});
     // The LSP loads the whole project once mystmd has built it; until then it knows the open files.
     const lsp = new LanguageClient(
@@ -51,8 +52,11 @@ export function activate(context: vscode.ExtensionContext) {
     );
     client = lsp;
     const request = (method: string, params: unknown) => lsp.sendRequest(method, params);
-    onStart({ root, myst, request });
-    preview = new MystPreview(context, root, myst, request);
+    // One content server for the preview and every live editor, reached at the URL webviews see.
+    const assets = webviewUrl(url);
+    const p = { root, myst, request, assets, content: ready.then(async () => contentServer(url, await assets)) };
+    onStart(p);
+    preview = new MystPreview(context, p);
     await lsp.start();
   };
   // The live editor starts the project too, for when it opens before any text editor (a restored tab).

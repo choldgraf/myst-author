@@ -22,6 +22,8 @@ function freePort(): Promise<number> {
  * `exited` rejects if mystmd dies, including after `stop`.
  * mystmd's output goes to `log`, a line at a time. `args` go to `myst start`, such as `--execute`.
  */
+export type Myst = Awaited<ReturnType<typeof startMyst>>;
+
 export async function startMyst(root: string, log = console.log, args: string[] = []) {
   const port = await freePort();
   // myst reads PORT as its own theme-server port. Pin HOST so it doesn't bind IPv6-only `localhost`, which proxies like code-server's miss.

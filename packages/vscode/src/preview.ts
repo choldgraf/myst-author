@@ -1,9 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import { relative, resolve, sep } from 'node:path';
 import * as vscode from 'vscode';
-import { contentServer } from '@myst-author/mystmd/built';
-import { findLabel, PreviewController, type PreviewHost, type Request } from '@myst-author/preview/controller';
-import type { startMyst } from '@myst-author/mystmd/start';
+import { findLabel, PreviewController, type PreviewHost } from '@myst-author/preview/controller';
+import type { Project } from './live.ts';
 
 /** Project-relative path with `/` separators, matching the content server's page `location`. */
 export const projectPath = (root: string, uri: vscode.Uri) => relative(root, uri.fsPath).split(sep).join('/');
@@ -18,32 +17,28 @@ const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.documen
 export class MystPreview {
   private panel?: vscode.WebviewPanel;
   private editor = isMarkdown(vscode.window.activeTextEditor) ? vscode.window.activeTextEditor : undefined;
-  private assets: Thenable<string>; // the content server's URL as the webview reaches it
   private preview: PreviewController;
   private host: PreviewHost = {
     current: () => {
       const doc = this.panel && this.editor?.document;
       const top = this.editor?.visibleRanges[0];
-      return doc && { path: projectPath(this.root, doc.uri), text: doc.getText(), dirty: doc.isDirty, line: top && top.start.line + 1 };
+      return doc && { path: projectPath(this.project.root, doc.uri), text: doc.getText(), dirty: doc.isDirty, line: top && top.start.line + 1 };
     },
     post: (m) => this.panel?.webview.postMessage(m),
-    open: (path, line) => this.show(vscode.Uri.file(resolve(this.root, path)), line),
+    open: (path, line) => this.show(vscode.Uri.file(resolve(this.project.root, path)), line),
     openExternal: (url) => vscode.env.openExternal(vscode.Uri.parse(url)),
     findLabel: async (id) => {
-      const s = await findLabel(this.request, id);
-      return s && { path: projectPath(this.root, vscode.Uri.parse(s.uri)), line: s.line };
+      const s = await findLabel(this.project.request, id);
+      return s && { path: projectPath(this.project.root, vscode.Uri.parse(s.uri)), line: s.line };
     },
     warn: (message) => vscode.window.showWarningMessage(message),
   };
 
   constructor(
     private context: vscode.ExtensionContext,
-    private root: string,
-    myst: Awaited<ReturnType<typeof startMyst>>,
-    private request: Request, // to the language server
+    private project: Project,
   ) {
-    this.assets = webviewUrl(myst.url);
-    this.preview = new PreviewController(this.host, myst.ready.then(async () => contentServer(myst.url, await this.assets)));
+    this.preview = new PreviewController(this.host, project.content);
     context.subscriptions.push(
       this.preview,
       vscode.window.onDidChangeActiveTextEditor((e) => {
@@ -62,7 +57,7 @@ export class MystPreview {
   }
 
   async open() {
-    const assets = await this.assets;
+    const assets = await this.project.assets;
     if (this.panel) return this.panel.reveal(vscode.ViewColumn.Beside, true);
     const dist = vscode.Uri.joinPath(this.context.extensionUri, 'dist');
     const panel = vscode.window.createWebviewPanel(
