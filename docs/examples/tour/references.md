@@ -13,7 +13,7 @@ The editor opens `index.md` at the figure.
 :::
 
 :::{tip} Try this: follow a link in the preview
-Open the preview with **Preview** in the toolbar.
+Open the preview, as on the first page.
 There, a plain click on a link jumps to its source line.
 Cmd-click (or Ctrl-click) the link instead to open the page it points to.
 :::

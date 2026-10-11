@@ -14,19 +14,18 @@ Roles like `{ref}`, `{numref}`, and `{eq}` link to a label.
 ## The basics
 
 The editor shows each block rendered, and the block with your cursor shows its Markdown.
-Changes save automatically about half a second after you stop typing.
+The web editor saves about half a second after you stop typing.
+In JupyterLab and VS Code, save as usual.
 
 :::{tip} Try this: edit a block
 Click a word in this sentence and change it.
 Click outside the box and it renders again.
-The badge in the top right changes while you type, and says `built ✓` once mystmd has rebuilt the page.
-
-[](#tour-basics)
-
 :::
 
 :::{tip} Try this: open the preview
 Click **Preview** in the toolbar to see the whole page beside the editor.
+In JupyterLab or VS Code, run **MyST: Open Preview to the Side** from the Command Palette instead.
+Its badge says `built ✓` once mystmd has built the page.
 Click any paragraph in the preview: the editor jumps to the line it came from.
 :::
 
@@ -56,6 +55,7 @@ Click the paragraph above to show its Markdown, then hover over `fig-logo` to se
 :::{tip} Try this: jump around the page
 Press {kbd}`Cmd+P` and type `#` to see this page's outline, with the figure and equation under their section.
 In VS Code, open the **Outline** view instead.
+JupyterLab doesn't have it.
 :::
 
 ## Next

@@ -22,6 +22,11 @@ Start a new line below this box, type ```` ```{ ````, and pick a directive name 
 Typing `{` in a sentence lists role names in the same way.
 :::
 
+:::{tip} Try this: insert a directive with `/`
+Start a new line below this box, type `/tab`, and pick `tab-set`.
+In a sentence, type a space and then `/kbd` to insert a role.
+:::
+
 ## Nested directives
 
 ::::{tab-set}

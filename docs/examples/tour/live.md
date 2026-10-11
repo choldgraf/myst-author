@@ -51,7 +51,8 @@ This embeds the figure from the first page:
 
 :::{tip} Try this: wait for the build
 While you type, the embed is a grey placeholder, because the in-browser render only knows this page.
-Once the badge in the top right says `built ✓`, the embed shows the figure.
+Once mystmd has built the page, the embed shows the figure.
+In JupyterLab and VS Code, save the file first, since mystmd only builds saved files.
 :::
 
 ## Tabs and dropdowns
@@ -98,6 +99,7 @@ The dropdown above shows its Markdown, with the match selected.
 :::{tip} Try this: compare the views
 Click **Source** in the toolbar to see the plain Markdown, and **Live** to come back.
 Click **Preview** to see the whole page beside the editor.
+In JupyterLab, run **MyST: Live Preview** from the Command Palette to turn live preview off and on.
 :::
 
 ## Next
