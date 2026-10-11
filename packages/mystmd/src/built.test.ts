@@ -6,7 +6,7 @@ import { contentServer } from './built.ts';
 const files: Record<string, object> = {
   '/prefix/config.json': { projects: [{ index: 'home', pages: [{ title: 'Part' }, { slug: 'guide-a' }] }] },
   '/prefix/content/home.json': { location: '/index.md', mdast: { type: 'root', children: [] } },
-  '/prefix/content/guide-a.json': { location: '/guide/a.md', mdast: { type: 'root', children: [{ type: 'image', url: '/x.png' }] } },
+  '/prefix/content/guide-a.json': { location: '/guide/a.md', mdast: { type: 'root', children: [{ type: 'image', url: '/x.png' }, { type: 'output', jupyter_data: { data: { 'image/png': { path: '/y.png' } } } }] } },
 };
 
 test('reads built pages under a path prefix and maps slugs to files', async (t) => {
@@ -23,7 +23,9 @@ test('reads built pages under a path prefix and maps slugs to files', async (t) 
   assert.equal(myst.fileForSlug('guide-a'), 'guide/a.md');
   assert.equal(myst.fileForSlug(''), 'index.md');
   assert.equal(myst.fileForSlug('nope'), undefined);
-  assert.equal((await myst.page('guide/a.md'))!.mdast.children[0].url, 'http://assets/x.png');
+  const [image, output] = (await myst.page('guide/a.md'))!.mdast.children;
+  assert.equal(image.url, 'http://assets/x.png');
+  assert.equal(output.jupyter_data.data['image/png'].path, 'http://assets/y.png');
   assert.equal(await myst.page('missing.md'), null);
   assert.deepEqual(await myst.built('missing.md'), { path: 'missing.md', page: null });
   assert.deepEqual(await contentServer(base + 'nope').built('a.md'), { path: 'a.md', page: null, error: 'not found' });

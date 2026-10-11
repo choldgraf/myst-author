@@ -1,6 +1,7 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react';
 import { Theme } from '@myst-theme/common';
 import { ArticleProvider, ThemeProvider } from '@myst-theme/providers';
+import type { GenericNode } from 'myst-common';
 import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, MyST } from 'myst-to-react';
 import { mystmdMissing, sha256, type Built } from '@myst-author/mystmd/built';
@@ -40,6 +41,22 @@ export function usePreview(path: string | undefined, text: string, dirty: boolea
     : 'fast preview';
   return { result, badge };
 }
+
+/**
+ * A code cell output that mystmd executed or read from a notebook: an image, or else its text.
+ * HTML output shows its plain text, because its scripts would run with the editor's access to your files.
+ * Widgets and interactive plots would need @myst-theme/jupyter.
+ */
+function Output({ node }: { node: GenericNode }) {
+  const out = node.jupyter_data;
+  if (out.output_type === 'stream') return <pre>{out.text}</pre>;
+  if (out.output_type === 'error') return <pre>{`${out.ename}: ${out.evalue}`}</pre>;
+  const data = out.data ?? {};
+  const image = Object.keys(data).find((type) => type.startsWith('image/') && data[type].path);
+  return image ? <img src={data[image].path} alt="" /> : <pre>{data['text/plain']?.content}</pre>;
+}
+
+const renderers = { ...DEFAULT_RENDERERS, output: Output };
 
 /** Controls in a rendered page that handle their own clicks (tabs, dropdowns, buttons), so a click on them doesn't jump to the source. */
 export const INTERACTIVE = 'button, summary, input, .cursor-pointer';
@@ -86,7 +103,7 @@ export function Preview({ result, topLine, onLineClick, onFollowLink }: Props) {
   }
 
   return (
-    <ThemeProvider theme={Theme.light} setTheme={() => {}} renderers={DEFAULT_RENDERERS}>
+    <ThemeProvider theme={Theme.light} setTheme={() => {}} renderers={renderers}>
       <ArticleProvider
         kind={SourceFileKind.Article}
         references={{ ...result.references, article: result.tree }}
