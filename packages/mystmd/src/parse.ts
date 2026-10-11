@@ -4,6 +4,7 @@ import {
   basicTransformationsPlugin,
   enumerateTargetsPlugin,
   footnotesPlugin,
+  getFrontmatter,
   glossaryPlugin,
   headingDepthPlugin,
   htmlPlugin,
@@ -21,12 +22,11 @@ import { gridDirectives } from 'myst-ext-grid';
 import { proofDirective } from 'myst-ext-proof';
 import { tabDirectives } from 'myst-ext-tabs';
 import type { GenericNode, GenericParent } from 'myst-common';
-import { load } from 'js-yaml';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 import { VFile } from 'vfile';
 
-// mystmd-lsp (`src/mystmd/parse.ts`) has a copy of this parse; keep the two in step. A parse exported by mystmd would replace both (upstream/README.md, U8).
+// mystmd-lsp (`src/mystmd/parse.ts`) has a copy of this parse; port fixes between the two. Its copy keeps a leading `# Title`, which its outline and labels need. A parse exported by mystmd would replace both (upstream/README.md, U8).
 
 // The extensions mystmd enables by default, so the parse matches `myst build`.
 const extDirectives = [cardDirective, ...gridDirectives, ...tabDirectives, proofDirective, ...exerciseDirectives];
@@ -38,17 +38,12 @@ export function parseMyst(md: string) {
   const parse = (s: string) => mystParse(s, { markdownit: { linkify: true }, directives: extDirectives, roles: extRoles, vfile });
   const tree = parse(md) as GenericParent;
 
-  let frontmatter: Record<string, any> = {};
-  const first = tree.children[0];
-  if (first?.type === 'code' && first.lang === 'yaml' && md.startsWith('---')) {
-    tree.children.shift();
-    try {
-      frontmatter = (load(first.value ?? '') as object) ?? {};
-    } catch {} // half-typed YAML is normal while editing
-  }
-
   // Directive transforms replace the directive node with children that have no position; keep the directive's lines.
   visit(tree, 'mystDirective', (d: GenericNode) => d.children?.forEach((c) => (c.position ??= d.position)));
+
+  // Like mystmd, this reads the YAML frontmatter, and makes the first heading the title if there isn't one, removing a leading `# Title`.
+  const { frontmatter } = getFrontmatter(vfile, tree, { propagateTargets: true }) as { frontmatter: Record<string, any> };
+
   // Without the project's bibliography, no citation is found, so mystmd's fallback turns `@label` into a reference to a label on this page, as a build does.
   visit(tree, 'cite', (c: GenericNode) => void (c.error = true));
 

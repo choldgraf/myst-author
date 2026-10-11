@@ -6,7 +6,6 @@
     "test": "node --test src/*.test.ts"
   },
   "dependencies": {
-    "js-yaml": "^4.1.0",
     "myst-common": "^1.10.1",
     "myst-ext-button": "^0.0.2",
     "myst-ext-card": "^1.0.9",
@@ -24,8 +23,5 @@
     "./built": "./src/built.ts",
     "./parse": "./src/parse.ts",
     "./start": "./src/start.ts"
-  },
-  "devDependencies": {
-    "@types/js-yaml": "^4.0.9"
   }
 }

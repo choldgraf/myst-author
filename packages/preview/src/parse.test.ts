@@ -39,6 +39,13 @@ test('a code cell keeps its lines', () => {
   assert.deepEqual(spans(parseMyst(src), src.split('\n')).map((s) => [s.start, s.end, s.blocks.map((b) => b.node.type)]), [[1, 3, []], [5, 7, ['code', 'outputs']]]);
 });
 
+test('a leading `# Title` is the page title, as in mystmd, so the fast parse has the same blocks as the build', () => {
+  const src = '# Hi\n\nText';
+  const result = parseMyst(src);
+  assert.equal(result.frontmatter.title, 'Hi');
+  assert.deepEqual(spans(result, src.split('\n')).map((s) => [s.start, s.end, s.blocks.map((b) => b.node.type)]), [[1, 1, []], [3, 3, ['paragraph']]]);
+});
+
 test('spans: a list leaves the blank line after it out, so it stays as spacing', () => {
   const list = '- a\n- b\n\nAfter';
   assert.deepEqual(spans(parseMyst(list), list.split('\n')).map((s) => [s.start, s.end]), [[1, 2], [4, 4]]);
