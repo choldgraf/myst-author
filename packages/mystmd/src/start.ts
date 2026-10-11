@@ -20,15 +20,14 @@ function freePort(): Promise<number> {
  * We pick the port, so `url` (the content server) is known before the first build; `ready` resolves once it's serving.
  * `ready` rejects with the message `mystmdMissing` if mystmd isn't installed.
  * `exited` rejects if mystmd dies, including after `stop`.
- * mystmd's output goes to `log`, a line at a time.
+ * mystmd's output goes to `log`, a line at a time. `args` go to `myst start`, such as `--execute`.
  */
-export async function startMyst(root: string, log = console.log) {
+export async function startMyst(root: string, log = console.log, args: string[] = []) {
   const port = await freePort();
   // myst reads PORT as its own theme-server port. Pin HOST so it doesn't bind IPv6-only `localhost`, which proxies like code-server's miss.
   const { PORT, ...rest } = process.env;
   const env = { ...rest, HOST: '127.0.0.1' };
-  const args = ['start', '--headless', '--server-port', String(port)];
-  const child = spawn(process.env.MYST_BIN ?? 'myst', args, { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
+  const child = spawn(process.env.MYST_BIN ?? 'myst', ['start', '--headless', '--server-port', String(port), ...args], { cwd: root, env, stdio: ['ignore', 'pipe', 'pipe'] });
   const stop = () => child.kill();
   process.on('exit', stop);
 

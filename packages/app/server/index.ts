@@ -12,9 +12,9 @@ import { startMyst } from '@myst-author/mystmd/start';
 import { listMarkdown, resolveInside, writeUnlessChanged } from './files.ts';
 import { lspBridge } from './lsp.ts';
 
-const { values, positionals } = parseArgs({ allowPositionals: true, options: { help: { type: 'boolean', short: 'h' } } });
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { help: { type: 'boolean', short: 'h' }, execute: { type: 'boolean' } } });
 if (values.help || positionals.length > 1) {
-  console.log('Usage: myst-author [folder]\n\nEdit the MyST project in folder (default: the current folder).\nEnvironment: PORT, MYST_BIN, NO_OPEN=1');
+  console.log('Usage: myst-author [--execute] [folder]\n\nEdit the MyST project in folder (default: the current folder).\n--execute runs code cells and inline expressions as mystmd builds.\nEnvironment: PORT, MYST_BIN, NO_OPEN=1');
   process.exit(values.help ? 0 : 1);
 }
 // Use real path (what Jupyter reports), so document URIs match in JupyterLab when the folder is reached through a symlink.
@@ -23,7 +23,7 @@ const port = Number(process.env.PORT ?? 4321);
 
 // The content server for the built preview. Until it's up, or once it stops, /myst/* answers 503 with this reason.
 // Only for a myst.yml in this folder: mystmd would otherwise search parent folders for one and serve that project instead.
-const myst = existsSync(path.join(root, 'myst.yml')) ? await startMyst(root) : undefined;
+const myst = existsSync(path.join(root, 'myst.yml')) ? await startMyst(root, console.log, values.execute ? ['--execute'] : []) : undefined;
 let mystDown = myst ? 'myst starting' : 'no myst.yml in this folder';
 myst?.ready
   .then(() => {

@@ -23,6 +23,8 @@ The editor opens at <http://127.0.0.1:4321>.
 Set `PORT` to use another port, for example `PORT=8000 npm run demo`.
 On macOS it also opens a browser tab; set `NO_OPEN=1` to stop that.
 If `myst` isn't on your `PATH`, set `MYST_BIN` to its location.
+To run code cells and inline `{eval}` expressions, add `--execute`, for example `npm start -- --execute path/to/project`.
+mystmd runs the page again each time you change its code, and needs Jupyter to do it.
 
 To run it from any folder as `myst-author`, run `npm link -w packages/app` once in the clone.
 Then run `myst-author` in a project folder, or `myst-author path/to/project`.
