@@ -13,7 +13,7 @@ See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author
 
 ## Try it
 
-You need JupyterLab 4.5 or newer, jupyter-server-proxy, and Node 24.
+You need Node 24 and [uv](https://docs.astral.sh/uv/).
 From the repo root:
 
 ```sh
@@ -23,7 +23,8 @@ npm run lab -- path/to/project     # or your own MyST project
 ```
 
 `npm run lab` builds the web app and the extension, then starts JupyterLab in the project folder with both.
-It loads the extension from `packages/jupyterlab/dist/`, so your own JupyterLab setup doesn't change.
+JupyterLab and jupyter-server-proxy run in a throwaway `uvx` environment, with Jupyter's config and extensions in `packages/jupyterlab/dist/jupyter/`.
+Your own Jupyter setup doesn't change, and extensions you've installed, such as jupyterlab-myst, don't load.
 Options after the project go to `jupyter lab`, for example `npm run lab -- . --port 9000`.
 Run it again after changes.
 

@@ -1,5 +1,6 @@
 // `npm run lab -- project [jupyter lab options]`: JupyterLab with this extension and the MyST Author server, for a MyST project.
-// The extension loads from a Jupyter folder inside dist/, so nothing is installed into your own Jupyter setup.
+// JupyterLab runs in its own environment (uvx), with its config and extensions in a Jupyter folder inside dist/.
+// So it neither uses nor changes your own Jupyter setup, such as other extensions you've installed.
 import { spawn } from 'node:child_process';
 import { mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -19,7 +20,8 @@ try { unlinkSync(link); } catch {} // the link from a previous run (unlink remov
 symlinkSync(join(import.meta.dirname, 'dist/labextension'), link);
 
 // binder/jupyter_server_config.py runs the MyST Author server for MYST_AUTHOR_PROJECT under jupyter-server-proxy.
-spawn('jupyter', ['lab', `--config=${join(repo, 'binder/jupyter_server_config.py')}`, `--ServerApp.root_dir=${project}`, ...options], {
+// `jupyter` comes from jupyter-core; jupyterlab and jupyter-server-proxy go in the same environment.
+spawn('uvx', ['--from', 'jupyter-core', '--with', 'jupyterlab', '--with', 'jupyter-server-proxy', 'jupyter', 'lab', `--config=${join(repo, 'binder/jupyter_server_config.py')}`, `--ServerApp.root_dir=${project}`, ...options], {
   stdio: 'inherit',
-  env: { ...process.env, JUPYTER_PATH: [data, process.env.JUPYTER_PATH].filter(Boolean).join(':'), MYST_AUTHOR_PROJECT: project },
+  env: { ...process.env, JUPYTER_CONFIG_DIR: join(data, 'config'), JUPYTER_DATA_DIR: data, MYST_AUTHOR_PROJECT: project },
 });

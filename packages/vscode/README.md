@@ -26,7 +26,8 @@ code --install-extension packages/vscode/myst-author.vsix
 
 `npm run vscode` from the repo root does both, replacing any copy you installed before.
 Reload open VS Code windows afterwards.
-`npm run demo:vscode` also opens a fresh copy of the tour, in the same folder each time.
+`npm run demo:vscode` instead opens a fresh copy of the tour, in the same folder each time, in a separate VS Code with its own settings and extensions.
+Your own VS Code setup doesn't change, and extensions you've installed don't load.
 VS Code asks whether you trust that folder the first time: choose **Trust**, since VS Code doesn't run the extension in Restricted Mode.
 The tour opens Markdown files in the live editor.
 
