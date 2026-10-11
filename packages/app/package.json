@@ -24,7 +24,7 @@
     "http-proxy-3": "^2.0.1",
     "katex": "^0.15.6",
     "myst-syntax": "github:choldgraf/myst-syntax",
-    "mystmd-lsp": "^0.0.4",
+    "mystmd-lsp": "^0.0.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sirv": "^3.0.2",
