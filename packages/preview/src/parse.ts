@@ -8,19 +8,18 @@ export type Block = { node: GenericNode; start: number; end: number };
 export type ParseResult = {
   tree: GenericParent;
   blocks: Block[];
-  messages: string[];
   frontmatter: Record<string, any>;
   references?: Record<string, any>; // extra ArticleProvider references from a built page (e.g. cite)
 };
 
 /** Parse and transform a single MyST page in the browser. */
 export function parseMyst(md: string): ParseResult {
-  const { tree, messages, frontmatter } = mystmd.parseMyst(md);
+  const { tree, frontmatter } = mystmd.parseMyst(md);
 
   // mystmd resolves embeds and references to other pages from the whole project, so here we can only say they're coming.
   markUnresolved(tree, false);
 
-  return { tree, blocks: toBlocks(tree), messages, frontmatter };
+  return { tree, blocks: toBlocks(tree), frontmatter };
 }
 
 /**
@@ -164,7 +163,6 @@ export function fromBuiltPage(page: BuiltPage): ParseResult {
   return {
     tree: page.mdast,
     blocks: toBlocks(page.mdast),
-    messages: [],
     frontmatter: page.frontmatter ?? {},
     references: page.references,
   };

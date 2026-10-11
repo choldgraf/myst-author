@@ -18,13 +18,12 @@ const md = [
 ].join('\n');
 
 test('top-level blocks keep their source line ranges', () => {
-  const { blocks, messages, frontmatter } = parseMyst(md);
+  const { blocks, frontmatter } = parseMyst(md);
   assert.equal(frontmatter.title, 'Hi');
   assert.deepEqual(
     blocks.map((b) => [b.node.type, b.start, b.end]),
     [['heading', 4, 4], ['paragraph', 6, 6], ['container', 8, 11], ['math', 13, 13]],
   );
-  assert.deepEqual(messages, []);
 });
 
 test('spans: the titled frontmatter, and each block with the label lines above it', () => {
@@ -80,9 +79,8 @@ test('@label resolves to a label on the page, like [](#label)', () => {
   assert.deepEqual(refs.map((c: any) => [c.type, text(c)]), [['crossReference', 'Figure\u00a01'], ['crossReference', 'Figure\u00a01']]);
 });
 
-test('a broken reference produces a message instead of throwing', () => {
-  const { messages } = parseMyst('See {ref}`nope`.\n');
-  assert.ok(messages.length > 0);
+test('a broken reference doesn\'t throw', () => {
+  assert.doesNotThrow(() => parseMyst('See {ref}`nope`.\n'));
 });
 
 test('embeds show a placeholder until mystmd builds them', () => {
