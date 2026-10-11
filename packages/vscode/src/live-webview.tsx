@@ -1,5 +1,6 @@
 import { markdown } from '@codemirror/lang-markdown';
 import { languages } from '@codemirror/language-data';
+import { yamlFrontmatter } from '@codemirror/lang-yaml';
 import { Compartment, Prec, Transaction, type Text } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { basicSetup, EditorView } from 'codemirror';
@@ -46,7 +47,7 @@ function create(text: string) {
     parent: document.getElementById('root')!,
     extensions: [
       basicSetup,
-      markdown({ codeLanguages: languages, extensions: [mystCode(languages)] }),
+      yamlFrontmatter({ content: markdown({ codeLanguages: languages, extensions: [mystCode(languages)] }) }), // frontmatter as YAML, not a `---` heading
       myst(),
       EditorView.lineWrapping,
       livePreview({ onFollowLink: (href, line) => vscode.postMessage({ type: 'follow', href, line }) }),
