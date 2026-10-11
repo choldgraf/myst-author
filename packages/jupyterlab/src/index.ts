@@ -1,6 +1,7 @@
 import type { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { ICommandPalette, MainAreaWidget } from '@jupyterlab/apputils';
 import { Compartment } from '@codemirror/state';
+import type { Cell } from '@jupyterlab/cells';
 import type { CodeMirrorEditor } from '@jupyterlab/codemirror';
 import { PageConfig, PathExt, URLExt } from '@jupyterlab/coreutils';
 import { IDocumentManager } from '@jupyterlab/docmanager';
@@ -11,10 +12,14 @@ import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { connectLsp } from '@myst-author/lsp-client/client';
 import { contentServer } from '@myst-author/mystmd/built';
+import { Preview } from '@myst-author/preview';
 import { findLabel, PreviewController, type ToPage } from '@myst-author/preview/controller';
 import { livePreview, offerBuilt, shadowSheet, showBuilt, topLine } from '@myst-author/preview/live';
 import { mountPreviewPage } from '@myst-author/preview/page';
-import { cellPages } from '@myst-author/preview/parse';
+import { cellPages, fromBuiltPage, type ParseResult } from '@myst-author/preview/parse';
+// React comes with @myst-author/preview, which renders with it.
+import { createElement } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
 import liveCss from '../dist/live.css'; // the preview's CSS, for the shadow roots of live blocks and the preview panel (see build.mjs)
 
 type Editor = IDocumentWidget<FileEditor>;
@@ -29,13 +34,36 @@ const jupyterRoot = PageConfig.getOption('rootUri').replace(/\/$/, '');
 const content = contentServer(server + 'myst');
 // Live preview in Markdown editors and notebook Markdown cells. Blocks render in shadow roots, so the preview's CSS can't restyle Lab.
 // Blocks read at Lab's content size, like its rendered Markdown, rather than the preview's 16px.
-const live = livePreview({ css: `${liveCss}\n.article { font-size: var(--jp-content-font-size1); line-height: var(--jp-content-line-height) }` });
+const cellCss = `${liveCss}\n.article { font-size: var(--jp-content-font-size1); line-height: var(--jp-content-line-height) }`;
+const live = livePreview({ css: cellCss });
 const liveMode = new Compartment();
 let liveOn = true;
 // The preview panel also renders in a shadow root.
 // The inner div is the page's body, and scrolls. It has no top padding, so the badge bar sticks to its very top.
 const previewCss = shadowSheet(`${liveCss}
 :host > div { position: relative; box-sizing: border-box; height: 100%; overflow: auto; padding: 0 2rem 1rem; background: white; color: black }`);
+
+// Rendered Markdown cells show mystmd's build in a shadow root on the cell's rendered widget (Lab's or jupyterlab-myst's), so references to other pages resolve.
+// Without a build, the shadow root holds just a <slot>, which shows that widget's own rendering underneath.
+// Trim the cell's outer margins, as Lab does for rendered Markdown.
+const cellSheet = shadowSheet(`${cellCss}\n.article > :first-child > :first-child { margin-top: 0 } .article > :last-child > :last-child { margin-bottom: 0 }`);
+const cellRoots = new WeakMap<HTMLElement, Root>();
+const cellBuilds = new WeakMap<Cell, ParseResult>(); // what each Markdown cell shows, while the notebook is saved and built
+const openExternal = (url: string) => void window.open(url, '_blank', 'noopener');
+function showCell(cell: Cell) {
+  const result = cellBuilds.get(cell);
+  const node = cell.inputArea?.renderedInput?.node;
+  if (!node) return;
+  let root = cellRoots.get(node);
+  if (!root) {
+    const shadow = node.attachShadow({ mode: 'open' });
+    shadow.adoptedStyleSheets = [cellSheet];
+    cellRoots.set(node, (root = createRoot(shadow.appendChild(document.createElement('div')))));
+  }
+  // Preview ignores a plain click on a link, so Lab stays open. Cmd/Ctrl-click opens external links; other pages' links do nothing.
+  const onFollowLink = (href: string) => /^[a-z][\w+.-]*:/i.test(href) && openExternal(href);
+  root.render(result ? createElement(Preview, { result, onFollowLink }) : createElement('slot'));
+}
 
 const isMarkdown = (w: Editor | null): w is Editor => !!w && w.context.path.endsWith('.md');
 const cm = (w: Editor) => w.content.editor as CodeMirrorEditor;
@@ -118,16 +146,24 @@ const plugin: JupyterFrontEndPlugin<void> = {
         attached.add(cell);
         await cell.ready;
         attachEditor(cell.editor as CodeMirrorEditor, (l) => `${l.uri(nb.context.path)}#${cell.model.id}`);
+        // Lab adds the cell's rendered widget after the first build arrives, and again after each edit, so show the build again then.
+        new MutationObserver(() => showCell(cell)).observe(cell.inputArea!.node, { childList: true });
         return true;
       })).then((added) => { if (added.includes(true)) sendBuiltCells(nb); });
 
     // A notebook's build has one block per cell, and no hash to compare with, so cells use it while the notebook is saved: that's what mystmd built.
     const sendBuiltCells = async (nb: NotebookPanel) => {
       const { page } = await content.built(PathExt.relative(await project, nb.context.path));
-      const pages = page && cellPages(page, nb.content.widgets.length);
-      if (!pages || nb.context.model.dirty) return;
+      const pages = !nb.context.model.dirty && page && cellPages(page, nb.content.widgets.length);
       nb.content.widgets.forEach((cell, i) => {
-        if (!attached.has(cell) || !cell.editor) return;
+        if (cell.model.type === 'markdown') {
+          const result = pages && fromBuiltPage(structuredClone(pages[i]));
+          if (result && i) result.frontmatter.title = undefined; // mystmd makes a notebook's first heading its title, which belongs to the first cell
+          if (result) cellBuilds.set(cell, result);
+          else cellBuilds.delete(cell);
+          showCell(cell);
+        }
+        if (!pages || !attached.has(cell) || !cell.editor) return;
         (cell.editor as CodeMirrorEditor).editor.dispatch({ effects: showBuilt.of({ page: pages[i], text: cell.model.sharedModel.getSource() }) });
       });
     };
@@ -142,6 +178,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
         nb.content.model?.cells.changed.connect(() => attachCells(nb));
         // Cell widgets can appear after the notebook is ready; a cell is always active before it's edited.
         nb.content.activeCellChanged.connect(() => attachCells(nb));
+        // Unsaved edits show Lab's rendering until mystmd builds the saved notebook.
+        nb.context.model.stateChanged.connect((_, { name, newValue }) => name === 'dirty' && newValue && sendBuiltCells(nb));
       });
     notebooks.forEach(watch);
     notebooks.widgetAdded.connect((_, nb) => watch(nb));
@@ -187,7 +225,7 @@ class MystPreview extends Widget {
     },
     post: (m) => this.receive(m),
     open: async (path, line) => show(this.docs, PathExt.join(await this.project, path), line),
-    openExternal: (url) => void window.open(url, '_blank', 'noopener'),
+    openExternal,
     findLabel: async (id) => {
       const l = await this.lsp;
       const s = await findLabel((method, params) => l.client.request(method, params), id);
