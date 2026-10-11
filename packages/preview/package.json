@@ -11,6 +11,8 @@
     "@myst-theme/providers": "^1.4.1",
     "@myst-theme/styles": "^1.4.1",
     "@tailwindcss/typography": "^0.5.20",
+    "anser": "^2.3.5",
+    "escape-carriage": "^1.3.1",
     "katex": "^0.15.6",
     "myst-common": "^1.10.1",
     "myst-spec-ext": "^1.10.1",

@@ -201,11 +201,13 @@ export function shadowSheet(css: string) {
 /** The (1-based) line at the top of the editor's viewport. */
 export const topLine = (view: EditorView) => view.state.doc.lineAt(view.lineBlockAtHeight(view.scrollDOM.scrollTop).from).number;
 
-/** Where the body starts, after the page title's span, as a CodeMirror offset (CodeMirror counts a CRLF as one character). Editors start the cursor there, so live preview shows the title rendered. */
+/** Where the body starts, after the page title's span or any frontmatter, as a CodeMirror offset (CodeMirror counts a CRLF as one character). Editors start the cursor there, so live preview shows the title rendered. */
 export function bodyStart(text: string) {
-  const lines = text.replaceAll('\r\n', '\n').split('\n');
+  const lf = text.replaceAll('\r\n', '\n');
+  const lines = lf.split('\n');
   const [first] = spans(parseMyst(text), lines);
-  return first && !first.blocks.length ? Math.min(lines.slice(0, first.end).join('\n').length + 1, text.length) : 0;
+  if (first && !first.blocks.length) return Math.min(lines.slice(0, first.end).join('\n').length + 1, lf.length);
+  return /^---\n[\s\S]*?\n---\n/.exec(lf)?.[0].length ?? 0;
 }
 
 /**

@@ -1,5 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { visit } from 'unist-util-visit';
 import { cellPages, fromBuiltPage, parseMyst, spans, withBuiltBlocks, withSourceLines } from './parse.ts';
 
 const md = [
@@ -69,6 +70,19 @@ test('withBuiltBlocks: unchanged spans keep the built nodes, at their new lines;
   const text = md.replace('See {numref}', 'Now see {numref}').replace('```\n\n', '```\n\nNew.\n\n');
   const { blocks } = withBuiltBlocks(parseMyst(text), text, built, md);
   assert.deepEqual(blocks.map((b) => [b.node.type, b.start]), [['built', 4], ['paragraph', 6], ['built', 8], ['paragraph', 13], ['built', 15]]);
+});
+
+test('withBuiltBlocks: edited spans keep the build\'s inline expression results, and an edited code cell keeps its outputs, dimmed', () => {
+  const src = '```{code-cell} python\nx = 1\n```\n\nIs {eval}`x`.';
+  const built = parseMyst(src);
+  visit(built.tree, 'inlineExpression', (n: any) => void Object.assign(n, { pending: false, result: { status: 'ok' }, children: [{ type: 'text', value: '1' }] }));
+  const outputs = built.blocks.find((b) => b.node.type === 'outputs')!.node;
+  const text = src.replace('x = 1', 'x = 2').replace('Is', 'It is') + ' And {eval}`y`.';
+  const result = withBuiltBlocks(parseMyst(text), text, built, src);
+  assert.deepEqual(result.blocks[1].node, { type: 'div', key: result.blocks[1].node.key, style: { opacity: 0.5 }, children: [outputs] });
+  const expressions: any[] = [];
+  visit(result.tree, 'inlineExpression', (n: any) => void expressions.push(n));
+  assert.deepEqual(expressions.map((n) => [n.value, n.pending, n.children?.[0]?.value]), [['x', false, '1'], ['y', true, undefined]]);
 });
 
 test('cellPages: one page per notebook cell, or null if the cell count differs', () => {

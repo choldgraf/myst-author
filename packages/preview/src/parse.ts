@@ -18,6 +18,8 @@ export function parseMyst(md: string): ParseResult {
 
   // mystmd resolves embeds and references to other pages from the whole project, so here we can only say they're coming.
   markUnresolved(tree, false);
+  // Only mystmd runs code: inline expressions wait for its build (see `withBuiltBlocks`).
+  visit(tree, 'inlineExpression', (n: GenericNode) => void (n.pending = true));
 
   return { tree, blocks: toBlocks(tree), frontmatter };
 }
@@ -122,6 +124,7 @@ export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Sp
  * `fast`, the fast parse of `text`, with the nodes of `built` wherever a span's source is the same as in `builtText`, the text `built` was built from.
  * `built` needs the fast parse's lines (see `withSourceLines`). Editing a span then only renders that span from the fast parse until the next build.
  * Unchanged spans keep the build's numbering and references, even when an edit elsewhere changes them, until the next build.
+ * Edited spans keep the build's result for each inline expression it ran, and an edited code cell keeps the build's outputs, dimmed.
  */
 export function withBuiltBlocks(fast: ParseResult, text: string, built: ParseResult, builtText: string): ParseResult {
   const source = (s: Span, lines: string[]) => lines.slice(s.start - 1, s.end).join('\n');
@@ -133,7 +136,19 @@ export function withBuiltBlocks(fast: ParseResult, text: string, built: ParseRes
     const match = kept.get(source(s, lines))?.shift();
     if (match?.blocks.length === s.blocks.length) s.blocks.forEach((b, i) => nodes.set(b, match.blocks[i].node));
   }
-  return { ...fast, references: built.references, blocks: fast.blocks.map((b) => ({ ...b, node: nodes.get(b) ?? b.node })) };
+  const results = new Map<string | undefined, GenericNode>();
+  visit(built.tree, 'inlineExpression', (n: GenericNode) => void (results.has(n.value) || results.set(n.value, n)));
+  visit(fast.tree, 'inlineExpression', (n: GenericNode) => {
+    const r = results.get(n.value);
+    if (r) Object.assign(n, { pending: false, result: r.result, children: r.children });
+  });
+  // Code cells pair up in order, unless one was added or removed.
+  const outputs = (blocks: Block[]) => blocks.filter((b) => b.node.type === 'outputs').map((b) => b.node);
+  const [fastOutputs, builtOutputs] = [outputs(fast.blocks), outputs(built.blocks)];
+  const stale = (node: GenericNode) => fastOutputs.length === builtOutputs.length && node.type === 'outputs'
+    ? { type: 'div', key: node.key, style: { opacity: 0.5 }, children: [builtOutputs[fastOutputs.indexOf(node)]] }
+    : node;
+  return { ...fast, references: built.references, blocks: fast.blocks.map((b) => ({ ...b, node: nodes.get(b) ?? stale(b.node) })) };
 }
 
 // Built pages drop positions on directive output (admonition, figure, tabs…); their content keeps them.

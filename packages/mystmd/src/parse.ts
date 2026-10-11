@@ -47,7 +47,7 @@ export function parseMyst(md: string) {
   // Without the project's bibliography, no citation is found, so mystmd's fallback turns `@label` into a reference to a label on this page, as a build does.
   visit(tree, 'cite', (c: GenericNode) => void (c.error = true));
 
-  const state = new ReferenceState('', { vfile });
+  const state = new ReferenceState('', { frontmatter, vfile });
   unified()
     .use(reconstructHtmlPlugin)
     .use(htmlPlugin)
