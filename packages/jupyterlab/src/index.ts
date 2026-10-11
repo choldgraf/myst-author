@@ -48,10 +48,12 @@ const previewCss = shadowSheet(`${liveCss}
 // Trim the cell's outer margins, as Lab does for rendered Markdown.
 const cellSheet = shadowSheet(`${cellCss}\n.article > :first-child > :first-child { margin-top: 0 } .article > :last-child > :last-child { margin-bottom: 0 }`);
 const cellRoots = new WeakMap<HTMLElement, Root>();
-const cellBuilds = new WeakMap<Cell, ParseResult>(); // what each Markdown cell shows, while the notebook is saved and built
+// Each Markdown cell's build, and the cell's text it was built from: the cell shows it while its text is the same.
+const cellBuilds = new WeakMap<Cell, { result: ParseResult; source: string }>();
 const openExternal = (url: string) => void window.open(url, '_blank', 'noopener');
 function showCell(cell: Cell) {
-  const result = cellBuilds.get(cell);
+  const built = cellBuilds.get(cell);
+  const result = built?.source === cell.model.sharedModel.getSource() ? built.result : undefined;
   const node = cell.inputArea?.renderedInput?.node;
   if (!node) return;
   let root = cellRoots.get(node);
@@ -98,6 +100,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
   requires: [IEditorTracker, IDocumentManager, INotebookTracker],
   optional: [ICommandPalette],
   activate: (app: JupyterFrontEnd, tracker: IEditorTracker, docs: IDocumentManager, notebooks: INotebookTracker, palette: ICommandPalette | null) => {
+    // Radix puts myst-theme's hover cards in <body>, outside the shadow roots, so they get the preview's CSS scoped to the card (`:root` becomes `:scope`).
+    document.head.appendChild(document.createElement('style')).textContent = `@scope (.hover-card-content) { ${cellCss.replaceAll(':root', ':scope')} }`;
     // Without rootUri, document URIs would be wrong, so skip the language features. The preview still works.
     const lsp = jupyterRoot ? Promise.resolve(connectLsp(server + 'lsp', jupyterRoot)) : Promise.reject(new Error("jupyter-lsp didn't set rootUri"));
     lsp.then((l) => {
@@ -151,20 +155,25 @@ const plugin: JupyterFrontEndPlugin<void> = {
         return true;
       })).then((added) => { if (added.includes(true)) sendBuiltCells(nb); });
 
-    // A notebook's build has one block per cell, and no hash to compare with, so cells use it while the notebook is saved: that's what mystmd built.
+    // A notebook's build has one block per cell, and no hash to compare with, so a cell uses its block while its text is as saved: that's what mystmd built.
+    // (Not while the notebook is clean: starting a kernel changes the notebook's metadata, which marks it dirty.)
+    // Just after a save, a cell's saved text can be ahead of the build, and the cell shows its old block until mystmd rebuilds.
+    const savedSources = new WeakMap<NotebookPanel, string[]>();
     const sendBuiltCells = async (nb: NotebookPanel) => {
       const { page } = await content.built(PathExt.relative(await project, nb.context.path));
-      const pages = !nb.context.model.dirty && page && cellPages(page, nb.content.widgets.length);
+      const pages = page && cellPages(page, nb.content.widgets.length);
       nb.content.widgets.forEach((cell, i) => {
+        const source = cell.model.sharedModel.getSource();
+        const built = pages && source === savedSources.get(nb)?.[i] ? pages[i] : null;
         if (cell.model.type === 'markdown') {
-          const result = pages && fromBuiltPage(structuredClone(pages[i]));
+          const result = built && fromBuiltPage(structuredClone(built));
           if (result && i) result.frontmatter.title = undefined; // mystmd makes a notebook's first heading its title, which belongs to the first cell
-          if (result) cellBuilds.set(cell, result);
+          if (result) cellBuilds.set(cell, { result, source });
           else cellBuilds.delete(cell);
           showCell(cell);
         }
-        if (!pages || !attached.has(cell) || !cell.editor) return;
-        (cell.editor as CodeMirrorEditor).editor.dispatch({ effects: showBuilt.of({ page: pages[i], text: cell.model.sharedModel.getSource() }) });
+        if (!built || !attached.has(cell) || !cell.editor) return;
+        (cell.editor as CodeMirrorEditor).editor.dispatch({ effects: showBuilt.of({ page: built, text: source }) });
       });
     };
     content.watch(() => {
@@ -173,13 +182,15 @@ const plugin: JupyterFrontEndPlugin<void> = {
     });
     const watch = (nb: NotebookPanel) =>
       nb.context.ready.then(() => {
+        // Each cell's text as last loaded or saved. An edited cell shows Lab's rendering until mystmd builds the saved notebook.
+        const save = () => savedSources.set(nb, nb.context.model.sharedModel.cells.map((c) => c.getSource()));
+        save();
+        nb.context.fileChanged.connect(save);
         attachCells(nb);
         // Changing a cell's type replaces its widget, so this also catches cells that become Markdown.
         nb.content.model?.cells.changed.connect(() => attachCells(nb));
         // Cell widgets can appear after the notebook is ready; a cell is always active before it's edited.
         nb.content.activeCellChanged.connect(() => attachCells(nb));
-        // Unsaved edits show Lab's rendering until mystmd builds the saved notebook.
-        nb.context.model.stateChanged.connect((_, { name, newValue }) => name === 'dirty' && newValue && sendBuiltCells(nb));
       });
     notebooks.forEach(watch);
     notebooks.widgetAdded.connect((_, nb) => watch(nb));

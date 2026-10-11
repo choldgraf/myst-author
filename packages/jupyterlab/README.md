@@ -47,10 +47,10 @@ Rebuild and reload the page after changes.
 - Completion, hints, hover, go to definition, and warnings for references in Markdown files and notebooks' Markdown cells, as in the web editor.
 - Live preview in Markdown files, and in notebooks' Markdown cells while you edit them, as in the web editor.
   Turn it on or off with **MyST: Live Preview** in the Command Palette.
-- Notebooks' Markdown cells that you aren't editing render with mystmd's build while the notebook is saved, so references to other pages resolve.
-  With unsaved changes, JupyterLab's own rendering shows.
+- Notebooks' Markdown cells that you aren't editing render with mystmd's build, so references to other pages resolve.
+  A cell you've changed since saving shows JupyterLab's own rendering until you save and mystmd rebuilds.
   You don't need jupyterlab-myst to try MyST Author, so try it without.
-  If both are installed, jupyterlab-myst's rendering shows while the notebook has unsaved changes.
+  If both are installed, jupyterlab-myst's rendering shows in those changed cells.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.
   It follows the current Markdown editor, but not notebooks.
   It works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.

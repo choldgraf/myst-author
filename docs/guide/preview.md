@@ -19,7 +19,7 @@ The cursor lands on the text you clicked.
 - Tabs, dropdowns, and buttons in a rendered block work without opening its source.
 - A block with a warning, such as a broken reference, has an orange bar on its left. Open it to see the warning.
 - Blocks render like the preview pane, from mystmd's build or the fast preview, as [Fast and built previews](preview.md#fast-and-built-previews) describes.
-  In a notebook, cells show the build when the notebook has no unsaved changes.
+  In a notebook, a cell shows the build when it has no unsaved changes.
 
 Live preview works in the web editor, JupyterLab, and VS Code.
 In JupyterLab it also covers notebooks' Markdown cells while you edit them.
