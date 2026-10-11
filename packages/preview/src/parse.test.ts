@@ -85,11 +85,14 @@ test('withBuiltBlocks: edited spans keep the build\'s inline expression results,
   assert.deepEqual(expressions.map((n) => [n.value, n.pending, n.children?.[0]?.value]), [['x', false, '1'], ['y', true, undefined]]);
 });
 
-test('cellPages: one page per notebook cell, or null if the cell count differs', () => {
+test('cellPages: a cell gets its block while its text is as saved, and only the first cell keeps the title', () => {
   const cell = (value: string) => ({ type: 'block', children: [{ type: 'text', value }] });
-  const page = { sha256: '', location: '/nb.ipynb', mdast: { type: 'root', children: [cell('a'), cell('b')] } } as any;
-  assert.deepEqual(cellPages(page, 2)!.map((p) => p.mdast.children[0].value), ['a', 'b']);
-  assert.equal(cellPages(page, 3), null);
+  const page = { sha256: '', location: '/nb.ipynb', frontmatter: { title: 'Nb' }, mdast: { type: 'root', children: [cell('a'), cell('b')] } } as any;
+  const [first, second] = cellPages(page, ['a', 'b'], ['a', 'b']);
+  assert.deepEqual([first!.mdast.children[0].value, second!.mdast.children[0].value], ['a', 'b']);
+  assert.deepEqual([first!.frontmatter!.title, second!.frontmatter!.title], ['Nb', undefined]);
+  assert.equal(cellPages(page, ['a', 'b edited'], ['a', 'b'])[1], null);
+  assert.deepEqual(cellPages(page, ['a', 'b', 'new'], ['a', 'b']), [null, null, null]); // the build has a different number of cells
 });
 
 test('@label resolves to a label on the page, like [](#label)', () => {

@@ -96,8 +96,8 @@ export function contentServer(base: string, assets = base) {
 }
 
 // Pages reference images and code cell outputs at the content server's root (e.g. `/local-<hash>.png`).
-// A cross-reference's `dataUrl` (`/<slug>.json`, which its hover card fetches) is at `/content/<slug>.json`.
-export function rebaseUrls(node: any, base: string) {
+// A cross-reference's `dataUrl`, the page its hover card fetches, is root-relative too, but the server has pages under `/content/` (see `rebaseFetched`).
+function rebaseUrls(node: any, base: string) {
   if (node.type === 'image') {
     for (const key of ['url', 'urlOptimized']) if (node[key]?.startsWith('/')) node[key] = base + node[key];
   }
@@ -106,4 +106,10 @@ export function rebaseUrls(node: any, base: string) {
     for (const d of Object.values<any>(node.jupyter_data?.data ?? {})) if (d.path?.startsWith('/')) d.path = base + d.path;
   }
   node.children?.forEach((c: any) => rebaseUrls(c, base));
+}
+
+/** Rebase a page that a cross-reference's hover card fetched from its `dataUrl` (`<base>/content/<slug>.json`), as `built()` does. */
+export function rebaseFetched(url: string, page: BuiltPage | undefined) {
+  const i = url.lastIndexOf('/content/');
+  if (i >= 0 && page?.mdast) rebaseUrls(page.mdast, url.slice(0, i));
 }

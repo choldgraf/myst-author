@@ -7,7 +7,7 @@ import { SWRConfig, type Middleware } from 'swr';
 import type { GenericNode } from 'myst-common';
 import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, Details, MyST } from 'myst-to-react';
-import { mystmdMissing, rebaseUrls, sha256, type Built } from '@myst-author/mystmd/built';
+import { mystmdMissing, rebaseFetched, sha256, type Built } from '@myst-author/mystmd/built';
 import { builtWithLines, fromBuiltPage, parseMyst, withBuiltBlocks, type ParseResult } from './parse.ts';
 
 /**
@@ -119,13 +119,12 @@ type Props = {
   onFollowLink?: (href: string, line?: number) => void;
 };
 
-// A cross-reference's hover card fetches its page from the content server, at `<base>/content/<slug>.json` (see `rebaseUrls`).
-// myst-to-react fetches it with SWR, so this rebases that page's URLs too, and its images load (if myst-to-react stops using SWR, they break again).
+// A cross-reference's hover card fetches its page from the content server, and myst-to-react fetches it with SWR.
+// So this rebases that page's URLs too, and its images load (if myst-to-react stops using SWR, they break again).
 const rebaseHoverPages: Middleware = (useSWRNext) => (key, fetcher, config) =>
   useSWRNext(key, fetcher && (async (url: string) => {
     const page: any = await fetcher(url);
-    const i = url.lastIndexOf('/content/');
-    if (i >= 0 && page?.mdast) rebaseUrls(page.mdast, url.slice(0, i));
+    rebaseFetched(url, page);
     return page;
   }), config);
 

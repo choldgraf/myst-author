@@ -155,19 +155,19 @@ const plugin: JupyterFrontEndPlugin<void> = {
         return true;
       })).then((added) => { if (added.includes(true)) sendBuiltCells(nb); });
 
-    // A notebook's build has one block per cell, and no hash to compare with, so a cell uses its block while its text is as saved: that's what mystmd built.
-    // (Not while the notebook is clean: starting a kernel changes the notebook's metadata, which marks it dirty.)
+    // Cells use their block of the build while their text is as saved (see `cellPages`).
+    // The notebook being clean isn't the test: starting a kernel changes its metadata, which marks it dirty.
     // Just after a save, a cell's saved text can be ahead of the build, and the cell shows its old block until mystmd rebuilds.
     const savedSources = new WeakMap<NotebookPanel, string[]>();
     const sendBuiltCells = async (nb: NotebookPanel) => {
       const { page } = await content.built(PathExt.relative(await project, nb.context.path));
-      const pages = page && cellPages(page, nb.content.widgets.length);
+      const sources = nb.content.widgets.map((cell) => cell.model.sharedModel.getSource());
+      const pages = page ? cellPages(page, sources, savedSources.get(nb) ?? []) : [];
       nb.content.widgets.forEach((cell, i) => {
-        const source = cell.model.sharedModel.getSource();
-        const built = pages && source === savedSources.get(nb)?.[i] ? pages[i] : null;
+        const source = sources[i];
+        const built = pages[i];
         if (cell.model.type === 'markdown') {
           const result = built && fromBuiltPage(structuredClone(built));
-          if (result && i) result.frontmatter.title = undefined; // mystmd makes a notebook's first heading its title, which belongs to the first cell
           if (result) cellBuilds.set(cell, { result, source });
           else cellBuilds.delete(cell);
           showCell(cell);
@@ -182,7 +182,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     });
     const watch = (nb: NotebookPanel) =>
       nb.context.ready.then(() => {
-        // Each cell's text as last loaded or saved. An edited cell shows Lab's rendering until mystmd builds the saved notebook.
+        // Each cell's text as last loaded or saved, by position: added or moved cells show Lab's rendering until you save and mystmd rebuilds.
         const save = () => savedSources.set(nb, nb.context.model.sharedModel.cells.map((c) => c.getSource()));
         save();
         nb.context.fileChanged.connect(save);

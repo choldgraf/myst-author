@@ -164,11 +164,19 @@ function firstPosition(node: GenericNode) {
   return pos;
 }
 
-/** A notebook's build split into one page per cell: mystmd builds each cell as one block. Null if the build doesn't have `cells` blocks. */
-export function cellPages(page: BuiltPage, cells: number): BuiltPage[] | null {
+/**
+ * A notebook's build split into one page per cell: mystmd builds each cell as one block.
+ * A notebook has no hash to compare with, so a cell gets its page while its text (`sources`) is as `saved`, which is what mystmd built.
+ * Otherwise the cell gets null, as do all cells if the build has a different number of cells.
+ * Only the first cell keeps the page title, which mystmd takes from the notebook's first heading.
+ */
+export function cellPages(page: BuiltPage, sources: string[], saved: string[]): (BuiltPage | null)[] {
   const blocks = page.mdast.children;
-  if (blocks.length !== cells) return null;
-  return blocks.map((b) => ({ ...page, mdast: { type: 'root', children: b.children ?? [] } }));
+  return sources.map((source, i) => blocks.length !== sources.length || source !== saved[i] ? null : {
+    ...page,
+    frontmatter: i ? { ...page.frontmatter, title: undefined } : page.frontmatter,
+    mdast: { type: 'root', children: blocks[i].children ?? [] },
+  });
 }
 
 /** Render a page built by mystmd the same way as the fast in-browser parse. */
