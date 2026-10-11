@@ -1,8 +1,9 @@
 import { markdown } from '@codemirror/lang-markdown';
+import { languages } from '@codemirror/language-data';
 import { Compartment, Prec, Transaction, type Text } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { basicSetup, EditorView } from 'codemirror';
-import { myst } from 'myst-syntax/codemirror';
+import { myst, mystCode } from 'myst-syntax/codemirror';
 import { connectLsp, messageTransport } from '@myst-author/lsp-client/client';
 import { bodyStart, livePreview, offerBuilt, pageLook } from '@myst-author/preview/live';
 import type { Change, FromLive, Pos, ToLive } from './live.ts';
@@ -45,7 +46,7 @@ function create(text: string) {
     parent: document.getElementById('root')!,
     extensions: [
       basicSetup,
-      markdown(),
+      markdown({ codeLanguages: languages, extensions: [mystCode(languages)] }),
       myst(),
       EditorView.lineWrapping,
       livePreview({ onFollowLink: (href, line) => vscode.postMessage({ type: 'follow', href, line }) }),

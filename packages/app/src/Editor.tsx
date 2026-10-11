@@ -1,8 +1,10 @@
 import { useEffect, useRef, type RefObject } from 'react';
 import { markdown } from '@codemirror/lang-markdown';
+import { languages } from '@codemirror/language-data';
 import { EditorState, type Extension } from '@codemirror/state';
 import { basicSetup, EditorView } from 'codemirror';
 import { bodyStart, topLine } from '@myst-author/preview/live';
+import { mystCode } from 'myst-syntax/codemirror';
 
 type Props = {
   initial: string;
@@ -22,7 +24,7 @@ export function Editor({ initial, onChange, onTopLine, viewRef, extensions }: Pr
       parent: host.current!,
       extensions: [
         basicSetup,
-        markdown(),
+        markdown({ codeLanguages: languages, extensions: [mystCode(languages)] }),
         EditorView.lineWrapping,
         initial.includes('\r\n') ? EditorState.lineSeparator.of('\r\n') : [], // keep a CRLF file's line breaks
         extensions,
