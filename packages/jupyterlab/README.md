@@ -49,7 +49,7 @@ Rebuild and reload the page after changes.
   Turn it on or off with **MyST: Live Preview** in the Command Palette.
 - Notebooks' Markdown cells that you aren't editing render with mystmd's build, so references to other pages resolve.
   A cell you've changed since saving shows JupyterLab's own rendering until you save and mystmd rebuilds.
-  You don't need jupyterlab-myst to try MyST Author, so try it without.
+  Try MyST Author instead of jupyterlab-myst; you don't need both.
   If both are installed, jupyterlab-myst's rendering shows in those changed cells.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.
   It follows the current Markdown editor, but not notebooks.

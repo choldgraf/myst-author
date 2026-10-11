@@ -20,6 +20,7 @@ The cursor lands on the text you clicked.
 - A block with a warning, such as a broken reference, has an orange bar on its left. Open it to see the warning.
 - Blocks render like the preview pane, from mystmd's build or the fast preview, as [Fast and built previews](preview.md#fast-and-built-previews) describes.
   In a notebook, a cell shows the build when it has no unsaved changes.
+  After you save, it shows the new build once mystmd rebuilds.
 
 Live preview works in the web editor, JupyterLab, and VS Code.
 In JupyterLab it also covers notebooks' Markdown cells while you edit them.
@@ -89,6 +90,7 @@ It works in one direction only: scrolling the preview doesn't move the editor.
 
 ## Links in the preview
 
+- Hovering a reference to another page shows its target, such as the figure or equation, in the built preview.
 - A plain click on a link jumps to its source line, like any other block.
 - Cmd-click (or Ctrl-click) follows the link.
   Web links open in a new browser tab.
