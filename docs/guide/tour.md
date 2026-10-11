@@ -9,8 +9,12 @@ Each page has **Try this** boxes that walk you through a feature in the editor.
 Open it with the Codespaces or Binder badge on [Get started](../get-started.md), or locally:
 
 ```bash
-npm run demo
+npm run demo          # in the web editor
+npm run demo:lab      # in JupyterLab
+npm run demo:vscode   # in VS Code
 ```
+
+Each opens a copy of the tour in a temporary folder, so your edits don't touch the repository.
 
 Start at `index.md` and follow the link under **Next** at the bottom of each page.
 The last page, `notebook.ipynb`, is for JupyterLab and VS Code.

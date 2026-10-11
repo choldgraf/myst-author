@@ -18,7 +18,7 @@ From the repo root:
 
 ```sh
 npm install
-npm run lab                        # the tour
+npm run demo:lab                   # a copy of the tour
 npm run lab -- path/to/project     # or your own MyST project
 ```
 

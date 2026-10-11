@@ -59,7 +59,7 @@ The VS Code extension: see [VS Code](../guide/vscode.md) to run it, and the [Dev
 The JupyterLab extension, built and running in JupyterLab (see [JupyterLab](../guide/jupyterlab.md)):
 
 ```bash
-npm run lab -- docs/examples/tour
+npm run demo:lab
 ```
 
 ## The docs

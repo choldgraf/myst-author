@@ -1,4 +1,4 @@
-// `npm run lab -- [project] [jupyter lab options]`: JupyterLab with this extension and the MyST Author server, for a MyST project (default: the tour).
+// `npm run lab -- project [jupyter lab options]`: JupyterLab with this extension and the MyST Author server, for a MyST project.
 // The extension loads from a Jupyter folder inside dist/, so nothing is installed into your own Jupyter setup.
 import { spawn } from 'node:child_process';
 import { mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
@@ -6,7 +6,11 @@ import { dirname, join, resolve } from 'node:path';
 
 const repo = resolve(import.meta.dirname, '../..');
 const [arg, ...options] = process.argv.slice(2);
-const project = resolve(arg ?? join(repo, 'docs/examples/tour'));
+if (!arg) {
+  console.error('Usage: npm run lab -- path/to/project [jupyter lab options]\nTo try a copy of the tour, run npm run demo:lab.');
+  process.exit(1);
+}
+const project = resolve(arg);
 
 const data = join(import.meta.dirname, 'dist/jupyter');
 const link = join(data, 'labextensions/@myst-author/jupyterlab');
