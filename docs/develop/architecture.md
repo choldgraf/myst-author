@@ -102,7 +102,7 @@ Everything about MyST lives in the packages; a host provides only what depends o
 - **The document.** The editor's text, and edits to and from wherever the host keeps it (a file on disk, Lab's document model, VS Code's `TextDocument`).
 - **A language server.** Start one with `spawnLsp`, relay its messages to `connectLsp` (a websocket URL, or `messageTransport` over any message channel), and give the client a project root URI.
 - **Built pages.** Fetch them with `contentServer`, and pass each build of the open file to live preview with `offerBuilt`, which shows it if it matches the editor text.
-- **Opening a file at a line**, and finding a label, through `PreviewHost` for the preview and `workspace.displayFile` for the language client.
+- **Opening a file at a line**, and finding a label, through `PreviewHost` for the preview pane, `followLink` for links in live preview, and `workspace.displayFile` for the language client.
 - **Its own chrome.** Commands, toggles, and prompts in the host's own UI.
 
 ## Design choices
