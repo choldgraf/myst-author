@@ -29,6 +29,9 @@ export async function sha256(text: string) {
   return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+/** The hashes a build of `text` may have. mystmd hashes the file as saved, which may have CRLF line breaks where an editor's text has `\n`, so both are tried. */
+export const savedHashes = (text: string) => Promise.all([sha256(text), sha256(text.replaceAll('\n', '\r\n'))]);
+
 export type ContentServer = ReturnType<typeof contentServer>;
 
 /**

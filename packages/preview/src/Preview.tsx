@@ -7,7 +7,7 @@ import { SWRConfig, type Middleware } from 'swr';
 import type { GenericNode } from 'myst-common';
 import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, Details, MyST } from 'myst-to-react';
-import { mystmdMissing, rebaseFetched, sha256, type Built } from '@myst-author/mystmd/built';
+import { mystmdMissing, rebaseFetched, savedHashes, type Built } from '@myst-author/mystmd/built';
 import { builtWithLines, fromBuiltPage, parseMyst, withBuiltBlocks, type ParseResult } from './parse.ts';
 
 /**
@@ -18,15 +18,15 @@ import { builtWithLines, fromBuiltPage, parseMyst, withBuiltBlocks, type ParseRe
 export function usePreview(path: string | undefined, text: string, dirty: boolean, built: Built | null) {
   // Parses on the main thread; deferring the text lets React keep typing responsive while it runs.
   const deferred = useDeferredValue(text);
-  const [hashed, setHashed] = useState({ text: '', hash: '' });
+  const [hashed, setHashed] = useState({ text: '', hashes: [] as string[] });
   useEffect(() => {
     let current = true;
-    sha256(deferred).then((hash) => current && setHashed({ text: deferred, hash }));
+    savedHashes(deferred).then((hashes) => current && setHashed({ text: deferred, hashes }));
     return () => { current = false; };
   }, [deferred]);
 
   const current = built?.path === path ? built : null;
-  const page = current?.page?.sha256 === hashed.hash ? current.page : null;
+  const page = current?.page && hashed.hashes.includes(current.page.sha256) ? current.page : null;
   // That build with the fast parse's lines, kept while you edit.
   const matched = useMemo(() => page && { path, text: hashed.text, result: builtWithLines(page, hashed.text) }, [page, hashed]);
   const kept = useRef(matched);
