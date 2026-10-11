@@ -5,10 +5,12 @@ import os
 repo = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 # The project to edit: MYST_AUTHOR_PROJECT (which `npm run lab` sets), else the tour.
 project = os.environ.get("MYST_AUTHOR_PROJECT", f"{repo}/docs/examples/tour")
+# MYST_AUTHOR_EXECUTE=1 runs code cells and inline expressions as mystmd builds.
+execute = ["--execute"] if os.environ.get("MYST_AUTHOR_EXECUTE") else []
 
 c.ServerProxy.servers = {
     "myst-author": {
-        "command": ["node", f"{repo}/packages/app/server/index.ts", project],
+        "command": ["node", f"{repo}/packages/app/server/index.ts", *execute, project],
         "environment": {"PORT": "{port}", "NODE_ENV": "production", "NO_OPEN": "1"},
         "timeout": 30,
         "launcher_entry": {"title": "MyST Author"},

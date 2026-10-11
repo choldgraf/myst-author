@@ -64,6 +64,11 @@
           "type": "string",
           "default": "",
           "description": "Path to a mystmd-lsp server script, such as dist/server.cjs from a mystmd-lsp clone, to use instead of the bundled one. Reload the window after changing it."
+        },
+        "mystAuthor.execute": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Run code cells and inline `{eval}` expressions when mystmd builds, with `myst start --execute`. This runs the project's code, and needs Jupyter. Reload the window after changing it."
         }
       }
     },

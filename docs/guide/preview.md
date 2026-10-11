@@ -49,6 +49,26 @@ The badge in the toolbar tells you which one you're looking at:
 | `built ✓` | You're looking at mystmd's build of exactly this text. |
 | `no mystmd` | mystmd isn't installed, so only the fast preview is available. |
 
+## Code cells and `{eval}`
+
+mystmd runs code cells and inline `{eval}` expressions only when you turn execution on:
+
+- **Web editor:** `npm start -- --execute path/to/project`.
+- **VS Code:** the `mystAuthor.execute` setting, then reload the window.
+- **JupyterLab:** set `MYST_AUTHOR_EXECUTE=1` before you start Jupyter.
+
+It runs the project's code, and needs Jupyter.
+mystmd runs the page again each time you save a change to its code.
+
+Without execution, the preview shows mystmd's "Unexecuted inline expression" warning, as a mystmd site would.
+With it, the built preview shows the results and outputs.
+While you edit, results and outputs from the last build stay in place, and an edited code cell's outputs are dimmed until the next build.
+A new `{eval}` shows its code in grey until then.
+
+Outputs look like they do on a mystmd site.
+HTML output, such as a pandas table, shows too, unless it has scripts, such as a plotly plot: then you see its plain text.
+Its scripts would run with the editor's access to your files.
+
 ## mystmd's logs
 
 mystmd's build output, including its warnings, shows up as `[myst]` lines:
