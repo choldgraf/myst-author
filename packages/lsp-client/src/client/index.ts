@@ -1,4 +1,5 @@
 import { jumpToDefinition, languageServerExtensions, LSPClient, type Transport } from '@codemirror/lsp-client';
+import type { Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { inlayHints } from './inlayHints.ts';
 
@@ -73,7 +74,13 @@ export function connectLsp(server: string | Transport, root: string) {
   const client = new LSPClient({
     rootUri: root,
     timeout: 20000, // the host starts a language server process per connection, which can take seconds on a busy host (e.g. Binder)
-    extensions: [inlayHints(), ...languageServerExtensions(), { editorExtension: [definitionClick, completionIcons] }], // inlayHints first: serverDiagnostics consumes the notification
+    extensions: [
+      inlayHints(), // first: serverDiagnostics consumes the notification
+      // LSPClient drops extensions with no `.extension`, which keymap.of() lacks before @codemirror/state 6.7.1 (JupyterLab 4.5 has 6.5).
+      // Wrapping them in arrays keeps F2, F12, and Shift+F12 in JupyterLab.
+      ...languageServerExtensions().map((e) => ('editorExtension' in e ? e : [e as Extension])),
+      { editorExtension: [definitionClick, completionIcons] },
+    ],
   });
   if (typeof server === 'string') keepConnected(client, new URL(server, location.href).href.replace(/^http/, 'ws'));
   else client.connect(server);
