@@ -29,11 +29,11 @@ export function usePreview(path: string | undefined, text: string, dirty: boolea
   const kept = useRef(matched);
   if (matched) kept.current = matched;
   const result = useMemo(() => {
-    if (page) return fromBuiltPage(page);
+    if (page) return matched?.result ?? fromBuiltPage(page);
     const fast = parseMyst(deferred);
     const k = kept.current;
     return k?.result && k.path === path ? withBuiltBlocks(fast, deferred, k.result, k.text) : fast;
-  }, [page, deferred]);
+  }, [page, matched, deferred]);
   const badge = current?.error === mystmdMissing ? 'no mystmd'
     : page ? 'built ✓'
     : dirty ? 'fast preview · unsaved'
