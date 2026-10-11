@@ -13,6 +13,14 @@ Cross-references are completed and checked as you type, across the whole project
 > This is an early prototype.
 > Expect rough edges, and please open an issue when you find one.
 
+It comes in three flavours, which share the same features:
+
+- **A web editor**, for writing a MyST project in your browser.
+- **A VS Code extension** ([docs](https://chrisholdgraf.com/myst-author/guide/vscode)), if you already write in VS Code.
+- **A JupyterLab extension** ([docs](https://chrisholdgraf.com/myst-author/guide/jupyterlab)), if you write in JupyterLab or JupyterHub.
+
+None of them are packaged yet, so you run each one from a clone of this repository, or try them on Codespaces or Binder.
+
 ## Project goals
 
 The goals of this repository are to explore how much work we'd need to do in order to enable an editor-like experience with MyST.
@@ -39,6 +47,7 @@ See [Get started](https://chrisholdgraf.com/myst-author/get-started) for more op
 ## Documentation
 
 See [the documentation](https://chrisholdgraf.com/myst-author/) to get started, take the guided tour, and learn how the pieces fit together.
+To work on MyST Author itself, see [Contributing](docs/develop/contributing.md).
 
 ## Development workflow
 
