@@ -62,7 +62,7 @@ export function contentServer(base: string, assets = base) {
     const slug = slugs.get('/' + path);
     if (!slug) return null;
     const result: BuiltPage = await json(`content/${slug}.json`);
-    rebaseImages(result.mdast, assets);
+    rebaseUrls(result.mdast, assets);
     return result;
   }
 
@@ -96,12 +96,14 @@ export function contentServer(base: string, assets = base) {
 }
 
 // Pages reference images and code cell outputs at the content server's root (e.g. `/local-<hash>.png`).
-function rebaseImages(node: any, base: string) {
+// A cross-reference's `dataUrl` (`/<slug>.json`, which its hover card fetches) is at `/content/<slug>.json`.
+function rebaseUrls(node: any, base: string) {
   if (node.type === 'image') {
     for (const key of ['url', 'urlOptimized']) if (node[key]?.startsWith('/')) node[key] = base + node[key];
   }
+  if (node.type === 'crossReference' && node.dataUrl?.startsWith('/')) node.dataUrl = `${base}/content${node.dataUrl}`;
   if (node.type === 'output') {
     for (const d of Object.values<any>(node.jupyter_data?.data ?? {})) if (d.path?.startsWith('/')) d.path = base + d.path;
   }
-  node.children?.forEach((c: any) => rebaseImages(c, base));
+  node.children?.forEach((c: any) => rebaseUrls(c, base));
 }

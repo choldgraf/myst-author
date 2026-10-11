@@ -91,13 +91,13 @@ export class MystPreview {
 
 /**
  * A webview page that runs `dist/<script>.js` with the preview's CSS.
- * Built pages load images from `assets` (the content server as the webview reaches it), plus any remote images the author links to.
+ * Built pages load images and cross-reference hover data from `assets` (the content server as the webview reaches it), plus any remote images the author links to.
  */
 export function webviewHtml(webview: vscode.Webview, dist: vscode.Uri, script: string, assets?: string) {
   const src = (file: string) => webview.asWebviewUri(vscode.Uri.joinPath(dist, file));
   const nonce = randomBytes(16).toString('base64');
-  const images = assets ? new URL(assets).origin : '';
-  const csp = `default-src 'none'; img-src ${webview.cspSource} ${images} https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; script-src 'nonce-${nonce}';`;
+  const origin = assets ? new URL(assets).origin : '';
+  const csp = `default-src 'none'; img-src ${webview.cspSource} ${origin} https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; connect-src ${origin}; script-src 'nonce-${nonce}';`;
   return `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
