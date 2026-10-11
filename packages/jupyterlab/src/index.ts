@@ -167,7 +167,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         const source = sources[i];
         const built = pages[i];
         if (cell.model.type === 'markdown') {
-          const result = built && fromBuiltPage(structuredClone(built));
+          const result = built && fromBuiltPage(built);
           if (result) cellBuilds.set(cell, { result, source });
           else cellBuilds.delete(cell);
           showCell(cell);

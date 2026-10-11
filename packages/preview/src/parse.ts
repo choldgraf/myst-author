@@ -85,9 +85,9 @@ export function withSourceLines(built: ParseResult, fast: ParseResult): ParseRes
   return { ...built, blocks: built.blocks.map((b, i) => ({ ...b, start: fast.blocks[i].start, end: fast.blocks[i].end })) };
 }
 
-/** mystmd's build of `text`, with the fast parse's lines (see `withSourceLines`). Works on a copy: hosts render the same page elsewhere, and `fromBuiltPage` edits it. */
+/** mystmd's build of `text`, with the fast parse's lines (see `withSourceLines`). */
 export function builtWithLines(page: BuiltPage, text: string) {
-  return withSourceLines(fromBuiltPage(structuredClone(page)), parseMyst(text));
+  return withSourceLines(fromBuiltPage(page), parseMyst(text));
 }
 
 /** Source lines (1-based, inclusive) that the live editor (`./live`) renders and reveals as one unit, and the blocks from them. */
@@ -179,13 +179,14 @@ export function cellPages(page: BuiltPage, sources: string[], saved: string[]): 
   });
 }
 
-/** Render a page built by mystmd the same way as the fast in-browser parse. */
+/** Render a page built by mystmd the same way as the fast in-browser parse. Works on a copy, since hosts render the same page elsewhere. */
 export function fromBuiltPage(page: BuiltPage): ParseResult {
+  const tree = structuredClone(page.mdast);
   // mystmd leaves embeds and references it can't find blank.
-  markUnresolved(page.mdast, true);
+  markUnresolved(tree, true);
   return {
-    tree: page.mdast,
-    blocks: toBlocks(page.mdast),
+    tree,
+    blocks: toBlocks(tree),
     frontmatter: page.frontmatter ?? {},
     references: page.references,
   };
