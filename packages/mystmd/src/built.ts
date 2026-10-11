@@ -50,18 +50,17 @@ export function contentServer(base: string, assets = base) {
     return r.json();
   }
 
-  /** Every built page. */
-  async function pages(): Promise<BuiltPage[]> {
-    const all = pageSlugs(await json('config.json'));
+  /** Learn each page's file from every built page, since config.json only lists slugs. */
+  async function mapSlugs(all: string[]) {
     const result: BuiltPage[] = await Promise.all(all.map((s) => json(`content/${s}.json`)));
     slugs = new Map(result.map((p, i) => [p.location, all[i]]));
     slugList = all.join();
-    return result;
   }
 
   /** The built page JSON for a project-relative path, or null if mystmd hasn't built it. */
   async function page(path: string): Promise<BuiltPage | null> {
-    if (pageSlugs(await json('config.json')).join() !== slugList) await pages();
+    const all = pageSlugs(await json('config.json'));
+    if (all.join() !== slugList) await mapSlugs(all);
     const slug = slugs.get('/' + path);
     if (!slug) return null;
     const result: BuiltPage = await json(`content/${slug}.json`);
