@@ -245,7 +245,7 @@ class MystPreview extends Widget {
     warn: (message) => console.warn(`MyST Author: ${message}`),
   }, Promise.resolve(content));
 
-  constructor(private tracker: IEditorTracker, private docs: IDocumentManager, private lsp: Promise<Lsp>, private project: Promise<string>) {
+  constructor(tracker: IEditorTracker, private docs: IDocumentManager, private lsp: Promise<Lsp>, private project: Promise<string>) {
     super();
     this.title.label = 'MyST Preview';
     this.title.closable = true;

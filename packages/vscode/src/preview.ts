@@ -18,10 +18,10 @@ export class MystPreview {
       current: () => {
         const doc = this.panel && this.editor?.document;
         const top = this.editor?.visibleRanges[0];
-        return doc && { path: projectPath(this.project.root, doc.uri), text: doc.getText(), dirty: doc.isDirty, line: top && top.start.line + 1 };
+        return doc && { path: projectPath(project.root, doc.uri), text: doc.getText(), dirty: doc.isDirty, line: top && top.start.line + 1 };
       },
       post: (m) => this.panel?.webview.postMessage(m),
-      open: (path, line) => this.show(vscode.Uri.file(resolve(this.project.root, path)), line),
+      open: (path, line) => this.show(vscode.Uri.file(resolve(project.root, path)), line),
     }, project.content);
     context.subscriptions.push(
       this.preview,

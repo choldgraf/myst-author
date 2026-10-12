@@ -16,7 +16,7 @@ A client that wants inlay hints must add them itself, and guess when to ask for 
 ## Proposal
 
 - An `inlayHints()` extension that requests `textDocument/inlayHint` for the document and shows each hint as a widget.
-  MyST Author's [`packages/lsp-client/src/client/inlayHints.ts`](../packages/lsp-client/src/client/inlayHints.ts) is about 50 lines and could be a starting point.
+  MyST Author's [`packages/lsp-client/src/inlayHints.ts`](../packages/lsp-client/src/inlayHints.ts) is about 50 lines and could be a starting point.
   It refreshes after each `textDocument/publishDiagnostics`, since the client can't receive `workspace/inlayHint/refresh`.
 - `requestHandlers` on `LSPClientConfig` and `LSPClientExtension`, like `notificationHandlers`, whose return value is the response.
   The inlay hint extension would then handle `workspace/inlayHint/refresh` and advertise `refreshSupport`.

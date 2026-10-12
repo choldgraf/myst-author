@@ -65,7 +65,6 @@ The tour opens Markdown files in the live editor.
 
 After changing any package, rebuild (`node build.mjs`) and reload the window (**Developer: Reload Window**).
 
-- `build.mjs`: bundles the extension and the webviews with esbuild, and copies in mystmd-lsp's server bundle as `dist/lsp.js`.
-  It also builds the webview CSS with Tailwind.
+The comments in `build.mjs` explain how the extension and its webviews are built.
 
 [Architecture](../../docs/develop/architecture.md#packages) describes the extension and the packages it uses.
