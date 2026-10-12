@@ -217,7 +217,7 @@ export function App() {
     if (!doc) return;
     followLink({
       open: (path, line) => (files.includes(path) ? openAt(path, line + 1) : setStatus(`can't open ${path}: only .md files open here`)),
-      openExternal: (url) => void window.open(url, '_blank'),
+      openExternal: (url) => void window.open(url, '_blank', 'noopener'),
       findLabel: async (id) => {
         if (!lsp) return undefined;
         const s = await findLabel((method, params) => lsp.client.request(method, params), id);
