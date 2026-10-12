@@ -62,11 +62,4 @@ Rebuild and reload the page after changes.
 
 ## Develop
 
-- `build.mjs`: compiles `src/` with esbuild, then bundles it with `@jupyterlab/builder`.
-  JupyterLab and CodeMirror packages stay external, so the extension uses Lab's copies.
-- `src/index.ts`: attaches live preview (`@myst-author/preview/live`) and the language client (`@myst-author/lsp-client/client`) to Markdown editors, and adds the preview panel (`@myst-author/preview/controller`).
-  Live blocks, rendered cells, and the preview panel render in shadow roots with the preview's CSS, so it can't restyle Lab.
-  `build.mjs` compiles that CSS to `dist/live.css`.
-  Hover cards render outside the shadow roots, so `src/index.ts` scopes the same CSS to them.
-  `style/index.css` loads KaTeX's CSS into the page for its fonts, since shadow roots ignore `@font-face`.
-  The preview panel is the same page as the VS Code preview (`@myst-author/preview/page`).
+The comments in `build.mjs` and `src/index.ts` explain how the extension is built and how it renders inside Lab.
