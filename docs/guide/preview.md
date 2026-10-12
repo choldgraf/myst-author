@@ -50,17 +50,18 @@ The badge in the toolbar tells you which one you're looking at:
 
 ## Code cells and `{eval}`
 
-mystmd runs code cells and inline `{eval}` expressions only when you turn execution on:
+mystmd runs code cells and inline `{eval}` expressions as it builds, so the built preview shows their results and outputs.
+This runs the project's code, and needs Jupyter.
+Without Jupyter, pages still build and notebooks keep their saved outputs.
+An `{eval}` that hasn't run shows mystmd's "Unexecuted inline expression" warning, as on a mystmd site.
+mystmd runs a page again each time you save a change to its code.
 
-- **Web editor:** `npm start -- --execute path/to/project`.
-- **VS Code:** the `mystAuthor.execute` setting, then reload the window.
-- **JupyterLab:** set `MYST_AUTHOR_EXECUTE=1` before you start Jupyter.
+To turn execution off:
 
-It runs the project's code, and needs Jupyter.
-mystmd runs the page again each time you save a change to its code.
+- **Web editor:** `npm start -- --no-execute path/to/project`.
+- **VS Code:** turn off the `mystAuthor.execute` setting, then reload the window.
+- **JupyterLab:** set `MYST_AUTHOR_EXECUTE=0` before you start Jupyter.
 
-Without execution, the preview shows mystmd's "Unexecuted inline expression" warning, as a mystmd site would.
-With it, the built preview shows the results and outputs.
 While you edit, results and outputs from the last build stay in place, and an edited code cell's outputs are dimmed until the next build.
 A new `{eval}` shows its code in grey until then.
 
