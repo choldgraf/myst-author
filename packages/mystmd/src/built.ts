@@ -36,7 +36,7 @@ export type ContentServer = ReturnType<typeof contentServer>;
 
 /**
  * The `myst start` content server at `base`: an absolute URL (`http://127.0.0.1:3100`), or one relative to the page (`myst`) when a host proxies it.
- * Image URLs point at `assets`, for when whoever displays the page reaches the server by another URL.
+ * Image, output, and hover-card URLs point at `assets`, for when whoever displays the page reaches the server by another URL.
  */
 export function contentServer(base: string, assets = base) {
   base = base.replace(/\/$/, '');

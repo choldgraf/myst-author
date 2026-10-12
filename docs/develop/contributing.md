@@ -41,17 +41,19 @@ CI runs both, and builds the web app and the VS Code and JupyterLab extensions.
 The web editor, with the development server:
 
 ```bash
-npm start -- docs/examples/tour
+npm run demo
 ```
 
 This is the normal way to run it locally.
+It runs on a temporary copy of the tour, because the editor saves as you type and would otherwise edit the repo.
+`npm start -- path/to/project` runs it on any project.
 It uses Vite, so changes to the app reload in the browser as you save them.
 
-The web editor, as a production build (what Binder and JupyterHub setups run):
+The web editor, as a production build, which Binder and the JupyterLab extension run through [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py):
 
 ```bash
 npm run build
-npm run serve -- docs/examples/tour
+npm run serve -- path/to/project
 ```
 
 The VS Code extension: see [VS Code](../guide/vscode.md) to run it, and the [Develop section of its README](https://github.com/choldgraf/myst-author/tree/main/packages/vscode#develop) for rebuilding after changes.

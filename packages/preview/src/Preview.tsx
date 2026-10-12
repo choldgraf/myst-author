@@ -119,8 +119,8 @@ type Props = {
   onFollowLink?: (href: string, line?: number) => void;
 };
 
-// A cross-reference's hover card fetches its page from the content server, and myst-to-react fetches it with SWR.
-// So this rebases that page's URLs too, and its images load (if myst-to-react stops using SWR, they break again).
+// myst-to-react fetches a cross-reference's hover-card page itself, through SWR, so it misses the URL rebasing in the content server's `built()`.
+// This rebases it the same way, with `rebaseFetched`, so its images load. It relies on myst-to-react fetching through SWR.
 const rebaseHoverPages: Middleware = (useSWRNext) => (key, fetcher, config) =>
   useSWRNext(key, fetcher && (async (url: string) => {
     const page: any = await fetcher(url);

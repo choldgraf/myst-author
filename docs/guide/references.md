@@ -26,8 +26,8 @@ Hover a reference to see what it points to and which file it's in.
 - Cmd-click (or Ctrl-click) a reference, or press {kbd}`F12`, to go to its target.
 - Press {kbd}`Shift+F12` on a reference or a label's definition to list every reference to that label.
 - Press {kbd}`F2` to rename a label and every reference to it.
-  The web editor only has one file open, so rename there changes only that file.
-  Use VS Code to rename across files.
+  The server finds every reference in the project, but the web editor and JupyterLab only change files that are open.
+  Use VS Code to rename across the project.
 
 ## Warnings
 

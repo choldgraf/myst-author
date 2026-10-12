@@ -20,7 +20,7 @@ import { cellPages, fromBuiltPage, type ParseResult } from '@myst-author/preview
 // React comes with @myst-author/preview, which renders with it.
 import { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import liveCss from '../dist/live.css'; // the preview's CSS, for the shadow roots of live blocks and the preview panel (see build.mjs)
+import liveCss from '../dist/live.css'; // the preview's CSS, for the extension's shadow roots (see build.mjs)
 
 type Editor = IDocumentWidget<FileEditor>;
 type Lsp = ReturnType<typeof connectLsp>;
@@ -150,7 +150,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         attached.add(cell);
         await cell.ready;
         attachEditor(cell.editor as CodeMirrorEditor, (l) => `${l.uri(nb.context.path)}#${cell.model.id}`);
-        // Lab adds the cell's rendered widget after the first build arrives, and again after each edit, so show the build again then.
+        // Lab adds the cell's rendered widget each time the cell renders, such as when you stop editing it, so check again then whether the build matches.
         new MutationObserver(() => showCell(cell)).observe(cell.inputArea!.node, { childList: true });
         return true;
       })).then((added) => { if (added.includes(true)) sendBuiltCells(nb); });

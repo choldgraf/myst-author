@@ -18,6 +18,8 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 `packages/preview` (`@myst-author/preview`)
 : Renders a MyST page with `myst-to-react`, from the [fast in-browser parse or mystmd's built page](../guide/preview.md#fast-and-built-previews).
   Each rendered block keeps its source line range, which is what click-to-source and scroll sync use.
+  `@myst-author/preview/parse` turns a page into blocks with source lines, from the fast parse or from a built page.
+  Its `cellPages` splits a notebook's build into one page per cell.
   `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews show.
   `@myst-author/preview/controller` runs in the extension and drives that page: it sends the current file and handles clicks.
   Its `findLabel` finds where a label is defined, through the language server's workspace symbols.
@@ -52,6 +54,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 : The JupyterLab extension.
   It connects Lab's Markdown editors and notebooks' Markdown cells to the host server's `/lsp` bridge.
   It adds live preview to them, and shows the preview page beside them.
+  Notebook Markdown cells you aren't editing render with mystmd's build.
 
 ## How the web app fits together
 
@@ -100,9 +103,12 @@ Lab reads and saves the files itself, so it doesn't use `/api/files`.
 Everything about MyST lives in the packages; a host provides only what depends on where it runs:
 
 - **The document.** The editor's text, and edits to and from wherever the host keeps it (a file on disk, Lab's document model, VS Code's `TextDocument`).
-- **A language server.** Start one with `spawnLsp`, relay its messages to `connectLsp` (a websocket URL, or `messageTransport` over any message channel), and give the client a project root URI.
+- **A language server.** Start one with `spawnLsp`, relay its messages to `connectLsp`, and give the client a project root URI.
+  `connectLsp` takes a websocket URL, or a `messageTransport` over any message channel.
 - **Built pages.** Fetch them with `contentServer`, and pass each build of the open file to live preview with `offerBuilt`, which shows it if it matches the editor text.
-- **Opening a file at a line**, and finding a label, through `PreviewHost` for the preview pane, `followLink` for links in live preview, and `workspace.displayFile` for the language client.
+  For a notebook, split the build with `cellPages`, which leaves out cells changed since the build, and pass each remaining page to its cell's editor with `showBuilt`.
+- **Opening a file at a line, and finding a label.** The preview pane asks through `PreviewHost`, and live preview follows links through `followLink`.
+  The language client opens files through `workspace.displayFile`.
 - **Its own chrome.** Commands, toggles, and prompts in the host's own UI.
 
 ## Design choices

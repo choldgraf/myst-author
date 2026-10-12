@@ -10,8 +10,8 @@ These pages explain what each part of the editor does and where its limits are.
 - [Find your way around](navigate.md): a MyST-aware page outline, and searching labels by name or title.
 - [Preview](preview.md): live preview in the editor, the fast and built previews, and how to move between preview and source.
 - [Directives and roles](directives.md): completion and highlighting for directives and roles.
-- [VS Code](vscode.md): the same features in VS Code.
-- [JupyterLab](jupyterlab.md): the same features in JupyterLab.
+- [VS Code](vscode.md): using MyST Author in VS Code, and what differs.
+- [JupyterLab](jupyterlab.md): using MyST Author in JupyterLab, and what differs.
 
 ## The layout
 

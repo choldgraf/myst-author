@@ -1,6 +1,6 @@
 # MyST Author for JupyterLab
 
-Cross-reference help and live preview for Markdown in JupyterLab's editor.
+Cross-reference help and live preview for Markdown files and notebooks in JupyterLab.
 It uses Lab's own file browser and editor.
 Install it from source, as below, or try it on [Binder](https://chrisholdgraf.com/myst-author/get-started#open-it-on-binder).
 
@@ -14,6 +14,7 @@ See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author
 ## Try it
 
 You need Node 24 and [uv](https://docs.astral.sh/uv/).
+Building the extension also needs a `python` with JupyterLab installed, to read which packages Lab shares; the `uvx` environment below is only for running Lab.
 From the repo root:
 
 ```sh
@@ -44,13 +45,14 @@ Rebuild and reload the page after changes.
 
 ## What works
 
-- Completion, hints, hover, go to definition, and warnings for references in Markdown files and notebooks' Markdown cells, as in the web editor.
+- Completion, hints, hover, go to definition, find references, rename, and warnings for references in Markdown files and notebooks' Markdown cells, as in the web editor.
 - Live preview in Markdown files, and in notebooks' Markdown cells while you edit them, as in the web editor.
   Turn it on or off with **MyST: Live Preview** in the Command Palette.
 - Notebooks' Markdown cells that you aren't editing render with mystmd's build, so references to other pages resolve.
   A cell you've changed since saving shows JupyterLab's own rendering until you save and mystmd rebuilds.
   Try MyST Author instead of jupyterlab-myst; you don't need both.
   If both are installed, jupyterlab-myst's rendering shows in those changed cells.
+  In cells that show the build, Cmd/Ctrl-click opens web links, and links to other pages do nothing.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.
   It follows the current Markdown editor, but not notebooks.
   It works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
@@ -63,6 +65,8 @@ Rebuild and reload the page after changes.
 - `build.mjs`: compiles `src/` with esbuild, then bundles it with `@jupyterlab/builder`.
   JupyterLab and CodeMirror packages stay external, so the extension uses Lab's copies.
 - `src/index.ts`: attaches live preview (`@myst-author/preview/live`) and the language client (`@myst-author/lsp-client/client`) to Markdown editors, and adds the preview panel (`@myst-author/preview/controller`).
-  Live blocks and the preview panel render in shadow roots with the preview's CSS, which `build.mjs` compiles to `dist/live.css`, so it can't restyle Lab.
+  Live blocks, rendered cells, and the preview panel render in shadow roots with the preview's CSS, so it can't restyle Lab.
+  `build.mjs` compiles that CSS to `dist/live.css`.
+  Hover cards render outside the shadow roots, so `src/index.ts` scopes the same CSS to them.
   `style/index.css` loads KaTeX's CSS into the page for its fonts, since shadow roots ignore `@font-face`.
   The preview panel is the same page as the VS Code preview (`@myst-author/preview/page`).

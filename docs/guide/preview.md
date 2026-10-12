@@ -19,11 +19,9 @@ The cursor lands on the text you clicked.
 - Tabs, dropdowns, and buttons in a rendered block work without opening its source.
 - A block with a warning, such as a broken reference, has an orange bar on its left. Open it to see the warning.
 - Blocks render like the preview pane, from mystmd's build or the fast preview, as [Fast and built previews](preview.md#fast-and-built-previews) describes.
-  In a notebook, a cell shows the build when it has no unsaved changes.
-  After you save, it shows the new build once mystmd rebuilds.
 
 Live preview works in the web editor, JupyterLab, and VS Code.
-In JupyterLab it also covers notebooks' Markdown cells while you edit them.
+In JupyterLab it also covers notebooks' Markdown cells while you edit them; [JupyterLab](jupyterlab.md#what-works) says when the cells you aren't editing show the build.
 In JupyterLab, turn it on or off with **MyST: Live Preview** in the Command Palette.
 In VS Code, switch a Markdown file between the text editor and the live editor with **MyST: Toggle Live Editor**.
 
@@ -32,7 +30,7 @@ In VS Code, switch a Markdown file between the text editor and the live editor w
 There are two versions of the preview, shown in the same pane:
 
 - The **fast preview** renders the page in your browser as you type.
-  It uses mystmd's parser, but some things only work in a full build, such as `{include}`, embeds, and notebook outputs.
+  It uses mystmd's parser, but some things only work in a full build, such as `{include}`, embeds, and running code.
   Embeds, and references to other pages, show grey placeholders until the build is ready.
 - The **built preview** is mystmd's own output from `myst start`.
   It is exact.
@@ -67,8 +65,8 @@ While you edit, results and outputs from the last build stay in place, and an ed
 A new `{eval}` shows its code in grey until then.
 
 Outputs look like they do on a mystmd site.
-HTML output, such as a pandas table, shows too, unless it has scripts, such as a plotly plot: then you see its plain text.
-Its scripts would run with the editor's access to your files.
+HTML output, such as a pandas table, shows too.
+HTML with scripts, such as a plotly plot, shows its plain text instead, because its scripts would run with the editor's access to your files.
 
 ## mystmd's logs
 

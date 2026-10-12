@@ -26,15 +26,16 @@ code --install-extension packages/vscode/myst-author.vsix
 
 `npm run vscode` from the repo root does both, replacing any copy you installed before.
 Reload open VS Code windows afterwards.
-`npm run demo:vscode` instead opens a fresh copy of the tour, in the same folder each time, in a separate VS Code with its own settings and extensions.
-Your own VS Code setup doesn't change, and extensions you've installed don't load.
-VS Code asks whether you trust that folder the first time: choose **Trust**, since VS Code doesn't run the extension in Restricted Mode.
+`npm run demo:vscode` instead opens a fresh copy of the tour.
+It opens in a separate VS Code with its own settings and extensions, so your own setup doesn't change and extensions you've installed don't load.
+The copy goes in the same folder each time, so VS Code only asks once whether you trust it.
+Choose **Trust**, since VS Code doesn't run the extension in Restricted Mode.
 The tour opens Markdown files in the live editor.
 
 ## What works
 
 - The extension starts when you open a Markdown file or notebook in a MyST project.
-  The project is the folder of the nearest `myst.yml` above that file.
+  The project is the folder of the nearest `myst.yml` above that file, searching no higher than the open workspace folder.
   It runs `myst start --headless` there, and uses that project for the rest of the window's session.
   Files outside a MyST project only get MyST syntax highlighting.
   Set `MYST_BIN` if `myst` isn't on your `PATH`.
@@ -42,7 +43,7 @@ The tour opens Markdown files in the live editor.
 - [mystmd-lsp's features](https://chrisholdgraf.com/mystmd-lsp/features) work in Markdown files and notebooks' Markdown cells.
   The page outline shows in the Outline view and the breadcrumbs, and `Cmd+Shift+O` searches it.
 - To open the preview, run **MyST: Open Preview to the Side** from the Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`).
-  The preview follows the active Markdown editor, but not notebooks.
+  The preview follows the active Markdown text editor, not the live editor or notebooks.
   It works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
 - To edit with live preview, click the book button in a Markdown file's toolbar, or run **MyST: Toggle Live Editor**.
   It's the web editor's live preview, with the same language features.

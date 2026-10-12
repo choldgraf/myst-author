@@ -13,7 +13,7 @@ Cross-references are completed and checked as you type, across the whole project
 > This is an early prototype.
 > Expect rough edges, and please open an issue when you find one.
 
-It comes in three flavours, which share the same features:
+It comes in three flavours, which share most features:
 
 - **A web editor**, for writing a MyST project in your browser.
 - **A VS Code extension** ([docs](https://chrisholdgraf.com/myst-author/guide/vscode)), if you already write in VS Code.
@@ -41,7 +41,6 @@ npm install
 npm run demo                     # a copy of the tour; or `npm start -- path/to/your/project`
 ```
 
-To run it from any folder as `myst-author`, run `npm link -w packages/app` once.
 See [Get started](https://chrisholdgraf.com/myst-author/get-started) for more options, and for what works without mystmd.
 
 ## Documentation

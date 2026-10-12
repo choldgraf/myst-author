@@ -124,7 +124,7 @@ function build(state: EditorState, result?: ParseResult, built?: Live['built']):
 /**
  * Typing in the revealed span keeps the last parse and only moves the other spans, which haven't changed.
  * Anything else reparses: an edit outside it (undo, rename, replace all), or leaving it after editing, so an edited span renders its current text.
- * A long page takes a noticeable pause to parse when you leave an edited block. Parse in a worker if that bites.
+ * A long page takes a noticeable pause to parse when you leave an edited block.
  */
 function update(value: Live, tr: Transaction): Live {
   if (!tr.docChanged && !tr.selection && !tr.effects.length) return value; // effects include new diagnostics
