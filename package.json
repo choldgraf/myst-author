@@ -9,7 +9,7 @@
     "start": "node packages/app/server/index.ts",
     "demo": "d=$(mktemp -d) && cp -R docs/examples/tour/. \"$d\" && npm start -- \"$d\"",
     "demo:lab": "d=$(mktemp -d) && cp -R docs/examples/tour/. \"$d\" && npm run lab -- \"$d\"",
-    "demo:vscode": "d=\"${TMPDIR:-/tmp}/myst-author-tour\" && v=\"${TMPDIR:-/tmp}/myst-author-vscode\" && rm -rf \"$d\" && mkdir -p \"$d\" && cp -R docs/examples/tour/. \"$d\" && npm run package -w packages/vscode && set -- --user-data-dir \"$v/user\" --extensions-dir \"$v/extensions\" && code \"$@\" --install-extension packages/vscode/myst-author.vsix --force && code \"$@\" \"$d\" \"$d/index.md\"",
+    "demo:vscode": "node packages/vscode/demo.mjs",
     "build": "npm run build -w packages/app",
     "serve": "NODE_ENV=production node packages/app/server/index.ts",
     "lab": "npm run build && npm run build -w packages/jupyterlab && node packages/jupyterlab/lab.mjs",
