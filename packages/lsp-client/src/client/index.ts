@@ -90,3 +90,5 @@ export function connectLsp(server: string | Transport, root: string) {
     path: (uri: string) => (uri.startsWith(root + '/') ? decodeURIComponent(uri.slice(root.length + 1)) : null),
   };
 }
+
+export type Lsp = ReturnType<typeof connectLsp>;

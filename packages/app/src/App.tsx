@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Compartment, Text } from '@codemirror/state';
 import { EditorView } from 'codemirror';
 import type { DocumentSymbol, SymbolInformation } from 'vscode-languageserver-protocol';
-import { connectLsp } from '@myst-author/lsp-client/client';
+import { connectLsp, type Lsp } from '@myst-author/lsp-client/client';
 import { Preview, usePreview } from '@myst-author/preview';
 import { contentServer, sha256, type Built } from '@myst-author/mystmd/built';
 import { findLabel, followLink } from '@myst-author/preview/controller';
@@ -14,7 +14,6 @@ import { myst } from 'myst-syntax/codemirror';
 import { type Item, QuickSwitcher } from './QuickSwitcher.tsx';
 
 type Doc = { path: string; text: string };
-type Lsp = ReturnType<typeof connectLsp>;
 
 // The host server proxies the content server under myst/ (relative, like every app URL).
 const content = contentServer('myst');

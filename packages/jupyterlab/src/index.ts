@@ -10,7 +10,7 @@ import { IEditorTracker, type FileEditor } from '@jupyterlab/fileeditor';
 import { INotebookTracker, type NotebookPanel } from '@jupyterlab/notebook';
 import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
-import { connectLsp } from '@myst-author/lsp-client/client';
+import { connectLsp, type Lsp } from '@myst-author/lsp-client/client';
 import { contentServer } from '@myst-author/mystmd/built';
 import { Preview } from '@myst-author/preview';
 import { findLabel, PreviewController, type ToPage } from '@myst-author/preview/controller';
@@ -23,7 +23,6 @@ import { createRoot, type Root } from 'react-dom/client';
 import liveCss from '../dist/live.css'; // the preview's CSS, for the extension's shadow roots (see build.mjs)
 
 type Editor = IDocumentWidget<FileEditor>;
-type Lsp = ReturnType<typeof connectLsp>;
 
 // The MyST Author server, which jupyter-server-proxy runs at <base>/myst-author/ (see binder/jupyter_server_config.py).
 const server = URLExt.join(PageConfig.getBaseUrl(), 'myst-author/');
