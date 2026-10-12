@@ -16,7 +16,7 @@ import { Preview } from '@myst-author/preview';
 import { findLabel, PreviewController, type ToPage } from '@myst-author/preview/controller';
 import { livePreview, offerBuilt, shadowSheet, showBuilt, topLine } from '@myst-author/preview/live';
 import { mountPreviewPage } from '@myst-author/preview/page';
-import { cellPages, fromBuiltPage, type ParseResult } from '@myst-author/preview/parse';
+import { cellPages, fromBuiltPage, parseMyst, type ParseResult } from '@myst-author/preview/parse';
 // React comes with @myst-author/preview, which renders with it.
 import { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -43,7 +43,8 @@ const previewCss = shadowSheet(`${liveCss}
 :host > div { position: relative; box-sizing: border-box; height: 100%; overflow: auto; padding: 0 2rem 1rem; background: white; color: black }`);
 
 // Rendered Markdown cells show mystmd's build in a shadow root on the cell's rendered widget (Lab's or jupyterlab-myst's), so references to other pages resolve.
-// Without a build, the shadow root holds just a <slot>, which shows that widget's own rendering underneath.
+// A cell whose text differs from the build shows the fast parse, as the live preview does, until mystmd rebuilds.
+// An empty cell's shadow root holds just a <slot>, which shows that widget's own rendering (Lab's hint text) underneath.
 // Trim the cell's outer margins, as Lab does for rendered Markdown.
 const cellSheet = shadowSheet(`${cellCss}\n.article > :first-child > :first-child { margin-top: 0 } .article > :last-child > :last-child { margin-bottom: 0 }`);
 const cellRoots = new WeakMap<HTMLElement, Root>();
@@ -52,7 +53,8 @@ const cellBuilds = new WeakMap<Cell, { result: ParseResult; source: string }>();
 const openExternal = (url: string) => void window.open(url, '_blank', 'noopener');
 function showCell(cell: Cell) {
   const built = cellBuilds.get(cell);
-  const result = built?.source === cell.model.sharedModel.getSource() ? built.result : undefined;
+  const source = cell.model.sharedModel.getSource();
+  const result = built?.source === source ? built.result : source.trim() ? parseMyst(source) : undefined;
   const node = cell.inputArea?.renderedInput?.node;
   if (!node) return;
   let root = cellRoots.get(node);

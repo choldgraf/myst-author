@@ -90,6 +90,12 @@ export function builtWithLines(page: BuiltPage, text: string) {
   return withSourceLines(fromBuiltPage(page), parseMyst(text));
 }
 
+/**
+ * Whether the page renders its title above the content.
+ * The title is the frontmatter's, or else the first heading, which stays in the content (`content_includes_title`) unless it's a leading `# Title`.
+ */
+export const hasTitle = (frontmatter: Record<string, any>) => !!frontmatter.title && !frontmatter.content_includes_title;
+
 /** Source lines (1-based, inclusive) that the live editor (`./live`) renders and reveals as one unit, and the blocks from them. */
 export type Span = { start: number; end: number; blocks: Block[] };
 
@@ -99,7 +105,7 @@ const LABEL = /^\s*\([a-zA-Z0-9|@<>*./_\-+:]+\)=\s*$/;
 /**
  * Group a page's blocks into spans for the live editor, given the page's source lines.
  * Blocks that share lines merge, and label lines (`(x)=`) join the block below them.
- * When the page has a title, the lines above the first block (frontmatter, and a `# Title` mystmd lifted out) are a span with no blocks: it renders as the title.
+ * When the page has a title (`hasTitle`), the lines above the first block (frontmatter, and a `# Title` mystmd lifted out) are a span with no blocks: it renders as the title.
  */
 export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Span[] {
   const out: Span[] = [];
@@ -116,7 +122,7 @@ export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Sp
   }
   let titleEnd = (out[0]?.start ?? lines.length + 1) - 1;
   while (titleEnd > 0 && !lines[titleEnd - 1].trim()) titleEnd--;
-  if (frontmatter.title && titleEnd > 0) out.unshift({ start: 1, end: titleEnd, blocks: [] });
+  if (hasTitle(frontmatter) && titleEnd > 0) out.unshift({ start: 1, end: titleEnd, blocks: [] });
   return out;
 }
 
