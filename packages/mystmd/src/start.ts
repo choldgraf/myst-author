@@ -15,6 +15,8 @@ function freePort(): Promise<number> {
   });
 }
 
+export type Myst = Awaited<ReturnType<typeof startMyst>>;
+
 /**
  * Run `myst start --headless` in `root`.
  * We pick the port, so `url` (the content server) is known before the first build; `ready` resolves once it's serving.
@@ -22,8 +24,6 @@ function freePort(): Promise<number> {
  * `exited` rejects if mystmd dies, including after `stop`.
  * mystmd's output goes to `log`, a line at a time. `args` go to `myst start`, such as `--execute`.
  */
-export type Myst = Awaited<ReturnType<typeof startMyst>>;
-
 export async function startMyst(root: string, log = console.log, args: string[] = []) {
   const port = await freePort();
   // myst reads PORT as its own theme-server port. Pin HOST so it doesn't bind IPv6-only `localhost`, which proxies like code-server's miss.
@@ -33,7 +33,6 @@ export async function startMyst(root: string, log = console.log, args: string[] 
   const stop = () => child.kill();
   process.on('exit', stop);
 
-  // Rejects if mystmd dies, even after `ready` has resolved.
   const exited = new Promise<never>((_, reject) => child.on('exit', (code) => reject(new Error(`myst exited with code ${code}`))));
   exited.catch(() => {});
 
