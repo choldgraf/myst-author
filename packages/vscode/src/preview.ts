@@ -1,49 +1,33 @@
-import { randomBytes } from 'node:crypto';
-import { relative, resolve, sep } from 'node:path';
+import { resolve } from 'node:path';
 import * as vscode from 'vscode';
-import { findLabel, PreviewController, type PreviewHost } from '@myst-author/preview/controller';
-import type { Project } from './live.ts';
-
-/** Project-relative path with `/` separators, matching the content server's page `location`. */
-export const projectPath = (root: string, uri: vscode.Uri) => relative(root, uri.fsPath).split(sep).join('/');
-
-/** mystmd's `url` as webviews reach it: in Codespaces and code-server they run in the browser, so images need the forwarded URL. */
-export const webviewUrl = (url: string) => vscode.env.asExternalUri(vscode.Uri.parse(url)).then((u) => u.toString().replace(/\/$/, ''));
-
-// Markdown files, not notebook cells (which are Markdown documents too).
-const isMarkdown = (e?: vscode.TextEditor): e is vscode.TextEditor => e?.document.languageId === 'markdown' && e.document.uri.scheme === 'file';
+import { PreviewController } from '@myst-author/preview/controller';
+import { isMarkdown, linkHost, projectPath, webviewHtml, type Project } from './project.ts';
 
 /** A webview beside the editor that previews the active markdown file, like the web app's preview pane. */
 export class MystPreview {
   private panel?: vscode.WebviewPanel;
-  private editor = isMarkdown(vscode.window.activeTextEditor) ? vscode.window.activeTextEditor : undefined;
+  private editor = isMarkdown(vscode.window.activeTextEditor?.document) ? vscode.window.activeTextEditor : undefined;
   private preview: PreviewController;
-  private host: PreviewHost = {
-    current: () => {
-      const doc = this.panel && this.editor?.document;
-      const top = this.editor?.visibleRanges[0];
-      return doc && { path: projectPath(this.project.root, doc.uri), text: doc.getText(), dirty: doc.isDirty, line: top && top.start.line + 1 };
-    },
-    post: (m) => this.panel?.webview.postMessage(m),
-    open: (path, line) => this.show(vscode.Uri.file(resolve(this.project.root, path)), line),
-    openExternal: (url) => vscode.env.openExternal(vscode.Uri.parse(url)),
-    findLabel: async (id) => {
-      const s = await findLabel(this.project.request, id);
-      return s && { path: projectPath(this.project.root, vscode.Uri.parse(s.uri)), line: s.line };
-    },
-    warn: (message) => vscode.window.showWarningMessage(message),
-  };
 
   constructor(
     private context: vscode.ExtensionContext,
     private project: Project,
   ) {
-    this.preview = new PreviewController(this.host, project.content);
+    this.preview = new PreviewController({
+      ...linkHost(project),
+      current: () => {
+        const doc = this.panel && this.editor?.document;
+        const top = this.editor?.visibleRanges[0];
+        return doc && { path: projectPath(this.project.root, doc.uri), text: doc.getText(), dirty: doc.isDirty, line: top && top.start.line + 1 };
+      },
+      post: (m) => this.panel?.webview.postMessage(m),
+      open: (path, line) => this.show(vscode.Uri.file(resolve(this.project.root, path)), line),
+    }, project.content);
     context.subscriptions.push(
       this.preview,
       vscode.window.onDidChangeActiveTextEditor((e) => {
         // Focusing the preview itself leaves no active editor; keep following the last markdown one.
-        if (!isMarkdown(e) || e === this.editor) return;
+        if (!isMarkdown(e?.document) || e === this.editor) return;
         this.editor = e;
         this.retitle();
         this.preview.sendFile();
@@ -82,24 +66,4 @@ export class MystPreview {
   private retitle() {
     if (this.panel && this.editor) this.panel.title = `MyST: ${this.editor.document.uri.path.split('/').pop()}`;
   }
-}
-
-/**
- * A webview page that runs `dist/<script>.js` with the preview's CSS.
- * Built pages load images and cross-reference hover data from `assets` (the content server as the webview reaches it), plus any remote images the author links to.
- */
-export function webviewHtml(webview: vscode.Webview, dist: vscode.Uri, script: string, assets?: string) {
-  const src = (file: string) => webview.asWebviewUri(vscode.Uri.joinPath(dist, file));
-  const nonce = randomBytes(16).toString('base64');
-  const origin = assets ? new URL(assets).origin : '';
-  const csp = `default-src 'none'; img-src ${webview.cspSource} ${origin} https: data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource}; connect-src ${origin}; script-src 'nonce-${nonce}';`;
-  return `<!DOCTYPE html>
-<html><head>
-<meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="${csp}">
-<link rel="stylesheet" href="${src('webview.css')}">
-</head><body>
-<div id="root"></div>
-<script nonce="${nonce}" src="${src(`${script}.js`)}"></script>
-</body></html>`;
 }

@@ -2,19 +2,8 @@ import { resolve } from 'node:path';
 import * as vscode from 'vscode';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
 import type { BuiltPage, ContentServer } from '@myst-author/mystmd/built';
-import { findLabel, followLink, type Request } from '@myst-author/preview/controller';
-import type { Myst } from '@myst-author/mystmd/start';
-import { projectPath, webviewHtml } from './preview.ts';
-
-/** The language server script: `mystAuthor.serverPath`, or the copy of mystmd-lsp's bundle in dist/. */
-export const serverScript = (context: vscode.ExtensionContext) =>
-  vscode.workspace.getConfiguration('mystAuthor').get<string>('serverPath') || context.asAbsolutePath('dist/lsp.js');
-
-/**
- * The MyST project the extension started: its folder, its mystmd, and requests to its language server.
- * `assets` is mystmd's URL as webviews reach it, and `content` its content server once mystmd is up.
- */
-export type Project = { root: string; myst: Myst; request: Request; assets: Thenable<string>; content: Promise<ContentServer> };
+import { followLink } from '@myst-author/preview/controller';
+import { linkHost, projectPath, serverScript, webviewHtml, type Project } from './project.ts';
 
 /** A position as VS Code and LSP count it (0-based). Not an offset: CodeMirror counts a CRLF as one character, VS Code as two. */
 export type Pos = { line: number; character: number };
@@ -131,21 +120,16 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
   }
 
   /** Follow a rendered link as the preview does. A target in this file is selected in the webview; others open in a text editor, like `definition`. */
-  private follow(document: vscode.TextDocument, { root, request }: Project, content: ContentServer | undefined, { href, line }: { href: string; line?: number }, post: (m: ToLive) => void) {
+  private follow(document: vscode.TextDocument, p: Project, content: ContentServer | undefined, { href, line }: { href: string; line?: number }, post: (m: ToLive) => void) {
     return followLink({
+      ...linkHost(p),
       open: (path, line) => {
-        const uri = vscode.Uri.file(resolve(root, path));
+        const uri = vscode.Uri.file(resolve(p.root, path));
         if (uri.fsPath === document.uri.fsPath) post({ type: 'select', at: { line, character: 0 } });
         else vscode.window.showTextDocument(uri, { selection: new vscode.Range(line, 0, line, 0) });
       },
-      openExternal: (url) => vscode.env.openExternal(vscode.Uri.parse(url)),
-      findLabel: async (id) => {
-        const s = await findLabel(request, id);
-        return s && { path: projectPath(root, vscode.Uri.parse(s.uri)), line: s.line };
-      },
-      warn: (message) => vscode.window.showWarningMessage(message),
       fileForSlug: (slug) => content?.fileForSlug(slug),
-    }, projectPath(root, document.uri), href, line);
+    }, projectPath(p.root, document.uri), href, line);
   }
 
   /** References across the project. VS Code's peek view needs a text editor, so pick one from a list. */

@@ -5,8 +5,9 @@ import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
 import { contentServer } from '@myst-author/mystmd/built';
 import { startMyst, type Myst } from '@myst-author/mystmd/start';
-import { LiveEditor, serverScript, type Project } from './live.ts';
-import { MystPreview, webviewUrl } from './preview.ts';
+import { LiveEditor } from './live.ts';
+import { MystPreview } from './preview.ts';
+import { isMarkdown, serverScript, webviewUrl, type Project } from './project.ts';
 
 let client: LanguageClient | undefined;
 let myst: Myst | undefined;
@@ -96,8 +97,6 @@ async function toggleLive() {
   await vscode.commands.executeCommand('vscode.openWith', uri, live ? 'default' : 'mystAuthor.live');
   await vscode.window.tabGroups.close(tab);
 }
-
-const isMarkdown = (d?: vscode.TextDocument) => d?.languageId === 'markdown' && d.uri.scheme === 'file';
 
 /** The folder of the nearest `myst.yml` above a file, within its workspace folder, if any. */
 function projectRoot(uri: vscode.Uri) {
