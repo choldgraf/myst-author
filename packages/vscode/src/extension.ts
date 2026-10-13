@@ -46,7 +46,8 @@ export function activate(context: vscode.ExtensionContext) {
       'MyST Author',
       { module: serverScript(context), transport: TransportKind.ipc, args: [`--content-server=${myst.url}`] },
       {
-        documentSelector: [{ scheme: 'file', language: 'markdown' }],
+        // Notebook cells need their own entry so pull diagnostics cover them.
+        documentSelector: [{ scheme: 'file', language: 'markdown' }, { notebook: { notebookType: 'jupyter-notebook' }, language: 'markdown' }],
         outputChannel: output,
         workspaceFolder: { uri: vscode.Uri.file(root), name: basename(root), index: 0 },
       },
