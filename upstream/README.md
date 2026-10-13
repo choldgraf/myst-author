@@ -11,7 +11,7 @@ These are proposals for the mystmd, myst-theme, and CodeMirror maintainers to de
 | U5 | Reusable single-page browser preview (from `myst-demo`) | myst-theme | idea |
 | U6 | `baseurl` fix for sites served under a sub-path, e.g. on JupyterHub ([mystmd#302](https://github.com/jupyter-book/mystmd/issues/302)) | myst-theme | idea |
 | U7 | Column-accurate inline positions in myst-parser (large) | mystmd | idea |
-| U8 | Export the helpers that MyST Author and mystmd-lsp each copy: a single-page parse, a `myst start --headless` launcher, and a content-server client | mystmd | idea |
+| U8 | Export the helpers that MyST Author and mystmd-lsp share through [mystmd-client](https://github.com/choldgraf/mystmd-client): a single-page parse, a `myst start --headless` launcher, and a content-server client | mystmd | idea |
 | U9 | [Inlay hints and requests from the server](U9-lsp-client-inlay-hints.md) | `@codemirror/lsp-client` | written up |
 | U10 | [An mdast → mystmd adapter, to adopt a micromark parser](U10-mdast-adapter.md) | mystmd | written up |
 

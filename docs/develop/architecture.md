@@ -9,11 +9,11 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 ## Packages
 
-`packages/mystmd` (`@myst-author/mystmd`)
+[`mystmd-client`](https://github.com/choldgraf/mystmd-client) (from GitHub)
 : Starts and talks to mystmd.
-  `@myst-author/mystmd/start` runs `myst start --headless`.
-  `@myst-author/mystmd/built` reads built page JSON from mystmd's *content server*, the local HTTP server that `myst start --headless` runs.
-  `@myst-author/mystmd/parse` parses a single page with mystmd's parser and transforms.
+  `mystmd-client/start` runs `myst start --headless`.
+  `mystmd-client/content-server` reads built page JSON from mystmd's *content server*, the local HTTP server that `myst start --headless` runs.
+  `mystmd-client/parse` parses a single page with mystmd's parser and transforms.
 
 `packages/preview` (`@myst-author/preview`)
 : Renders a MyST page with `myst-to-react`, from the [fast in-browser parse or mystmd's built page](../guide/preview.md#fast-and-built-previews).

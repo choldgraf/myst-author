@@ -13,6 +13,7 @@ flowchart LR
     preview["preview"]
   end
   lsp["mystmd-lsp<br/>language server"]
+  client["mystmd-client<br/>mystmd helpers"]
   syntax["myst-syntax<br/>highlighting"]
   parser["myst-parser-unified<br/>micromark parser"]
   mystmd[("mystmd")]
@@ -20,9 +21,11 @@ flowchart LR
   hosts --> preview
   hosts -- "package" --> lsp
   hosts -- "package" --> syntax
-  preview --> mystmd
+  hosts -- "package" --> client
+  preview -- "package" --> client
   preview --> theme
-  lsp --> mystmd
+  lsp -- "package" --> client
+  client --> mystmd
   parser -. "compares against" .-> mystmd
 ```
 
@@ -32,6 +35,7 @@ flowchart LR
 |---|---|---|
 | [mystmd](https://github.com/jupyter-book/mystmd) | What MyST means: parsing, transforms, builds, and the content server | Everyone |
 | [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) | What an editor knows about a MyST project: references, labels, completion, hover, warnings | Any LSP editor (Neovim, Helix) |
+| [mystmd-client](https://github.com/choldgraf/mystmd-client) | Starting mystmd, reading its content server, and parsing one page the way mystmd does | Any tool that runs mystmd or parses a single page |
 | [myst-syntax](https://github.com/choldgraf/myst-syntax) | Highlighting MyST syntax, for CodeMirror and TextMate | VS Code extensions and CodeMirror editors |
 | [myst-parser-unified](https://github.com/choldgraf/myst-parser-unified) | Parsing MyST with micromark, and how its trees differ from mystmd's | People using the unified Markdown tools (remark), and mystmd as a possible future parser |
 | [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview, once it's published |
@@ -60,6 +64,6 @@ Put each feature in the lowest repository that can hold it:
   For example, MyST Author follows preview links to labels through mystmd-lsp's workspace symbols, so mystmd-lsp [documents how it names them](https://chrisholdgraf.com/mystmd-lsp/features#symbols).
 - When repositories recognise the same syntax, each one follows mystmd's rule and names where that rule lives, instead of copying another repository.
   For example, myst-syntax, mystmd-lsp and MyST Author's preview all find labels like `(intro)=` with the characters from mystmd's `TARGET_PATTERN`.
-- Code copied between repositories says where its twin is, and why there's a copy.
-  The only copies are the mystmd helpers that start mystmd, read its content server, and parse one page.
-  mystmd-lsp and MyST Author both need them until mystmd exports them (U8 in [upstream proposals](upstream.md)).
+- Repositories don't copy code from each other.
+  The mystmd helpers that start mystmd, read its content server, and parse one page live in [mystmd-client](https://github.com/choldgraf/mystmd-client), which mystmd-lsp and MyST Author both import.
+  It's installed from GitHub, not npm, because it goes away once mystmd exports the helpers (U8 in [upstream proposals](upstream.md)).
