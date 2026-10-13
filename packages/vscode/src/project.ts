@@ -1,9 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import { relative, sep } from 'node:path';
 import * as vscode from 'vscode';
-import type { ContentServer } from '@myst-author/mystmd/built';
+import type { ContentServer } from 'mystmd-client/content-server';
 import { findLabel, type Request } from '@myst-author/preview/controller';
-import type { Myst } from '@myst-author/mystmd/start';
+import type { Myst } from 'mystmd-client/start';
 
 /** The language server script: `mystAuthor.serverPath`, or the copy of mystmd-lsp's bundle in dist/. */
 export const serverScript = (context: vscode.ExtensionContext) =>

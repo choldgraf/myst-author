@@ -5,7 +5,7 @@ import { SWRConfig, type Middleware } from 'swr';
 import type { GenericNode } from 'myst-common';
 import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, MyST } from 'myst-to-react';
-import { mystmdMissing, rebaseFetched, savedHashes, type Built } from '@myst-author/mystmd/built';
+import { mystmdMissing, rebaseFetched, savedHashes, type Built } from 'mystmd-client/content-server';
 import { Output, Outputs } from './outputs.tsx';
 import { builtWithLines, fromBuiltPage, hasTitle, parseMyst, withBuiltBlocks, type ParseResult } from './parse.ts';
 

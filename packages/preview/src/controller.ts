@@ -1,4 +1,4 @@
-import { mystmdMissing, type Built, type ContentServer } from '@myst-author/mystmd/built';
+import { mystmdMissing, type Built, type ContentServer } from 'mystmd-client/content-server';
 
 /** Messages from the host to the preview page (`./page`). */
 export type ToPage =

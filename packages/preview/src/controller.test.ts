@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mystmdMissing } from '@myst-author/mystmd/built';
+import { mystmdMissing } from 'mystmd-client/content-server';
 import { findLabel, PreviewController, type PreviewHost } from './controller.ts';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve));

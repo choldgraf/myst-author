@@ -11,7 +11,7 @@ import { INotebookTracker, type NotebookPanel } from '@jupyterlab/notebook';
 import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
 import { connectLsp, type Lsp } from '@myst-author/lsp-client/client';
-import { contentServer } from '@myst-author/mystmd/built';
+import { contentServer } from 'mystmd-client/content-server';
 import { Preview } from '@myst-author/preview';
 import { findLabel, PreviewController, type ToPage } from '@myst-author/preview/controller';
 import { livePreview, offerBuilt, shadowSheet, showBuilt, topLine } from '@myst-author/preview/live';

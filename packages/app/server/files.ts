@@ -1,6 +1,6 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { sha256 } from '@myst-author/mystmd/built';
+import { sha256 } from 'mystmd-client/content-server';
 
 const SKIP = new Set(['node_modules', '_build']);
 

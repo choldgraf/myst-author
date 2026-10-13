@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { sha256 } from '@myst-author/mystmd/built';
+import { sha256 } from 'mystmd-client/content-server';
 import { listMarkdown, resolveInside, writeUnlessChanged } from './files.ts';
 
 test('listMarkdown finds .md files and skips build/hidden/node_modules dirs', async () => {

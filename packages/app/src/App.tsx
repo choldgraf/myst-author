@@ -4,7 +4,7 @@ import { EditorView } from 'codemirror';
 import type { DocumentSymbol, SymbolInformation } from 'vscode-languageserver-protocol';
 import { connectLsp, type Lsp } from '@myst-author/lsp-client/client';
 import { Preview, usePreview } from '@myst-author/preview';
-import { contentServer, sha256, type Built } from '@myst-author/mystmd/built';
+import { contentServer, sha256, type Built } from 'mystmd-client/content-server';
 import { findLabel, followLink } from '@myst-author/preview/controller';
 import { livePreview, offerBuilt, pageLook } from '@myst-author/preview/live';
 import { listFiles, projectRoot, readFile, writeFile } from './api.ts';

@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import * as vscode from 'vscode';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
-import type { BuiltPage, ContentServer } from '@myst-author/mystmd/built';
+import type { BuiltPage, ContentServer } from 'mystmd-client/content-server';
 import { followLink } from '@myst-author/preview/controller';
 import { linkHost, projectPath, serverScript, webviewHtml, type Project } from './project.ts';
 

@@ -6,7 +6,6 @@
     "test": "node --test src/*.test.ts"
   },
   "dependencies": {
-    "@myst-author/mystmd": "*",
     "@myst-theme/common": "^1.4.1",
     "@myst-theme/providers": "^1.4.1",
     "@myst-theme/styles": "^1.4.1",
@@ -17,6 +16,7 @@
     "myst-common": "^1.10.1",
     "myst-spec-ext": "^1.10.1",
     "myst-to-react": "^1.4.1",
+    "mystmd-client": "github:choldgraf/mystmd-client",
     "swr": "^2.1.5",
     "tailwindcss": "^3.4.19",
     "unist-util-visit": "^4.1.2"

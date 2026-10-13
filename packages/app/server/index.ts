@@ -8,7 +8,8 @@ import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { createProxyServer } from 'http-proxy-3';
 import sirv from 'sirv';
-import { startMyst } from '@myst-author/mystmd/start';
+import { mystmdMissing } from 'mystmd-client/content-server';
+import { startMyst } from 'mystmd-client/start';
 import { listMarkdown, resolveInside, writeUnlessChanged } from './files.ts';
 import { lspBridge } from './lsp.ts';
 
@@ -30,7 +31,10 @@ myst?.ready
     mystDown = '';
     return myst.exited;
   })
-  .catch((err) => (mystDown = err.message));
+  .catch((err) => {
+    mystDown = err.message;
+    if (err.message === mystmdMissing) console.log(`${mystmdMissing}; built preview disabled`);
+  });
 const lsp = lspBridge(root, myst?.url); // the LSP loads the project once myst is up; until then it knows open documents
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => process.exit()); // runs the 'exit' hook that stops myst
 const proxy = createProxyServer();

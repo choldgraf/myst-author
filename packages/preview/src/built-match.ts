@@ -1,5 +1,5 @@
 import { StateEffect, type EditorState, type TransactionSpec } from '@codemirror/state';
-import { savedHashes, type BuiltPage } from '@myst-author/mystmd/built';
+import { savedHashes, type BuiltPage } from 'mystmd-client/content-server';
 
 /**
  * Render from mystmd's build of `text`, which resolves embeds and references to other pages, if the editor still has that text.

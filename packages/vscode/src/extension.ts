@@ -3,8 +3,8 @@ import { basename, dirname, join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 import * as vscode from 'vscode';
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node';
-import { contentServer } from '@myst-author/mystmd/built';
-import { startMyst, type Myst } from '@myst-author/mystmd/start';
+import { contentServer, mystmdMissing } from 'mystmd-client/content-server';
+import { startMyst, type Myst } from 'mystmd-client/start';
 import { LiveEditor } from './live.ts';
 import { MystPreview } from './preview.ts';
 import { isMarkdown, serverScript, webviewUrl, type Project } from './project.ts';
@@ -39,7 +39,10 @@ export function activate(context: vscode.ExtensionContext) {
     myst = await startMyst(root, (line) => output.appendLine(stripVTControlCharacters(line)), execute ? ['--execute'] : []);
     // Failing to start is reported by the preview; this is for mystmd dying later, which otherwise looks like a build that never finishes.
     const { url, ready, exited } = myst;
-    ready.then(() => exited.catch((e) => vscode.window.showWarningMessage(`MyST: mystmd stopped (${e.message}). See MyST: Show Log.`)), () => {});
+    ready.then(
+      () => exited.catch((e) => vscode.window.showWarningMessage(`MyST: mystmd stopped (${e.message}). See MyST: Show Log.`)),
+      (e) => e.message === mystmdMissing && output.appendLine(`${mystmdMissing}; built preview disabled`),
+    );
     // The LSP loads the whole project once mystmd has built it; until then it knows the open files.
     const lsp = new LanguageClient(
       'mystAuthor',

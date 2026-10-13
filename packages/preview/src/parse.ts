@@ -1,6 +1,6 @@
 import type { GenericNode, GenericParent } from 'myst-common';
-import type { BuiltPage } from '@myst-author/mystmd/built';
-import * as mystmd from '@myst-author/mystmd/parse';
+import type { BuiltPage } from 'mystmd-client/content-server';
+import * as mystmd from 'mystmd-client/parse';
 import { EXIT, SKIP, visit } from 'unist-util-visit';
 
 /** A top-level rendered node and the source lines (1-based, inclusive) it came from. */

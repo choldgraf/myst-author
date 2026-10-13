@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { EditorState, type TransactionSpec } from '@codemirror/state';
-import { sha256, type BuiltPage } from '@myst-author/mystmd/built';
+import { sha256, type BuiltPage } from 'mystmd-client/content-server';
 import { offerBuilt, showBuilt } from './built-match.ts';
 
 test('offerBuilt shows a build only when it matches the editor text, with either line ending', async () => {
