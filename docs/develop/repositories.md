@@ -26,7 +26,7 @@ flowchart LR
   preview --> theme
   lsp -- "package" --> client
   client --> mystmd
-  parser -. "compares against" .-> mystmd
+  parser -. "output compared with mystmd's parser" .-> mystmd
 ```
 
 ## What each one owns
@@ -37,12 +37,17 @@ flowchart LR
 | [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) | What an editor knows about a MyST project: references, labels, completion, hover, warnings | Any LSP editor (Neovim, Helix) |
 | [mystmd-client](https://github.com/choldgraf/mystmd-client) | Starting mystmd, reading its content server, and parsing one page the way mystmd does | Any tool that runs mystmd or parses a single page |
 | [myst-syntax](https://github.com/choldgraf/myst-syntax) | Highlighting MyST syntax, for CodeMirror and TextMate | VS Code extensions and CodeMirror editors |
-| [myst-parser-unified](https://github.com/choldgraf/myst-parser-unified) | Parsing MyST with micromark, and how its trees differ from mystmd's | People using the unified Markdown tools (remark), and mystmd as a possible future parser |
+| [myst-parser-unified](https://github.com/choldgraf/myst-parser-unified) | Parsing MyST with micromark, with line and column positions on every node | People using the unified Markdown tools (remark), and mystmd as a possible future parser |
 | [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview, once it's published |
 | [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
 
 Hosts start mystmd themselves and pass its address to mystmd-lsp, even though mystmd-lsp can start it.
 A host runs several language servers for one project (one per browser tab or VS Code live editor), and they all share one mystmd.
+
+Nothing depends on [myst-parser-unified](https://chrisholdgraf.com/myst-parser-unified/) yet.
+It's a candidate to replace the parser that mystmd-lsp and the preview use.
+mystmd-lsp's design notes list [what a parser must provide to replace its regexes](https://chrisholdgraf.com/mystmd-lsp/design#replacing-the-reference-regexes).
+Its `mystParse` drop-in matches the output of mystmd's parser, myst-parser, on 89 of 90 myst-spec examples (`npm run score` in that repository).
 
 ## Where a feature goes
 

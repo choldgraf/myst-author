@@ -118,7 +118,8 @@ Everything about MyST lives in the packages; a host provides only what depends o
   The web app is the simplest host, not a full IDE: features that VS Code and JupyterLab already have, such as git or file management, are left to them.
 - **The preview uses mystmd's own code.** The fast preview uses mystmd's parser and transforms.
   The built preview is mystmd's output.
-  There is no separate MyST parser to keep in sync.
+  The app and the language server both parse with mystmd's own parser through mystmd-client, so the running system has no second parser.
+  [myst-parser-unified](repositories.md#what-each-one-owns) is a separate experiment, not a dependency.
 - **Markdown is the source of truth.** Changes go one way, from the Markdown to the preview.
 - **Stock mystmd.** Everything works with released mystmd.
   Changes that would make it better are written up as [upstream proposals](upstream.md).
