@@ -1,7 +1,7 @@
 {
   "name": "myst-author-monorepo",
   "private": true,
-  "license": "BSD-3-Clause",
+  "license": "CC0-1.0",
   "type": "module",
   "workspaces": ["packages/*"],
   "engines": { "node": ">=24" },
