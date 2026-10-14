@@ -55,7 +55,7 @@ The tour opens Markdown files in the live editor.
 ## Notes
 
 - MyST syntax is highlighted on top of VS Code's Markdown grammar, with [myst-syntax](https://github.com/choldgraf/myst-syntax).
-  The [MyST-Markdown](https://marketplace.visualstudio.com/items?itemName=ExecutableBookProject.myst-highlight) extension highlights the same syntax, so turn one of them off.
+  Other MyST highlighting extensions cover the same syntax, so turn them off.
 - The extension turns off VS Code's own Markdown link suggestions (`markdown.suggest.paths.enabled`) in every Markdown file, since they suggest GitHub-style heading slugs that mystmd doesn't use for labeled headings.
   The language server completes files and labels instead.
 - mystmd's and the language server's output go to the **MyST** output channel; **MyST: Show Log** opens it.
