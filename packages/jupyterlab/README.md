@@ -25,7 +25,7 @@ npm run lab -- path/to/project     # or your own MyST project
 
 `npm run lab` builds the web app and the extension, then starts JupyterLab in the project folder with both.
 JupyterLab and jupyter-server-proxy run in a throwaway `uvx` environment, with Jupyter's config and extensions in `packages/jupyterlab/dist/jupyter/`.
-Your own Jupyter setup doesn't change, and extensions you've installed don't load.
+Your own Jupyter setup doesn't change, and extensions you've installed, such as jupyterlab-myst, don't load.
 Options after the project go to `jupyter lab`, for example `npm run lab -- . --port 9000`.
 Run it again after changes.
 
@@ -50,6 +50,8 @@ Rebuild and reload the page after changes.
   Turn it on or off with **MyST: Live Preview** in the Command Palette.
 - Notebooks' Markdown cells that you aren't editing render with mystmd's build, so references to other pages resolve.
   A cell you've changed since saving shows the fast preview, as while editing, until you save and mystmd rebuilds.
+  If you also have jupyterlab-myst installed, both work, but you may see its rendering flash before MyST Author's appears, because Lab renders the cell with it first.
+  You don't need both, so try MyST Author on its own if that bothers you.
   In cells that show the build, Cmd/Ctrl-click opens web links, and links to other pages do nothing.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.
   It follows the current Markdown editor, but not notebooks.

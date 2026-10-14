@@ -42,7 +42,7 @@ let liveOn = true;
 const previewCss = shadowSheet(`${liveCss}
 :host > div { position: relative; box-sizing: border-box; height: 100%; overflow: auto; padding: 0 2rem 1rem; background: white; color: black }`);
 
-// Rendered Markdown cells show mystmd's build in a shadow root on the cell's rendered widget (Lab's or another extension's), so references to other pages resolve.
+// Rendered Markdown cells show mystmd's build in a shadow root on the cell's rendered widget (Lab's or jupyterlab-myst's), so references to other pages resolve.
 // A cell whose text differs from the build shows the fast parse, as the live preview does, until mystmd rebuilds.
 // An empty cell's shadow root holds just a <slot>, which shows that widget's own rendering (Lab's hint text) underneath.
 // Trim the cell's outer margins, as Lab does for rendered Markdown.
