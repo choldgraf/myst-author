@@ -44,8 +44,8 @@ function HtmlOutput({ html }: { html: string }) {
 }
 
 /**
- * ANSI-coloured text, with myst-theme's `ansi-*` classes, like the ANSI renderer that mystmd sites use.
- * That's a wrapper for anser and escape-carriage, which only supports React 18, so this does the same with them.
+ * ANSI-coloured text as spans with the class names of nteract's ansi-to-react (BSD-3), which myst-theme's CSS styles.
+ * Written against anser and escape-carriage directly, because ansi-to-react only supports React 18.
  */
 function Ansi({ text }: { text: string }) {
   return Anser.ansiToJson(escapeCarriageReturn(text), { use_classes: true, remove_empty: true }).map((part, i) => (
