@@ -23,7 +23,7 @@ Each block shows its Markdown when the cursor reaches it, and renders again when
 
 ## Figures, equations, and references
 
-```{figure} https://raw.githubusercontent.com/jupyter-book/mystmd/main/docs/public/logo.svg
+```{figure} images/myst-logo.svg
 :label: fig-live
 :width: 160px
 

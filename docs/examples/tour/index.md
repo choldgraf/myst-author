@@ -32,7 +32,7 @@ Click any paragraph in the preview: the editor jumps to the line it came from.
 (tour-figure)=
 ## A figure and an equation
 
-```{figure} https://raw.githubusercontent.com/jupyter-book/mystmd/main/docs/public/logo.svg
+```{figure} images/myst-logo.svg
 :label: fig-logo
 :width: 200px
 
