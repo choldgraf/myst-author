@@ -53,7 +53,7 @@ Rebuild and reload the page after changes.
   If you also have jupyterlab-myst installed, both work, but you may see its rendering flash before MyST Author's appears, because Lab renders the cell with it first.
   You don't need both, so try MyST Author on its own if that bothers you.
   In cells that show the build, Cmd/Ctrl-click opens web links, and links to other pages do nothing.
-- For MyST syntax highlighting while editing, install [jupyterlab-myst-syntax](https://github.com/choldgraf/myst-syntax) (`pip install jupyterlab-myst-syntax`; until it is published, build it from that repository).
+- For MyST syntax highlighting while editing, install [jupyterlab-myst-syntax](https://github.com/choldgraf/myst-syntax) (until it is published, build it from that repository).
   The throwaway environments that `npm run lab` and Binder use don't include it yet.
   MyST Author's Lab extension doesn't highlight, by design, so the two don't overlap.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.

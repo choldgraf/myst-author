@@ -45,9 +45,9 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 `packages/vscode`
 : The VS Code extension.
-  It depends on the MyST Language Server extension for the language server and mystmd, and shows the same preview in a webview.
+  It depends on the MyST Language Server extension (see [How the repositories fit together](repositories.md#what-each-one-owns)) and shows the same preview in a webview.
   Its live editor is a custom editor: a webview that runs CodeMirror with the same live preview.
-  VS Code can't pass its language features into a webview, so the live editor's language client talks to a server process of its own, spawned from the language server extension's bundle.
+  VS Code can't pass its language features into a webview, so the live editor's language client talks to a server process of its own.
 
 `packages/jupyterlab` (`@myst-author/jupyterlab`)
 : The JupyterLab extension.

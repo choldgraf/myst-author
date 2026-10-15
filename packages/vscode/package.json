@@ -1,7 +1,7 @@
 {
   "name": "myst-author-vscode",
   "displayName": "MyST Author",
-  "description": "MyST language features, live preview and a live editor.",
+  "description": "Live preview and a live editor for MyST projects, on top of the MyST Language Server extension.",
   "version": "0.0.1",
   "private": true,
   "publisher": "myst-author",

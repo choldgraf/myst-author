@@ -9,9 +9,7 @@ export function activate(context: vscode.ExtensionContext) {
   let preview: MystPreview | undefined;
   // The live editor can open before the project is known (a restored tab), so it gets the promise.
   const started = project().catch((e) => void vscode.window.showErrorMessage(`MyST Author: ${e.message}`));
-  started.then((p) => {
-    if (p) preview = new MystPreview(context, p);
-  });
+  started.then((p) => p && (preview = new MystPreview(context, p)));
   context.subscriptions.push(
     vscode.commands.registerCommand('mystAuthor.openPreview', () =>
       preview ? preview.open() : vscode.window.showInformationMessage('Open a MyST project (a folder with myst.yml) to preview it.')),

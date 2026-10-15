@@ -1,7 +1,8 @@
 # MyST Author for VS Code
 
 MyST in VS Code: a live preview and a live editor on top of the [MyST Language Server](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode) extension.
-This extension depends on it, so VS Code installs it, and MyST Syntax with it.
+It depends on that extension, which depends on [MyST Syntax](https://github.com/choldgraf/myst-syntax) for highlighting, so once they are published one install gives all three.
+Until then, you build and load it from this repository.
 
 ## Build and run
 
@@ -26,10 +27,12 @@ code --install-extension packages/vscode/myst-author.vsix
 ```
 
 `npm run vscode` from the repo root does both, replacing any copy you installed before.
+Reload open VS Code windows afterwards.
+
 Until MyST Language Server and MyST Syntax are published, install their `.vsix` files first, since VS Code resolves extension dependencies from its gallery and won't activate this extension without them.
 `node packages/vscode/deps.mjs` builds both into `packages/vscode/deps/`; install each with `code --install-extension`.
-The same goes for `--extensionDevelopmentPath` above and for `npm run demo:vscode` below, whose fresh extensions folder has nothing in it.
-Reload open VS Code windows afterwards.
+`--extensionDevelopmentPath` needs them installed in your VS Code too; `npm run demo:vscode` installs them itself.
+
 `npm run demo:vscode` instead opens a fresh copy of the tour.
 It opens in a separate VS Code with its own settings and extensions, so your own setup doesn't change and extensions you've installed don't load.
 The copy goes in the same folder each time, so VS Code only asks once whether you trust it.
@@ -42,7 +45,7 @@ The tour opens Markdown files in the live editor.
   The language server [picks the project](https://chrisholdgraf.com/mystmd-lsp/configuration#finding-the-project), the nearest `myst.yml` at or above the workspace folder, and runs `myst start --headless` there, so open the project folder as the workspace.
   Without a `myst.yml` you get the language server's features but no preview.
   Set `MYST_BIN` if `myst` isn't on your `PATH`.
-- Without mystmd the language features still work for open files, and the live editor keeps its fast render; see [fewer features](https://chrisholdgraf.com/myst-author/get-started#run-it-locally).
+- Without mystmd the language features still work for open files, and the live editor keeps its fast render, as [Get started](https://chrisholdgraf.com/myst-author/get-started#run-it-locally) describes.
 - [mystmd-lsp's features](https://chrisholdgraf.com/mystmd-lsp/features) work in Markdown files and notebooks' Markdown cells.
   The page outline shows in the Outline view and the breadcrumbs, and `Cmd+Shift+O` searches it.
 - To open the preview, run **MyST: Open Preview to the Side** from the Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`).
@@ -57,8 +60,6 @@ The tour opens Markdown files in the live editor.
 
 ## Notes
 
-- Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension, which the MyST Language Server extension depends on, so VS Code installs it with them.
-  Nothing else is needed for highlighting.
 - mystmd's and the language server's output go to the MyST Language Server extension's output channel.
 - To use your own build of the language server, set its `mystmdLsp.serverPath` setting.
 

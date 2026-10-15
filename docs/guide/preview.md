@@ -46,12 +46,12 @@ The badge in the toolbar tells you which one you're looking at:
 | `fast preview` | mystmd hasn't built this file yet. This happens while mystmd starts, if it fails or stops, and for files it doesn't build, such as files left out of the `toc` in `myst.yml`. |
 | `building…` | Your changes are saved and mystmd is rebuilding. You only see it for files mystmd has built before; a file's first build shows `fast preview`. |
 | `built ✓` | You're looking at mystmd's build of exactly this text. |
-| `no mystmd` | mystmd isn't installed, so only the fast preview is available. |
+| `no mystmd` | mystmd isn't installed, so only the fast preview is available. In VS Code the MyST Language Server extension shows the warning instead, and the badge stays `fast preview`. |
 
 ## Code cells and `{eval}`
 
 The web editor and JupyterLab have mystmd run code cells and inline `{eval}` expressions as it builds, so the built preview shows their results and outputs.
-In VS Code this is off until you turn on the MyST Language Server extension's `mystmdLsp.execute` setting, since that extension starts mystmd.
+In VS Code it's off unless you turn on the MyST Language Server extension's `mystmdLsp.execute` setting, since that extension starts mystmd.
 Running code needs Jupyter.
 Without Jupyter, pages still build and notebooks keep their saved outputs.
 An `{eval}` that hasn't run shows mystmd's "Unexecuted inline expression" warning, as on a mystmd site.
@@ -60,7 +60,6 @@ mystmd runs a page again each time you save a change to its code.
 To turn execution off:
 
 - **Web editor:** `npm start -- --no-execute path/to/project`.
-- **VS Code:** leave `mystmdLsp.execute` off.
 - **JupyterLab:** set `MYST_AUTHOR_EXECUTE=0` before you start Jupyter.
 
 While you edit, results and outputs from the last build stay in place, and an edited code cell's outputs are dimmed until the next build.
