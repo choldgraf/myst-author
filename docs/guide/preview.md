@@ -21,7 +21,8 @@ The cursor lands on the text you clicked.
 - Blocks render like the preview pane, from mystmd's build or the fast preview, as [Fast and built previews](preview.md#fast-and-built-previews) describes.
 
 Live preview works in the web editor, JupyterLab, and VS Code.
-In JupyterLab it also covers notebooks' Markdown cells while you edit them; [JupyterLab](jupyterlab.md#what-works) says when the cells you aren't editing show the build.
+In JupyterLab it also covers notebooks' Markdown cells while you edit them.
+[JupyterLab](jupyterlab.md#what-works) says when the cells you aren't editing show the build.
 In JupyterLab, turn it on or off with **MyST: Live Preview** in the Command Palette.
 In VS Code, switch a Markdown file between the text editor and the live editor with **MyST: Toggle Live Editor**.
 
@@ -42,9 +43,9 @@ The badge in the toolbar tells you which one you're looking at:
 
 | Badge | Meaning |
 |---|---|
-| `fast preview · unsaved` | The file has unsaved changes, and mystmd only builds saved files. The web editor saves as you type; in JupyterLab and VS Code, save the file to build it. |
+| `fast preview · unsaved` | The file has unsaved changes, and mystmd only builds saved files. The web editor saves as you type. In JupyterLab and VS Code, save the file to build it. |
 | `fast preview` | mystmd hasn't built this file yet. This happens while mystmd starts, if it fails or stops, and for files it doesn't build, such as files left out of the `toc` in `myst.yml`. In VS Code a file mystmd doesn't build gets no preview at all. |
-| `building…` | Your changes are saved and mystmd is rebuilding. You only see it for files mystmd has built before; a file's first build shows `fast preview`. |
+| `building…` | Your changes are saved and mystmd is rebuilding. You only see it for files mystmd has built before. A file's first build shows `fast preview`. |
 | `built ✓` | You're looking at mystmd's build of exactly this text. |
 | `no mystmd` | mystmd isn't installed, so only the fast preview is available. In VS Code the MyST Language Server extension shows the warning instead, and the preview doesn't open. |
 
@@ -57,10 +58,8 @@ Without Jupyter, pages still build and notebooks keep their saved outputs.
 An `{eval}` that hasn't run shows mystmd's "Unexecuted inline expression" warning, as on a mystmd site.
 mystmd runs a page again each time you save a change to its code.
 
-To turn execution off:
-
-- **Web editor:** `npm start -- --no-execute path/to/project`.
-- **JupyterLab:** set `MYST_AUTHOR_EXECUTE=0` before you start Jupyter.
+To turn it off in the web editor, run `npm start -- --no-execute path/to/project`.
+In JupyterLab, set `MYST_AUTHOR_EXECUTE=0` before you start Jupyter.
 
 While you edit, results and outputs from the last build stay in place, and an edited code cell's outputs are dimmed until the next build.
 A new `{eval}` shows its code in grey until then.
@@ -73,9 +72,9 @@ HTML with scripts, such as a plotly plot, shows its plain text instead, because 
 
 mystmd's build output, including its warnings, shows up as `[myst]` lines:
 
-- **Web editor:** the terminal that runs `npm start`.
-- **JupyterLab:** the Jupyter server's log.
-- **VS Code:** the MyST Language Server extension's output channel.
+- The web editor prints them in the terminal that runs `npm start`.
+- JupyterLab puts them in the Jupyter server's log.
+- VS Code shows them in the MyST Language Server extension's output channel.
 
 ## Click to jump to the source
 

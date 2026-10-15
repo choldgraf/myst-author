@@ -71,7 +71,7 @@ test('withSourceLines: built blocks take the lines of the fast parse, or null if
   assert.equal(withSourceLines({ ...built, blocks: built.blocks.slice(1) }, fast), null);
 });
 
-test('withBuiltBlocks: unchanged spans keep the built nodes, at their new lines; edited and new ones get the fast parse', () => {
+test('withBuiltBlocks: unchanged spans keep the built nodes at their new lines, while edited and new ones get the fast parse', () => {
   const fast = parseMyst(md);
   const built = { ...fast, blocks: fast.blocks.map((b) => ({ ...b, node: { type: 'built' } })) };
   const text = md.replace('See {numref}', 'Now see {numref}').replace('```\n\n', '```\n\nNew.\n\n');

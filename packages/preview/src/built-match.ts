@@ -3,8 +3,8 @@ import { savedHashes, type BuiltPage } from 'mystmd-client/content-server';
 
 /**
  * Render from mystmd's build of `text`, which resolves embeds and references to other pages, if the editor still has that text.
- * Until the next build, a block you edit renders from the fast parse, like the preview pane; the others keep the build.
- * Hosts usually call `offerBuilt` instead; this is for content without a hash to check, such as a notebook cell.
+ * Until the next build, a block you edit renders from the fast parse, like the preview pane, and the others keep the build.
+ * Hosts usually call `offerBuilt` instead. This is for content without a hash to check, such as a notebook cell.
  */
 export const showBuilt = StateEffect.define<{ page: BuiltPage; text: string }>();
 

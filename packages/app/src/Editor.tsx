@@ -15,7 +15,7 @@ type Props = {
   extensions: Extension;
 };
 
-/** CodeMirror editor. Remount (via `key`) to load a different file; callbacks must be stable. */
+/** CodeMirror editor. Remount (via `key`) to load a different file. Callbacks must be stable. */
 export function Editor({ initial, onChange, onTopLine, viewRef, extensions }: Props) {
   const host = useRef<HTMLDivElement>(null);
   useEffect(() => {

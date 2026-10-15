@@ -15,7 +15,7 @@ import { builtWithLines, fromBuiltPage, hasTitle, parseMyst, withBuiltBlocks, ty
  * `badge` says which one it is.
  */
 export function usePreview(path: string | undefined, text: string, dirty: boolean, built: Built | null) {
-  // Parses on the main thread; deferring the text lets React keep typing responsive while it runs.
+  // Parses on the main thread. Deferring the text lets React keep typing responsive while it runs.
   const deferred = useDeferredValue(text);
   const [hashed, setHashed] = useState({ text: '', hashes: [] as string[] });
   useEffect(() => {
@@ -77,7 +77,7 @@ const rebaseHoverPages: Middleware = (useSWRNext) => (key, fetcher, config) =>
     return page;
   }), config);
 
-/** Render a parsed page block-by-block; each block carries its source line range for sync. */
+/** Render a parsed page block by block. Each block carries its source line range for sync. */
 export function Preview({ result, topLine, onLineClick, onFollowLink }: Props) {
   const article = useRef<HTMLElement>(null);
 

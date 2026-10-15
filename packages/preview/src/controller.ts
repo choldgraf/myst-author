@@ -6,7 +6,7 @@ export type ToPage =
   | ({ type: 'built' } & Built)
   | { type: 'scroll'; line: number };
 
-/** Messages from the preview page to the host; lines are 1-based. */
+/** Messages from the preview page to the host. Lines are 1-based. */
 export type FromPage =
   | { type: 'ready' }
   | { type: 'reveal'; line: number }
@@ -55,7 +55,7 @@ export class PreviewController {
       });
   }
 
-  /** Send the current file and its build; call when the host follows another file. */
+  /** Send the current file and its build. Call when the host follows another file. */
   sendFile() {
     this.sendText();
     this.sendBuilt();
@@ -106,7 +106,7 @@ type LinkHost = Pick<PreviewHost, 'open' | 'openExternal' | 'findLabel' | 'warn'
   fileForSlug(slug: string): string | undefined; // see `ContentServer`
 };
 
-/** Cmd/Ctrl-click on a preview link in file `here`; `line` is where an in-page `#id` target renders, if found. */
+/** Cmd/Ctrl-click on a preview link in file `here`. `line` is where an in-page `#id` target renders, if found. */
 export async function followLink(host: LinkHost, here: string, href: string, line?: number) {
   if (/^[a-z][\w+.-]*:/i.test(href)) return host.openExternal(href); // http:, mailto:, …
   const [path, id] = href.split('#');
@@ -116,7 +116,7 @@ export async function followLink(host: LinkHost, here: string, href: string, lin
     if (target) return host.open(target.path, target.line);
     if (line && !path) return host.open(here, line - 1);
   }
-  // Built pages link to other pages by slug (`/slug`, `/` for the index); the fast preview keeps the author's relative path.
+  // Built pages link to other pages by slug (`/slug`, `/` for the index), while the fast preview keeps the author's relative path.
   const target = !path ? here
     : path.startsWith('/') ? host.fileForSlug(path.slice(1))
     : decodeURIComponent(new URL(path, `http://x/${here}`).pathname.slice(1));

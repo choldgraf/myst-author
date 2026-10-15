@@ -43,12 +43,11 @@ The web editor, with the development server:
 npm run demo
 ```
 
-This is the normal way to run it locally.
 It runs on a temporary copy of the tour, because the editor saves as you type and would otherwise edit the repo.
 `npm start -- path/to/project` runs it on any project.
 It uses Vite, so changes to the app reload in the browser as you save them.
 
-The web editor, as a production build, which Binder and the JupyterLab extension run through [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py):
+The production build, which is what Binder and the JupyterLab extension run through [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py):
 
 ```bash
 npm run build

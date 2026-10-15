@@ -23,10 +23,11 @@ None of them are packaged yet, so you run each one from a clone of this reposito
 
 ## Project goals
 
-The goals of this repository are to explore how much work we'd need to do in order to enable an editor-like experience with MyST.
+The goals of this repository are to explore how much work we'd need to enable an editor-like experience with MyST.
 We want to identify the building blocks that could _enable_ this end result, and use this repository to build them out and see how complex it is.
 
-The building blocks live in separate repositories that are each useful on their own; see [How the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories).
+The building blocks live in separate repositories that are each useful on their own.
+[How the repositories fit together](https://chrisholdgraf.com/myst-author/develop/repositories) explains how they relate.
 
 ## Try it
 
@@ -38,7 +39,7 @@ To run it on your computer, you need Node 24 or newer.
 ```bash
 git clone https://github.com/choldgraf/myst-author && cd myst-author
 npm install
-npm run demo                     # a copy of the tour; or `npm start -- path/to/your/project`
+npm run demo                     # a copy of the tour, or `npm start -- path/to/your/project`
 ```
 
 See [Get started](https://chrisholdgraf.com/myst-author/get-started) for more options, and for what works without mystmd.

@@ -10,7 +10,7 @@ import { findLabel, type Request } from '@myst-author/preview/controller';
  */
 export type Project = { root: string; request: Request; server: string; url: string; assets: string; content: ContentServer };
 
-/** The project a document is a page of; undefined when it isn't one (see `extension.ts`). */
+/** The project a document is a page of, or undefined when it isn't one (see `extension.ts`). */
 export type ProjectFor = (uri: vscode.Uri) => Promise<Project | undefined>;
 
 /** Project-relative path with `/` separators, matching the content server's page `location`. */

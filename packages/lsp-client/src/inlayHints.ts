@@ -28,7 +28,7 @@ async function refresh(view: EditorView) {
   const doc = view.state.doc;
   const range = { start: { line: 0, character: 0 }, end: plugin.toPosition(doc.length, doc) };
   const result = await plugin.client.request<unknown, InlayHint[] | null>('textDocument/inlayHint', { textDocument: { uri: plugin.uri }, range });
-  if (view.state.doc !== doc || !view.dom.isConnected) return; // stale; the next diagnostics push refreshes again
+  if (view.state.doc !== doc || !view.dom.isConnected) return; // Stale. The next diagnostics push refreshes again.
   const widgets = (result ?? []).map((h) => {
     const label = typeof h.label === 'string' ? h.label : h.label.map((p) => p.value).join('');
     return Decoration.widget({ widget: new Hint(label), side: 1 }).range(plugin.fromPosition(h.position, doc));

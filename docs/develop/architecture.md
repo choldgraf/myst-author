@@ -9,7 +9,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 ## Packages
 
-The language server (mystmd-lsp) and the mystmd helpers (mystmd-client) live in their own repositories; see [What each one owns](repositories.md#what-each-one-owns).
+The language server (mystmd-lsp) and the mystmd helpers (mystmd-client) live in their own repositories, as [What each one owns](repositories.md#what-each-one-owns) describes.
 The packages here read built pages from mystmd's *content server*, the local HTTP server that `myst start --headless` runs.
 
 `packages/preview` (`@myst-author/preview`)
@@ -23,7 +23,7 @@ The packages here read built pages from mystmd's *content server*, the local HTT
   `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block with the cursor.
   Its `pageLook` extension makes the editor read like the page, as in the web app and the VS Code live editor.
   `@myst-author/preview/build` compiles the preview's CSS for hosts that bundle it.
-  Each extension implements the preview's `PreviewHost` interface to open files and look up labels.
+  The VS Code and JupyterLab hosts implement the preview's `PreviewHost` interface to open files and look up labels.
 
 `packages/lsp-client` (`@myst-author/lsp-client`)
 : Connects the hosts to the language server.
@@ -83,8 +83,9 @@ flowchart TB
    If the connection drops, the browser reconnects and re-opens its files.
    mystmd-lsp's [How it works](https://chrisholdgraf.com/mystmd-lsp/how-it-works) explains how the server uses mystmd.
 
-The VS Code extension does the same without the host server: the language server tells it each file's project and where that project's mystmd is, and it fetches built pages from there directly.
-The web app and JupyterLab hosts run the server with `--root`, so they are one project each.
+The VS Code extension does the same without the host server.
+The language server tells it which project each file belongs to and where that project's mystmd is, and it fetches built pages from there directly.
+The web app and JupyterLab hosts start the language server with `--root`, so each of them is one project.
 
 The JupyterLab extension uses the host server, which jupyter-server-proxy runs inside Jupyter.
 Lab's editors connect to its `/lsp` bridge, and live preview and the preview panel fetch built pages through its `/myst` proxy.
@@ -92,26 +93,30 @@ Lab reads and saves the files itself, so it doesn't use `/api/files`.
 
 ## Adding a host
 
-Everything about MyST lives in the packages; a host provides only what depends on where it runs:
+Everything about MyST lives in the packages.
+A host does only what depends on where it runs:
 
-- **The document.** The editor's text, and edits to and from wherever the host keeps it (a file on disk, Lab's document model, VS Code's `TextDocument`).
-- **A language server.** Start one with `spawnLsp`, relay its messages to `connectLsp`, and give the client a project root URI.
+- It holds the document: the editor's text, and edits to and from wherever it keeps that text (a file on disk, Lab's document model, or VS Code's `TextDocument`).
+- It runs a language server.
+  It starts one with `spawnLsp`, relays its messages to `connectLsp`, and gives the client a project root URI.
   `connectLsp` takes a websocket URL, or a `messageTransport` over any message channel.
-- **Built pages.** Fetch them with `contentServer`, and pass each build of the open file to live preview with `offerBuilt`, which shows it if it matches the editor text.
-  For a notebook, split the build with `cellPages`, which leaves out cells changed since the build, and pass each remaining page to its cell's editor with `showBuilt`.
-- **Opening a file at a line, and finding a label.** The preview pane asks through `PreviewHost`, and live preview follows links through `followLink`.
+- It fetches built pages with `contentServer`, and passes each build of the open file to live preview with `offerBuilt`, which shows it if it matches the editor text.
+  For a notebook, it splits the build with `cellPages`, which leaves out cells changed since the build, and passes each remaining page to its cell's editor with `showBuilt`.
+- It opens a file at a line, and finds a label.
+  The preview pane asks for these through `PreviewHost`, and live preview follows links through `followLink`.
   The language client opens files through `workspace.displayFile`.
-- **Its own chrome.** Commands, toggles, and prompts in the host's own UI.
+- It adds its own chrome: commands, toggles, and prompts in the host's own UI.
 
 ## Design choices
 
-- **Each feature goes in the lowest layer that can hold it.**
-  See [Where a feature goes](repositories.md#where-a-feature-goes).
-  The web app is the simplest host, not a full IDE: features that VS Code and JupyterLab already have, such as git or file management, are left to them.
-- **The preview uses mystmd's own code.** The fast preview uses mystmd's parser and transforms.
+- Each feature goes in the lowest layer that can hold it, as [Where a feature goes](repositories.md#where-a-feature-goes) describes.
+  The web app is the simplest host, not a full IDE.
+  Features that VS Code and JupyterLab already have, such as git or file management, are left to them.
+- The preview uses mystmd's own code.
+  The fast preview uses mystmd's parser and transforms, through mystmd-client, as the language server does, so the running system has no second parser.
   The built preview is mystmd's output.
-  The app and the language server both parse with mystmd's own parser through mystmd-client, so the running system has no second parser.
   [myst-parser-unified](repositories.md#what-each-one-owns) is a separate experiment, not a dependency.
-- **Markdown is the source of truth.** Changes go one way, from the Markdown to the preview.
-- **Stock mystmd.** Everything works with released mystmd.
+- Markdown is the source of truth.
+  Changes go one way, from the Markdown to the preview.
+- Everything works with released mystmd.
   Changes that would make it better are written up as [upstream proposals](upstream.md).

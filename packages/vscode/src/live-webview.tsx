@@ -11,7 +11,7 @@ import type { Change, FromLive, Pos, ToLive } from './live.ts';
 
 declare function acquireVsCodeApi(): { postMessage(message: FromLive): void };
 const vscode = acquireVsCodeApi();
-// VS Code adds theme-colored defaults for code, kbd, and blockquote; live blocks use only myst-theme's styles.
+// VS Code adds theme-colored defaults for code, kbd, and blockquote. Live blocks use only myst-theme's styles.
 document.getElementById('_defaultStyles')?.remove();
 
 const toPos = (doc: Text, offset: number): Pos => {

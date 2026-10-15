@@ -27,7 +27,7 @@ export function App() {
   const [files, setFiles] = useState<string[]>([]);
   const [doc, setDoc] = useState<Doc | null>(null); // the file as loaded (editor's initial content)
   const [text, setText] = useState(''); // live editor content
-  const [status, setStatus] = useState(''); // errors and warnings; the preview badge shows the save state
+  const [status, setStatus] = useState(''); // errors and warnings (the preview badge shows the save state)
   const [conflict, setConflict] = useState(false); // the file changed on disk while it had unsaved edits: autosave waits for a choice
   const [showFiles, setShowFiles] = useState(true);
   // Source: plain Markdown. Live: rendered in the editor. Preview: plain Markdown beside the rendered page.
@@ -118,7 +118,7 @@ export function App() {
   }, [doc, text, conflict]);
 
   // Last-chance save when the tab closes.
-  // No conflict check, since hashing is async and the tab is closing; it only overwrites a change made in the last half second.
+  // No conflict check, since hashing is async and the tab is closing. It only overwrites a change made in the last half second.
   useEffect(() => {
     const flush = () => { if (doc && !conflict && text !== saved.current) writeFile(doc.path, text, { keepalive: true }); };
     window.addEventListener('beforeunload', flush);

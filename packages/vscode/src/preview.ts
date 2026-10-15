@@ -18,7 +18,7 @@ export class MystPreview {
     context.subscriptions.push(
       new vscode.Disposable(() => this.preview?.dispose()),
       vscode.window.onDidChangeActiveTextEditor((e) => {
-        // Focusing the preview itself leaves no active editor; keep following the last markdown one.
+        // Focusing the preview itself leaves no active editor, so keep following the last Markdown one.
         if (e && isMarkdown(e.document) && e !== this.editor) this.follow(e);
       }),
       vscode.workspace.onDidChangeTextDocument((e) => e.document === this.editor?.document && this.preview?.sendText()),
@@ -52,7 +52,7 @@ export class MystPreview {
     this.retitle();
   }
 
-  /** Follow `editor` if its file is a page of a project; a file that isn't leaves the preview on the last one. */
+  /** Follow `editor` if its file is a page of a project. A file that isn't leaves the preview on the last one. */
   private async follow(editor: vscode.TextEditor) {
     this.following = editor;
     const project = await this.projectFor(editor.document.uri);
@@ -72,7 +72,7 @@ export class MystPreview {
       post: (m) => this.panel?.webview.postMessage(m),
       open: (path, line) => this.show(vscode.Uri.file(resolve(project.root, path)), line),
     }, Promise.resolve(project.content));
-    // The page is built for one project's assets, so reload it; it asks for the file once ready.
+    // The page is built for one project's assets, so reload it. It asks for the file once ready.
     if (this.panel) this.panel.webview.html = this.html(this.panel.webview);
   }
 

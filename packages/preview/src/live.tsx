@@ -22,7 +22,7 @@ type FollowLink = (href: string, line?: number) => void;
 // What Cmd/Ctrl-click on a rendered link does, when the host passes `onFollowLink` (see `livePreview`).
 const linkFollower = Facet.define<FollowLink, FollowLink | undefined>({ combine: (fs) => fs[0] });
 
-// Node positions and keys change on every parse; leave them out so unchanged blocks keep their DOM.
+// Node positions and keys change on every parse, so leave them out, and unchanged blocks keep their DOM.
 const identity = (blocks: Block[]) => JSON.stringify(blocks.map((b) => b.node), (k, v) => (k === 'position' || k === 'key' ? undefined : v));
 
 /** A span rendered with the same component as the preview pane. */
@@ -38,7 +38,7 @@ class Rendered extends WidgetType {
   toDOM(view: EditorView) {
     const dom = document.createElement('div');
     dom.className = this.warn ? 'cm-live cm-live-warn' : 'cm-live';
-    // The frontmatter span has no blocks, and renders as the page title; other spans leave the title out.
+    // The frontmatter span has no blocks, and renders as the page title. Other spans leave the title out.
     const { title, ...rest } = this.result.frontmatter;
     const page = { ...this.result, blocks: this.span.blocks, frontmatter: this.span.blocks.length ? rest : this.result.frontmatter };
     const sheet = view.state.facet(shadowStyles);
@@ -85,7 +85,7 @@ function sourceAt(state: EditorState, { from, to }: Located, e: MouseEvent, shad
   const range = caret ? null : document.caretRangeFromPoint?.(e.clientX, e.clientY); // Safari, which can't see into a shadow root
   const node = caret?.offsetNode ?? range?.startContainer;
   if (node?.nodeType !== Node.TEXT_NODE || !node.textContent) return from;
-  // The renderer curls quotes; straighten them (same length, so offsets hold) to match the source.
+  // The renderer curls quotes. Straighten them (same length, so offsets hold) to match the source.
   const i = state.doc.sliceString(from, to).indexOf(node.textContent.replace(/[‘’]/g, "'").replace(/[“”]/g, '"'));
   return i < 0 ? from : from + i + (caret?.offset ?? range?.startOffset ?? 0);
 }
@@ -182,7 +182,7 @@ const theme = EditorView.baseTheme({
  * Like `Preview`, blocks need myst-theme's and KaTeX's CSS. By default that's the page's CSS.
  * A host whose own CSS clashes with it (JupyterLab) passes the CSS as `css`: blocks then render in shadow roots that share it.
  * KaTeX's fonts still need its CSS on the page, because shadow roots ignore `@font-face`. The host sets the editor's font.
- * `onFollowLink` handles Cmd/Ctrl-click on a rendered link, like `Preview`'s; a plain click shows the source.
+ * `onFollowLink` handles Cmd/Ctrl-click on a rendered link, like `Preview`'s. A plain click shows the source.
  */
 export function livePreview({ css, onFollowLink }: { css?: string; onFollowLink?: FollowLink } = {}): Extension {
   const base = [liveField, arrows, theme, onFollowLink ? linkFollower.of(onFollowLink) : []];
@@ -213,7 +213,7 @@ export function bodyStart(text: string) {
 /**
  * Live preview that reads like the page: a centred column, a proportional font (code stays monospace), and no gutters.
  * Source text and headings use the rendered page's sizes, so showing a block's source doesn't reflow the page.
- * The web app and the VS Code live editor use it; JupyterLab keeps Lab's editor look.
+ * The web app and the VS Code live editor use it. JupyterLab keeps Lab's editor look.
  */
 export const pageLook: Extension = [
   EditorView.theme({
@@ -222,7 +222,7 @@ export const pageLook: Extension = [
     '.cm-gutters': { display: 'none' },
     '.cm-activeLine': { backgroundColor: 'transparent' }, // otherwise the blank line under the title, where the cursor starts, shows as a band
   }),
-  // `prose`'s heading sizes, hard-coded to match myst-theme; read its CSS if they drift.
+  // `prose`'s heading sizes, hard-coded to match myst-theme. Read its CSS if they drift.
   syntaxHighlighting(HighlightStyle.define([
     { tag: tags.monospace, fontFamily: 'monospace' },
     { tag: tags.labelName, fontFamily: 'monospace' }, // a code fence's info string, such as `{figure} path`, like the code below it

@@ -11,7 +11,7 @@ This comes from [mystmd-lsp](https://chrisholdgraf.com/mystmd-lsp/features), who
 ## Syntax highlighting
 
 The web editor and VS Code highlight MyST syntax with [myst-syntax](https://github.com/choldgraf/myst-syntax), which lists what it covers.
-In JupyterLab, install jupyterlab-myst-syntax from the same repository; see [JupyterLab](jupyterlab.md).
+In JupyterLab, install jupyterlab-myst-syntax from the same repository, as [JupyterLab](jupyterlab.md) describes.
 
 ## Known limits
 

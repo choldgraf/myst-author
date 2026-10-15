@@ -22,7 +22,7 @@ It doesn't install it.
 To install it (in VS Code, Codespaces, or code-server), package it and install the `.vsix`:
 
 ```sh
-npm run package -w packages/vscode   # from the repo root; writes packages/vscode/myst-author.vsix
+npm run package -w packages/vscode   # from the repo root, writes packages/vscode/myst-author.vsix
 code --install-extension packages/vscode/myst-author.vsix
 ```
 
@@ -30,11 +30,13 @@ code --install-extension packages/vscode/myst-author.vsix
 Reload open VS Code windows afterwards.
 
 Until MyST Language Server and MyST Syntax are published, install their `.vsix` files first, since VS Code resolves extension dependencies from its gallery and won't activate this extension without them.
-`node packages/vscode/deps.mjs` builds both into `packages/vscode/deps/`; install each with `code --install-extension`.
-`--extensionDevelopmentPath` needs them installed in your VS Code too; `npm run demo:vscode` installs them itself.
+`node packages/vscode/deps.mjs` builds both into `packages/vscode/deps/`.
+Install each with `code --install-extension`.
+`--extensionDevelopmentPath` needs them installed in your VS Code too.
 
 `npm run demo:vscode` instead opens a fresh copy of the tour.
 It opens in a separate VS Code with its own settings and extensions, so your own setup doesn't change and extensions you've installed don't load.
+It installs the extensions this one depends on itself.
 The copy goes in the same folder each time, so VS Code only asks once whether you trust it.
 Choose **Trust**, since VS Code doesn't run the extension in Restricted Mode.
 The tour opens Markdown files in the live editor.
@@ -42,8 +44,9 @@ The tour opens Markdown files in the live editor.
 ## What works
 
 - The extension starts when a workspace folder contains a `myst.yml`.
-  The language server [picks each file's project](https://chrisholdgraf.com/mystmd-lsp/configuration#finding-the-project), the nearest `myst.yml` at or above the file within its workspace folder, and runs `myst start --headless` there.
-  The preview and the live editor show a file through its project, so a file that isn't a page of one gets no preview.
+  The language server [finds each file's project](https://chrisholdgraf.com/mystmd-lsp/configuration#finding-the-project) and runs `myst start --headless` there, so several projects can be open in one window.
+  A file outside every project, or one its project doesn't build, isn't a page of any project.
+  It gets no preview, and the live editor opens it without language features.
   The MyST Language Server extension's status bar item says which project a file belongs to.
   Set `MYST_BIN` if `myst` isn't on your `PATH`.
 - Without mystmd the text editor keeps the language server's features for open files, but the preview and the live editor's language features need mystmd.

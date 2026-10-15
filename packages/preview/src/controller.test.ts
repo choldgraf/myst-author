@@ -35,7 +35,7 @@ test('sends the build on start, on rebuilds, and on file changes until disposed'
   preview.dispose();
   assert.ok(stopped);
 
-  // A failed mystmd is reported and its error posted; a missing one is only posted.
+  // A failed mystmd is reported and its error posted. A missing one is only posted.
   calls.length = 0;
   new PreviewController(host(calls), Promise.reject(new Error('exited')));
   new PreviewController(host(calls), Promise.reject(new Error(mystmdMissing)));

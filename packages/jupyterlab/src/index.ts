@@ -63,7 +63,7 @@ function showCell(cell: Cell) {
     shadow.adoptedStyleSheets = [cellSheet];
     cellRoots.set(node, (root = createRoot(shadow.appendChild(document.createElement('div')))));
   }
-  // Preview ignores a plain click on a link, so Lab stays open. Cmd/Ctrl-click opens external links; other pages' links do nothing.
+  // Preview ignores a plain click on a link, so Lab stays open. Cmd/Ctrl-click opens external links, and other pages' links do nothing.
   const onFollowLink = (href: string) => /^[a-z][\w+.-]*:/i.test(href) && openExternal(href);
   root.render(result ? createElement(Preview, { result, onFollowLink }) : createElement('slot'));
 }
@@ -96,7 +96,7 @@ async function show(docs: IDocumentManager, path: string, line: number) {
 
 const plugin: JupyterFrontEndPlugin<void> = {
   id: '@myst-author/jupyterlab:plugin',
-  description: 'MyST reference intelligence and live preview.',
+  description: 'Cross-reference help and live preview for MyST.',
   autoStart: true,
   requires: [IEditorTracker, IDocumentManager, INotebookTracker],
   optional: [ICommandPalette],
@@ -190,7 +190,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
         attachCells(nb);
         // Changing a cell's type replaces its widget, so this also catches cells that become Markdown.
         nb.content.model?.cells.changed.connect(() => attachCells(nb));
-        // Cell widgets can appear after the notebook is ready; a cell is always active before it's edited.
+        // Cell widgets can appear after the notebook is ready, and a cell is always active before it's edited.
         nb.content.activeCellChanged.connect(() => attachCells(nb));
       });
     notebooks.forEach(watch);

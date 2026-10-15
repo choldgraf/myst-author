@@ -5,7 +5,7 @@ import { inlayHints } from './inlayHints.ts';
 
 /**
  * A transport over any message channel, such as a webview's postMessage.
- * `post` sends a message; `listen` registers the one function that receives them.
+ * `post` sends a message, and `listen` registers the one function that receives them.
  */
 export function messageTransport(post: (message: string) => void, listen: (receive: (message: string) => void) => void): Transport {
   let handlers: ((message: string) => void)[] = [];
@@ -36,7 +36,7 @@ function keepConnected(client: LSPClient, url: string, delay = 1000) {
   client.connect(socketTransport(ws));
   client.initializing.then(() => (delay = 1000), () => ws.close());
   ws.addEventListener('close', () => {
-    client.disconnect(); // a fresh `initializing` promise; requests made meanwhile wait for the next connection
+    client.disconnect(); // a fresh `initializing` promise, so requests made meanwhile wait for the next connection
     setTimeout(() => keepConnected(client, url, Math.min(delay * 2, 30000)), delay);
   });
 }
@@ -54,7 +54,7 @@ const definitionClick = EditorView.domEventHandlers({
 });
 
 // Completion icons for MyST. lsp-client turns each LSP kind into a coarse CodeMirror type, and drops some (Reference, File, Operator, Snippet).
-// Types are shared, so figures and citations get the same icon; an lsp-client option to map kinds would separate them.
+// Types are shared, so figures and citations get the same icon. An lsp-client option to map kinds would separate them.
 const icon = (content: string, fontSize = '90%') => ({ '&:after': { content: `'${content}'`, fontSize } });
 const completionIcons = EditorView.theme({
   '.cm-completionIcon:not([class*="cm-completionIcon-"])': icon('#'), // labels, equations, code, files

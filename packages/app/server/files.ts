@@ -16,7 +16,7 @@ export async function listMarkdown(root: string, dir = ''): Promise<string[]> {
   return out.sort();
 }
 
-/** Absolute path for a project-relative .md path; throws if it escapes the project. */
+/** Absolute path for a project-relative .md path. Throws if it escapes the project. */
 export function resolveInside(root: string, rel: string): string {
   const base = path.resolve(root);
   const abs = path.resolve(base, rel);
@@ -26,7 +26,7 @@ export function resolveInside(root: string, rel: string): string {
 
 /**
  * Write `text` to `abs`, unless the file changed on disk (by an LLM, git, another editor) since the browser read it.
- * `base` is the hash of what the browser last read or saved; without it, always writes. Returns whether it wrote.
+ * `base` is the hash of what the browser last read or saved. Without it, always writes. Returns whether it wrote.
  */
 export async function writeUnlessChanged(abs: string, text: string, base?: string) {
   if (base && base !== (await sha256(await readFile(abs, 'utf8')))) return false;

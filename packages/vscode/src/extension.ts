@@ -6,7 +6,7 @@ import { MystPreview } from './preview.ts';
 import { webviewUrl, type Project } from './project.ts';
 
 export function activate(context: vscode.ExtensionContext) {
-  // Activated once; if that fails, say so once and no document has a project.
+  // Activated once. If that fails, say so once, and no document has a project.
   const lsp = Promise.resolve(vscode.extensions.getExtension<{ client: LanguageClient; server: string }>('myst-author.mystmd-lsp-vscode')!.activate())
     .catch((e: Error) => void vscode.window.showErrorMessage(`MyST Author: ${e.message}`));
   const projects = new Map<string, PromiseLike<Project>>();

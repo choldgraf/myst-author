@@ -9,12 +9,14 @@ Install it from source, as below, or try it on [Binder](https://chrisholdgraf.co
 The extension is a frontend only.
 It talks to the web app's host server (`packages/app/server`), which runs mystmd and the language server for one project.
 [jupyter-server-proxy](https://jupyter-server-proxy.readthedocs.io) runs that server at `/myst-author/` under the Jupyter server's URL.
-See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) for the setup; `MYST_AUTHOR_PROJECT` sets the project folder.
+See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) for the setup.
+`MYST_AUTHOR_PROJECT` sets the project folder.
 
 ## Try it
 
 You need Node 24 and [uv](https://docs.astral.sh/uv/).
-Building the extension also needs a `python` with JupyterLab installed, to read which packages Lab shares; the `uvx` environment below is only for running Lab.
+Building the extension also needs a `python` with JupyterLab installed, to read which packages Lab shares.
+The `uvx` environment below is only for running Lab.
 From the repo root:
 
 ```sh
@@ -59,7 +61,7 @@ Rebuild and reload the page after changes.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.
   It follows the current Markdown editor, but not notebooks.
   It works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
-- Files mystmd doesn't build, such as ones outside the server's project folder, get the fast preview and no reference help.
+- Files mystmd doesn't build, such as ones outside the project folder, get the fast preview and no reference help.
 - The language features need jupyter-lsp, which ships with JupyterLab.
   Without it, the extension logs a warning in the browser console, and only the preview works.
 

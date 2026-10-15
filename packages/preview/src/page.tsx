@@ -6,7 +6,7 @@ import { Preview, usePreview } from './Preview.tsx';
 
 /**
  * A page that previews one file for a host editor (a VS Code webview, a JupyterLab panel), driven by a `PreviewController`.
- * `postMessage` sends the host a message; `listen` registers the one function that receives the host's.
+ * `postMessage` sends the host a message, and `listen` registers the one function that receives the host's.
  */
 type Host = { postMessage(message: FromPage): void; listen(receive: (message: ToPage) => void): void };
 

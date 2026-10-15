@@ -49,7 +49,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     webview.html = webviewHtml(webview, dist, 'live', project?.assets);
 
     // Edits from the webview, one at a time, so each one's positions match the document.
-    // An edit made elsewhere while one of these is in flight can put the two out of sync; send document versions if that bites.
+    // An edit made elsewhere while one of these is in flight can put the two out of sync. Send document versions if that bites.
     let queue = Promise.resolve();
     let applying = 0;
     const apply = (changes: Change[]) =>
@@ -110,7 +110,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     vscode.window.showTextDocument(uri, { selection });
   }
 
-  /** Follow a rendered link as the preview does. A target in this file is selected in the webview; others open in a text editor, like `definition`. */
+  /** Follow a rendered link as the preview does. A target in this file is selected in the webview. Others open in a text editor, like `definition`. */
   private follow(document: vscode.TextDocument, p: Project, { href, line }: { href: string; line?: number }, post: (m: ToLive) => void) {
     return followLink({
       ...linkHost(p),

@@ -8,7 +8,7 @@ Run MyST Author on your computer, or open it in your browser with Codespaces or 
 ## Run it locally
 
 You need Node 24 or newer.
-[mystmd](https://mystmd.org/guide/installing) (which provides the `myst` command) is recommended.
+[mystmd](https://mystmd.org/guide/installing), which provides the `myst` command, is recommended.
 
 ```bash
 git clone https://github.com/choldgraf/myst-author
@@ -21,9 +21,10 @@ npm run demo
 
 The editor opens at <http://127.0.0.1:4321>.
 Set `PORT` to use another port, for example `PORT=8000 npm run demo`.
-On macOS it also opens a browser tab; set `NO_OPEN=1` to stop that.
+On macOS it also opens a browser tab, which `NO_OPEN=1` stops.
 If `myst` isn't on your `PATH`, set `MYST_BIN` to its location.
-Code cells and inline `{eval}` expressions run as mystmd builds; see [Code cells and `{eval}`](guide/preview.md#code-cells-and-eval).
+Code cells and inline `{eval}` expressions run as mystmd builds.
+[Code cells and `{eval}`](guide/preview.md#code-cells-and-eval) says how to turn that off.
 
 To run it from any folder as `myst-author`, run `npm link -w packages/app` once in the clone.
 Then run `myst-author` in a project folder, or `myst-author path/to/project`.
@@ -48,7 +49,8 @@ To point it at another folder, stop it with {kbd}`Ctrl+C` in the terminal and ru
 
 Binder builds the repository and opens the tour in JupyterLab, with the [JupyterLab extension](guide/jupyterlab.md).
 The Launcher also has **VS Code**, with the [VS Code extension](guide/vscode.md), and **MyST Author**, the web editor.
-In JupyterLab and the web editor, only the tour project gets the whole-project features; in VS Code, so does any folder with a `myst.yml`, such as `docs/`.
+The web editor and JupyterLab only know the tour project, so other files open with the fast preview and no reference help.
+In VS Code, every page of a MyST project gets reference help and the built preview, so the pages of `docs/` do too.
 The first launch can take a few minutes.
 Changes are lost when the Binder session ends.
 

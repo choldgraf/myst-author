@@ -78,7 +78,7 @@ function toBlocks(tree: GenericParent): Block[] {
 /**
  * A built page's blocks, with the source lines of the fast parse's blocks.
  * Built pages lose the lines of directive output, and embedded content keeps the lines of the page it came from.
- * Both parses find the same top-level blocks, so they pair up in order; when the counts differ, returns null.
+ * Both parses find the same top-level blocks, so they pair up in order. When the counts differ, returns null.
  */
 export function withSourceLines(built: ParseResult, fast: ParseResult): ParseResult | null {
   if (built.blocks.length !== fast.blocks.length) return null;
@@ -157,7 +157,7 @@ export function withBuiltBlocks(fast: ParseResult, text: string, built: ParseRes
   return { ...fast, references: built.references, blocks: fast.blocks.map((b) => ({ ...b, node: nodes.get(b) ?? stale(b.node) })) };
 }
 
-// Built pages drop positions on directive output (admonition, figure, tabs…); their content keeps them.
+// Built pages drop positions on directive output (admonition, figure, tabs…), but their content keeps them.
 // Included content carries the other file's lines, so don't look inside it.
 function firstPosition(node: GenericNode) {
   let pos: GenericNode['position'];

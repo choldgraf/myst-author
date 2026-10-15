@@ -35,7 +35,7 @@ myst?.ready
     mystDown = err.message;
     if (err.message === mystmdMissing) console.log(`${mystmdMissing}; built preview disabled`);
   });
-const lsp = lspBridge(root, myst?.url); // the LSP loads the project once myst is up; until then it knows open documents
+const lsp = lspBridge(root, myst?.url); // The language server loads the project once myst is up. Until then it only knows open documents.
 for (const sig of ['SIGINT', 'SIGTERM']) process.on(sig, () => process.exit()); // runs the 'exit' hook that stops myst
 const proxy = createProxyServer();
 proxy.on('error', (err, _req, res) => {
@@ -92,7 +92,7 @@ server.on('upgrade', (req, socket, head) => {
   if (req.url === '/lsp') return lsp(req, socket, head);
 });
 
-// Production serves the `npm run build` output; dev mode compiles on the fly with hot reload.
+// Production serves the `npm run build` output. Dev mode compiles on the fly with hot reload.
 const app = process.env.NODE_ENV === 'production'
   ? sirv(path.resolve(import.meta.dirname, '../dist'), { single: true })
   : (await import('vite').then(({ createServer }) => createServer({

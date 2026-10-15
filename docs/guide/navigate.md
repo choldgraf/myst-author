@@ -19,19 +19,22 @@ To open the outline:
 - In the web editor, press {kbd}`Cmd+P` and type `#`.
   Keep typing to filter, for example `#figure`, and press {kbd}`Enter` to jump there.
 - In VS Code, open the **Outline** view in the Explorer sidebar.
-  VS Code may also show its own Markdown outline there; the MyST one is the one with figures and equations.
+  VS Code may also show its own Markdown outline there.
+  The MyST one is the one with figures and equations.
   The breadcrumbs above the editor show the section you're in, and {kbd}`Cmd+Shift+O` searches the outline.
 
 ## Find a label anywhere
 
-You can search every label in the project by its name or by its text; in VS Code, that's every project in the window.
+You can search every label in the project by its name or by its text.
+In VS Code, that's every project open in the window.
 For example, `sea` finds a figure labeled `fig-slr` if its caption mentions sea level.
 
 - In the web editor, press {kbd}`Cmd+P` and type `@` followed by your search.
   This matches how you write a reference to a label in MyST, `@label`.
 - In VS Code, press {kbd}`Cmd+T` (Go to Symbol in Workspace).
 
-Reference completion searches the same way, within the file's own project: after `` {ref}` ``, type words from a heading or caption instead of the label.
+Reference completion searches the same way, within the file's own project.
+After `` {ref}` ``, type words from a heading or caption instead of the label.
 
 ## Things to try
 

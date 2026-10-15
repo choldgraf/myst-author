@@ -1,7 +1,7 @@
 {
   "name": "@myst-author/jupyterlab",
   "version": "0.0.1",
-  "description": "MyST reference intelligence and live preview in JupyterLab.",
+  "description": "Cross-reference help and live preview for MyST in JupyterLab.",
   "private": true,
   "main": "dist/index.js",
   "style": "style/index.css",
