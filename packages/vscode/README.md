@@ -1,6 +1,7 @@
 # MyST Author for VS Code
 
-MyST in VS Code: language features from the [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) language server, MyST syntax highlighting, a live preview, and a live editor.
+MyST in VS Code: a live preview and a live editor on top of the [MyST Language Server](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode) extension.
+This extension depends on it, so VS Code installs it, and MyST Syntax with it.
 
 ## Build and run
 
@@ -25,7 +26,8 @@ code --install-extension packages/vscode/myst-author.vsix
 ```
 
 `npm run vscode` from the repo root does both, replacing any copy you installed before.
-Until MyST Syntax is on the Marketplace, build and install its `.vsix` from the [myst-syntax](https://github.com/choldgraf/myst-syntax) repo first (`npm run package -w packages/vscode` there), since VS Code resolves extension dependencies from the Marketplace and won't activate this extension without it.
+Until MyST Language Server and MyST Syntax are published, install their `.vsix` files first, since VS Code resolves extension dependencies from its gallery (the Marketplace, or Open VSX for code-server) and won't activate this extension without them.
+`node packages/vscode/deps.mjs` builds both into `packages/vscode/deps/`; install each with `code --install-extension`.
 The same goes for `--extensionDevelopmentPath` above and for `npm run demo:vscode` below, whose fresh extensions folder has nothing in it.
 Reload open VS Code windows afterwards.
 `npm run demo:vscode` instead opens a fresh copy of the tour.
@@ -36,12 +38,11 @@ The tour opens Markdown files in the live editor.
 
 ## What works
 
-- The extension starts when you open a Markdown file or notebook in a MyST project.
-  The project is the folder of the nearest `myst.yml` above that file, searching no higher than the open workspace folder.
-  It runs `myst start --headless` there, and uses that project for the rest of the window's session.
-  Files outside a MyST project only get MyST syntax highlighting.
+- The extension starts when you open a Markdown file or notebook.
+  The language server [picks the project](https://chrisholdgraf.com/mystmd-lsp/configuration#finding-the-project), the nearest `myst.yml` at or above the workspace folder, and runs `myst start --headless` there, so open the project folder as the workspace.
+  Without a `myst.yml` you get the language server's features but no preview.
   Set `MYST_BIN` if `myst` isn't on your `PATH`.
-- Without mystmd the extension still runs, with [fewer features](https://chrisholdgraf.com/myst-author/get-started#run-it-locally).
+- Without mystmd the language features still work for open files, and the live editor keeps its fast render; see [fewer features](https://chrisholdgraf.com/myst-author/get-started#run-it-locally).
 - [mystmd-lsp's features](https://chrisholdgraf.com/mystmd-lsp/features) work in Markdown files and notebooks' Markdown cells.
   The page outline shows in the Outline view and the breadcrumbs, and `Cmd+Shift+O` searches it.
 - To open the preview, run **MyST: Open Preview to the Side** from the Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`).
@@ -56,12 +57,12 @@ The tour opens Markdown files in the live editor.
 
 ## Notes
 
-- Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension, which this extension depends on, so VS Code installs it with it.
+- Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension, which the MyST Language Server extension depends on, so VS Code installs it with them.
   Nothing else is needed for highlighting.
 - The extension turns off VS Code's own Markdown link suggestions (`markdown.suggest.paths.enabled`) in every Markdown file, since they suggest GitHub-style heading slugs that mystmd doesn't use for labeled headings.
   The language server completes files and labels instead.
-- mystmd's and the language server's output go to the **MyST** output channel; **MyST: Show Log** opens it.
-- To use your own build of the language server, set `mystAuthor.serverPath` to its script, such as `dist/server.cjs` in a mystmd-lsp clone, and reload the window.
+- mystmd's and the language server's output go to the MyST Language Server extension's output channel.
+- To use your own build of the language server, set its `mystmdLsp.serverPath` setting.
 
 ## Develop
 

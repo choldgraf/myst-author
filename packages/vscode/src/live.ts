@@ -1,9 +1,9 @@
 import { resolve } from 'node:path';
 import * as vscode from 'vscode';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
-import type { BuiltPage, ContentServer } from 'mystmd-client/content-server';
+import type { BuiltPage } from 'mystmd-client/content-server';
 import { followLink } from '@myst-author/preview/controller';
-import { linkHost, projectPath, serverScript, webviewHtml, type Project } from './project.ts';
+import { linkHost, projectPath, webviewHtml, type Project } from './project.ts';
 
 /** A position as VS Code and LSP count it (0-based). Not an offset: CodeMirror counts a CRLF as one character, VS Code as two. */
 export type Pos = { line: number; character: number };
@@ -36,18 +36,17 @@ const toPos = (p: vscode.Position): Pos => ({ line: p.line, character: p.charact
 export class LiveEditor implements vscode.CustomTextEditorProvider {
   constructor(
     private context: vscode.ExtensionContext,
-    private project: (uri: vscode.Uri) => Promise<Project> | undefined, // undefined outside a MyST project
+    private project: Promise<Project | undefined>, // undefined outside a MyST project
   ) {}
 
   async resolveCustomTextEditor(document: vscode.TextDocument, panel: vscode.WebviewPanel) {
     const { webview } = panel;
     const post = (m: ToLive) => webview.postMessage(m);
     const at = (p: Pos) => new vscode.Position(p.line, p.character);
-    const project = this.project(document.uri);
-    const assets = await project?.then((p) => p.assets);
+    const project = await this.project;
     const dist = vscode.Uri.joinPath(this.context.extensionUri, 'dist');
     webview.options = { enableScripts: true, localResourceRoots: [dist] };
-    webview.html = webviewHtml(webview, dist, 'live', assets);
+    webview.html = webviewHtml(webview, dist, 'live', project?.assets);
 
     // Edits from the webview, one at a time, so each one's positions match the document.
     // An edit made elsewhere while one of these is in flight can put the two out of sync; send document versions if that bites.
@@ -63,31 +62,24 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
       }));
 
     let server: ReturnType<typeof spawnLsp> | undefined;
-    let content: ContentServer | undefined;
     let stopWatch: (() => void) | undefined;
-    let disposed = false;
     const connect = (p: Project) => {
-      if (disposed) return;
       // A server of its own, as each web app tab gets: lsp-client speaks raw LSP, which VS Code's language client can't pass on.
-      server = spawnLsp(serverScript(this.context), [`--content-server=${p.myst.url}`, `--root=${p.root}`], (message) => post({ type: 'lsp', message }));
+      server = spawnLsp(p.server, [`--content-server=${p.url}`, `--root=${p.root}`], (message) => post({ type: 'lsp', message }));
       post({ type: 'connect', root: vscode.Uri.file(p.root).toString(), uri: document.uri.toString() });
       // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.
-      p.content.then((built) => {
-        if (disposed) return;
-        content = built;
-        const path = projectPath(p.root, document.uri);
-        stopWatch = built.watch(async () => {
-          const { page } = await built.built(path);
-          if (page) post({ type: 'built', page });
-        });
-      }, () => {}); // no mystmd: blocks keep the fast render
+      const path = projectPath(p.root, document.uri);
+      stopWatch = p.content.watch(async () => {
+        const { page } = await p.content.built(path);
+        if (page) post({ type: 'built', page });
+      });
     };
 
     const subscriptions = [
       webview.onDidReceiveMessage((m: FromLive) => {
         if (m.type === 'ready') {
           post({ type: 'init', text: document.getText() });
-          project?.then(connect);
+          if (project) connect(project);
         } else if (m.type === 'edit') apply(m.changes);
         else if (m.type === 'lsp') server?.send(m.message);
         // lsp-client only acts on files open in an editor, which here is just this one.
@@ -95,7 +87,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
         else if (m.type === 'definition') this.definition(document, at(m.at));
         else if (m.type === 'references') this.references(document, at(m.at), post);
         else if (m.type === 'rename') this.rename(document, at(m.at));
-        else if (m.type === 'follow') project?.then((p) => this.follow(document, p, content, m, post));
+        else if (m.type === 'follow' && project) this.follow(document, project, m, post);
       }),
       // Edits from anywhere else (the text editor, its undo, a rename, git) go to the webview.
       vscode.workspace.onDidChangeTextDocument((e) => {
@@ -104,7 +96,6 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
       }),
     ];
     panel.onDidDispose(() => {
-      disposed = true;
       server?.child.kill();
       stopWatch?.();
       subscriptions.forEach((s) => s.dispose());
@@ -120,7 +111,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
   }
 
   /** Follow a rendered link as the preview does. A target in this file is selected in the webview; others open in a text editor, like `definition`. */
-  private follow(document: vscode.TextDocument, p: Project, content: ContentServer | undefined, { href, line }: { href: string; line?: number }, post: (m: ToLive) => void) {
+  private follow(document: vscode.TextDocument, p: Project, { href, line }: { href: string; line?: number }, post: (m: ToLive) => void) {
     return followLink({
       ...linkHost(p),
       open: (path, line) => {
@@ -128,7 +119,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
         if (uri.fsPath === document.uri.fsPath) post({ type: 'select', at: { line, character: 0 } });
         else vscode.window.showTextDocument(uri, { selection: new vscode.Range(line, 0, line, 0) });
       },
-      fileForSlug: (slug) => content?.fileForSlug(slug),
+      fileForSlug: (slug) => p.content.fileForSlug(slug),
     }, projectPath(p.root, document.uri), href, line);
   }
 

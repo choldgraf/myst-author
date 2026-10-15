@@ -42,10 +42,6 @@
         "command": "mystAuthor.toggleLive",
         "title": "MyST: Toggle Live Editor",
         "icon": "$(book)"
-      },
-      {
-        "command": "mystAuthor.showLog",
-        "title": "MyST: Show Log"
       }
     ],
     "menus": {
@@ -57,27 +53,12 @@
         }
       ]
     },
-    "configuration": {
-      "title": "MyST Author",
-      "properties": {
-        "mystAuthor.serverPath": {
-          "type": "string",
-          "default": "",
-          "description": "Path to a mystmd-lsp server script, such as dist/server.cjs from a mystmd-lsp clone, to use instead of the bundled one. Reload the window after changing it."
-        },
-        "mystAuthor.execute": {
-          "type": "boolean",
-          "default": true,
-          "markdownDescription": "Run code cells and inline `{eval}` expressions when mystmd builds, with `myst start --execute`. This runs the project's code, and needs Jupyter. Turn it off to build with saved outputs only. Reload the window after changing it."
-        }
-      }
-    },
     "configurationDefaults": {
       "markdown.suggest.paths.enabled": false
     }
   },
   "extensionDependencies": [
-    "myst-author.myst-syntax-vscode"
+    "myst-author.mystmd-lsp-vscode"
   ],
   "scripts": {
     "build": "node build.mjs",
@@ -99,7 +80,6 @@
     "katex": "^0.15.6",
     "myst-syntax": "^0.0.1",
     "mystmd-client": "github:choldgraf/mystmd-client",
-    "mystmd-lsp": "^0.0.6",
     "punycode": "^2.3.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

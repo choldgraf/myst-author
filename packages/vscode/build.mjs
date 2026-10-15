@@ -17,8 +17,6 @@ await Promise.all([
 
 const resolve = createRequire(import.meta.url).resolve;
 buildCss('dist/webview.css');
-// The language server comes bundled already.
-cpSync(resolve('mystmd-lsp/dist/server.cjs'), 'dist/lsp.js');
 // katex.min.css refers to its fonts relative to itself.
 const katex = dirname(resolve('katex/package.json'));
 cpSync(join(katex, 'dist/fonts'), 'dist/fonts', { recursive: true });

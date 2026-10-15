@@ -22,7 +22,7 @@ export class MystPreview {
       },
       post: (m) => this.panel?.webview.postMessage(m),
       open: (path, line) => this.show(vscode.Uri.file(resolve(project.root, path)), line),
-    }, project.content);
+    }, Promise.resolve(project.content));
     context.subscriptions.push(
       this.preview,
       vscode.window.onDidChangeActiveTextEditor((e) => {
@@ -40,8 +40,7 @@ export class MystPreview {
     );
   }
 
-  async open() {
-    const assets = await this.project.assets;
+  open() {
     if (this.panel) return this.panel.reveal(vscode.ViewColumn.Beside, true);
     const dist = vscode.Uri.joinPath(this.context.extensionUri, 'dist');
     const panel = vscode.window.createWebviewPanel(
@@ -51,7 +50,7 @@ export class MystPreview {
       { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [dist] },
     );
     const { webview } = panel;
-    webview.html = webviewHtml(webview, dist, 'webview', assets);
+    webview.html = webviewHtml(webview, dist, 'webview', this.project.assets);
     webview.onDidReceiveMessage((m) => this.preview.onMessage(m));
     panel.onDidDispose(() => (this.panel = undefined));
     this.panel = panel;

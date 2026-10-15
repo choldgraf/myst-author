@@ -19,7 +19,7 @@ flowchart LR
   mystmd[("mystmd")]
   theme[("myst-theme")]
   hosts --> preview
-  hosts -- "package" --> lsp
+  hosts -- "extension · package" --> lsp
   hosts -- "extension · package" --> syntax
   hosts -- "package" --> client
   preview -- "package" --> client
@@ -34,14 +34,15 @@ flowchart LR
 | Repository | Owns | Useful on its own to |
 |---|---|---|
 | [mystmd](https://github.com/jupyter-book/mystmd) | What MyST means: parsing, transforms, builds, and the content server | Everyone |
-| [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) | What an editor knows about a MyST project: references, labels, completion, hover, warnings | Any LSP editor (Neovim, Helix) |
+| [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) | What an editor knows about a MyST project: references, labels, completion, hover, warnings | Any LSP editor (VS Code, Neovim, Helix) |
 | [mystmd-client](https://github.com/choldgraf/mystmd-client) | Starting mystmd, reading its content server, and parsing one page the way mystmd does | Any tool that runs mystmd or parses a single page |
 | [myst-syntax](https://github.com/choldgraf/myst-syntax) | Highlighting MyST syntax, for CodeMirror and TextMate, and the VS Code and JupyterLab extensions that ship it | Anyone who wants MyST highlighted in VS Code, JupyterLab, CodeMirror, or Shiki |
 | [myst-parser-unified](https://github.com/choldgraf/myst-parser-unified) | Parsing MyST with micromark, with line and column positions on every node | People using the unified Markdown tools (remark), and mystmd as a possible future parser |
 | [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview, once it's published |
 | [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
 
-Hosts start mystmd themselves and pass its address to mystmd-lsp, even though mystmd-lsp can start it.
+The web app and JupyterLab hosts start mystmd and pass its address to the server.
+In VS Code the MyST Language Server extension owns the server, which starts mystmd, and MyST Author asks it for the address through the server's `myst/project` request.
 The web app and the VS Code live editor import `myst-syntax/codemirror` from the package, since a TextMate grammar doesn't reach a CodeMirror webview; VS Code's Markdown files get the grammar from the extension.
 A host runs several language servers for one project (one per browser tab or VS Code live editor), and they all share one mystmd.
 
@@ -68,6 +69,7 @@ Put each feature in the lowest repository that can hold it:
 - Repositories depend on each other only through published artifacts, a package from npm or git or an editor extension, never by path.
 - A rule that one repository relies on is part of the other's documented interface.
   For example, MyST Author follows preview links to labels through mystmd-lsp's workspace symbols, so mystmd-lsp [documents how it names them](https://chrisholdgraf.com/mystmd-lsp/features#symbols).
+  Likewise, MyST Author asks where the project is with mystmd-lsp's `myst/project` request, which its [configuration page](https://chrisholdgraf.com/mystmd-lsp/configuration) documents.
 - When repositories recognise the same syntax, each one follows mystmd's rule and names where that rule lives, instead of copying another repository.
   For example, myst-syntax, mystmd-lsp and MyST Author's preview all find labels like `(intro)=` with the characters from mystmd's `TARGET_PATTERN`.
 - Repositories don't copy code from each other.

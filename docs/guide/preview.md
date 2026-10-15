@@ -50,8 +50,9 @@ The badge in the toolbar tells you which one you're looking at:
 
 ## Code cells and `{eval}`
 
-mystmd runs code cells and inline `{eval}` expressions as it builds, so the built preview shows their results and outputs.
-This runs the project's code, and needs Jupyter.
+The web editor and JupyterLab have mystmd run code cells and inline `{eval}` expressions as it builds, so the built preview shows their results and outputs.
+In VS Code this is off until you turn on the MyST Language Server extension's `mystmdLsp.execute` setting, since that extension starts mystmd.
+Running code needs Jupyter.
 Without Jupyter, pages still build and notebooks keep their saved outputs.
 An `{eval}` that hasn't run shows mystmd's "Unexecuted inline expression" warning, as on a mystmd site.
 mystmd runs a page again each time you save a change to its code.
@@ -59,7 +60,7 @@ mystmd runs a page again each time you save a change to its code.
 To turn execution off:
 
 - **Web editor:** `npm start -- --no-execute path/to/project`.
-- **VS Code:** turn off the `mystAuthor.execute` setting, then reload the window.
+- **VS Code:** leave `mystmdLsp.execute` off.
 - **JupyterLab:** set `MYST_AUTHOR_EXECUTE=0` before you start Jupyter.
 
 While you edit, results and outputs from the last build stay in place, and an edited code cell's outputs are dimmed until the next build.
@@ -75,7 +76,7 @@ mystmd's build output, including its warnings, shows up as `[myst]` lines:
 
 - **Web editor:** the terminal that runs `npm start`.
 - **JupyterLab:** the Jupyter server's log.
-- **VS Code:** the **MyST** channel in the Output panel.
+- **VS Code:** the MyST Language Server extension's output channel.
 
 ## Click to jump to the source
 

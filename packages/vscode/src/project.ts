@@ -3,17 +3,12 @@ import { relative, sep } from 'node:path';
 import * as vscode from 'vscode';
 import type { ContentServer } from 'mystmd-client/content-server';
 import { findLabel, type Request } from '@myst-author/preview/controller';
-import type { Myst } from 'mystmd-client/start';
-
-/** The language server script: `mystAuthor.serverPath`, or the copy of mystmd-lsp's bundle in dist/. */
-export const serverScript = (context: vscode.ExtensionContext) =>
-  vscode.workspace.getConfiguration('mystAuthor').get<string>('serverPath') || context.asAbsolutePath('dist/lsp.js');
 
 /**
- * The MyST project the extension started: its folder, its mystmd, and requests to its language server.
- * `assets` is mystmd's URL as webviews reach it, and `content` its content server once mystmd is up.
+ * The MyST project the language server chose: its folder, requests to it, and `server`, the server bundle the live editor spawns for its webviews.
+ * `url` is mystmd's content server, `assets` the same URL as webviews reach it, and `content` a client for it.
  */
-export type Project = { root: string; myst: Myst; request: Request; assets: Thenable<string>; content: Promise<ContentServer> };
+export type Project = { root: string; request: Request; server: string; url: string; assets: string; content: ContentServer };
 
 /** Project-relative path with `/` separators, matching the content server's page `location`. */
 export const projectPath = (root: string, uri: vscode.Uri) => relative(root, uri.fsPath).split(sep).join('/');
