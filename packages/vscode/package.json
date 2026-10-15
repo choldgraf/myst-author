@@ -17,8 +17,7 @@
     "dist"
   ],
   "activationEvents": [
-    "onLanguage:markdown",
-    "onNotebook:jupyter-notebook"
+    "workspaceContains:**/myst.yml"
   ],
   "contributes": {
     "customEditors": [

@@ -43,9 +43,9 @@ flowchart LR
 | [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server where no extension does, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
 
 The web app and JupyterLab hosts start mystmd and pass its address to the server.
-In VS Code the MyST Language Server extension owns the server, which starts mystmd, and MyST Author asks it for the address through the server's `myst/project` request.
+In VS Code the MyST Language Server extension owns the server, which starts one mystmd per project, and MyST Author asks it for each file's project and mystmd address through the server's `myst/project` request.
 The web app and the VS Code live editor import `myst-syntax/codemirror` from the package, since a TextMate grammar doesn't reach a CodeMirror webview; VS Code's Markdown files get the grammar from the extension.
-A host runs several language servers for one project (one per browser tab or VS Code live editor), and they all share one mystmd.
+A host runs several language servers (one per browser tab or VS Code live editor), and those for one project share its mystmd.
 
 Nothing depends on [myst-parser-unified](https://chrisholdgraf.com/myst-parser-unified/) yet.
 It's a candidate to replace the parser that mystmd-lsp and the preview use.
@@ -72,7 +72,7 @@ Put each feature in the lowest repository that can hold it:
   Until they are published, `packages/vscode/deps.mjs` builds them from their repositories for Binder, Codespaces and the demo; its header says what to clean up afterwards.
 - A rule that one repository relies on is part of the other's documented interface.
   For example, MyST Author follows preview links to labels through mystmd-lsp's workspace symbols, so mystmd-lsp [documents how it names them](https://chrisholdgraf.com/mystmd-lsp/features#symbols).
-  Likewise, MyST Author asks where the project is with mystmd-lsp's `myst/project` request, which its [configuration page](https://chrisholdgraf.com/mystmd-lsp/configuration) documents.
+  Likewise, MyST Author asks where a file's project is with mystmd-lsp's `myst/project` request, which its [configuration page](https://chrisholdgraf.com/mystmd-lsp/configuration) documents.
 - When repositories recognise the same syntax, each one follows mystmd's rule and names where that rule lives, instead of copying another repository.
   For example, myst-syntax, mystmd-lsp and MyST Author's preview all find labels like `(intro)=` with the characters from mystmd's `TARGET_PATTERN`.
 - Repositories don't copy code from each other.

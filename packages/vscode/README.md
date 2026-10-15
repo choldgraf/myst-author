@@ -41,15 +41,16 @@ The tour opens Markdown files in the live editor.
 
 ## What works
 
-- The extension starts when you open a Markdown file or notebook.
-  The language server [picks the project](https://chrisholdgraf.com/mystmd-lsp/configuration#finding-the-project), the nearest `myst.yml` at or above the workspace folder, and runs `myst start --headless` there, so open the project folder as the workspace.
-  Without a `myst.yml` you get the language server's features but no preview.
+- The extension starts when a workspace folder contains a `myst.yml`.
+  The language server [picks each file's project](https://chrisholdgraf.com/mystmd-lsp/configuration#finding-the-project), the nearest `myst.yml` at or above the file within its workspace folder, and runs `myst start --headless` there.
+  The preview and the live editor show a file through its project, so a file that isn't a page of one gets no preview.
+  The MyST Language Server extension's status bar item says which project a file belongs to.
   Set `MYST_BIN` if `myst` isn't on your `PATH`.
-- Without mystmd the language features still work for open files, and the live editor keeps its fast render, as [Get started](https://chrisholdgraf.com/myst-author/get-started#run-it-locally) describes.
+- Without mystmd the text editor keeps the language server's features for open files, but the preview and the live editor's language features need mystmd.
 - [mystmd-lsp's features](https://chrisholdgraf.com/mystmd-lsp/features) work in Markdown files and notebooks' Markdown cells.
   The page outline shows in the Outline view and the breadcrumbs, and `Cmd+Shift+O` searches it.
 - To open the preview, run **MyST: Open Preview to the Side** from the Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`).
-  The preview follows the active Markdown text editor, not the live editor or notebooks.
+  The preview follows the active Markdown text editor, not the live editor or notebooks, and stays on the last page when you switch to a file that isn't one.
   It works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
 - To edit with live preview, click the book button in a Markdown file's toolbar, or run **MyST: Toggle Live Editor**.
   It's the web editor's live preview, with the same language features.

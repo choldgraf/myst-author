@@ -6,29 +6,40 @@ import { MystPreview } from './preview.ts';
 import { webviewUrl, type Project } from './project.ts';
 
 export function activate(context: vscode.ExtensionContext) {
-  let preview: MystPreview | undefined;
-  // The live editor can open before the project is known (a restored tab), so it gets the promise.
-  const started = project().catch((e) => void vscode.window.showErrorMessage(`MyST Author: ${e.message}`));
-  started.then((p) => p && (preview = new MystPreview(context, p)));
-  context.subscriptions.push(
-    vscode.commands.registerCommand('mystAuthor.openPreview', () =>
-      preview ? preview.open() : vscode.window.showInformationMessage('Open a MyST project (a folder with myst.yml) to preview it.')),
-    vscode.commands.registerCommand('mystAuthor.toggleLive', toggleLive),
-    vscode.window.registerCustomEditorProvider('mystAuthor.live', new LiveEditor(context, started), { webviewOptions: { retainContextWhenHidden: true } }),
-  );
-}
+  // Activated once; if that fails, say so once and no document has a project.
+  const lsp = Promise.resolve(vscode.extensions.getExtension<{ client: LanguageClient; server: string }>('myst-author.mystmd-lsp-vscode')!.activate())
+    .catch((e: Error) => void vscode.window.showErrorMessage(`MyST Author: ${e.message}`));
+  const projects = new Map<string, PromiseLike<Project>>();
 
-/**
- * The project from the MyST Language Server extension: its server picks the folder and runs mystmd, and we ask it where they are.
- * Undefined outside a MyST project, which leaves the preview and the live editor's language features off.
- */
-async function project(): Promise<Project | undefined> {
-  const { client, server } = await vscode.extensions.getExtension<{ client: LanguageClient; server: string }>('myst-author.mystmd-lsp-vscode')!.activate();
-  const { root, contentServer: url } = await client.sendRequest<{ root?: string; contentServer?: string }>('myst/project');
-  if (!root || !url) return;
-  // One content server for the preview and every live editor, reached at the URL webviews see.
-  const assets = await webviewUrl(url);
-  return { root, server, url, assets, request: (method, params) => client.sendRequest(method, params), content: contentServer(url, assets) };
+  /**
+   * The project `uri` is a page of, from the MyST Language Server extension: its server finds the folder and runs mystmd, and we ask it where they are.
+   * Undefined for a file outside every project or one mystmd doesn't build, which leaves the preview and the live editor's language features off.
+   * One `Project` per folder: a window can hold several, each with its own content server.
+   */
+  async function projectFor(uri: vscode.Uri): Promise<Project | undefined> {
+    const ext = await lsp;
+    if (!ext) return;
+    const { client, server } = ext;
+    try {
+      const { root, contentServer: url, page } = await client.sendRequest<{ root?: string; contentServer?: string; page?: boolean }>('myst/project', { uri: uri.toString() });
+      if (!root || !url || !page) return;
+      if (!projects.has(root)) {
+        // One content server client per project, reached at the URL webviews see.
+        projects.set(root, webviewUrl(url).then((assets) => ({ root, server, url, assets, request: (method, params) => client.sendRequest(method, params), content: contentServer(url, assets) })));
+      }
+      return await projects.get(root);
+    } catch {
+      // A server that died, or a URL that can't be forwarded: the file just has no project, and the editor still opens.
+      // The language server extension reports its own failures, so no message here (this runs on every editor switch).
+    }
+  }
+
+  const preview = new MystPreview(context, projectFor);
+  context.subscriptions.push(
+    vscode.commands.registerCommand('mystAuthor.openPreview', () => preview.open()),
+    vscode.commands.registerCommand('mystAuthor.toggleLive', toggleLive),
+    vscode.window.registerCustomEditorProvider('mystAuthor.live', new LiveEditor(context, projectFor), { webviewOptions: { retainContextWhenHidden: true } }),
+  );
 }
 
 /** Reopen the active Markdown tab in the live editor, or a live editor tab in the text editor. */

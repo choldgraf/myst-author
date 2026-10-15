@@ -43,10 +43,10 @@ The badge in the toolbar tells you which one you're looking at:
 | Badge | Meaning |
 |---|---|
 | `fast preview · unsaved` | The file has unsaved changes, and mystmd only builds saved files. The web editor saves as you type; in JupyterLab and VS Code, save the file to build it. |
-| `fast preview` | mystmd hasn't built this file yet. This happens while mystmd starts, if it fails or stops, and for files it doesn't build, such as files left out of the `toc` in `myst.yml`. |
+| `fast preview` | mystmd hasn't built this file yet. This happens while mystmd starts, if it fails or stops, and for files it doesn't build, such as files left out of the `toc` in `myst.yml`. In VS Code a file mystmd doesn't build gets no preview at all. |
 | `building…` | Your changes are saved and mystmd is rebuilding. You only see it for files mystmd has built before; a file's first build shows `fast preview`. |
 | `built ✓` | You're looking at mystmd's build of exactly this text. |
-| `no mystmd` | mystmd isn't installed, so only the fast preview is available. In VS Code the MyST Language Server extension shows the warning instead, and the badge stays `fast preview`. |
+| `no mystmd` | mystmd isn't installed, so only the fast preview is available. In VS Code the MyST Language Server extension shows the warning instead, and the preview doesn't open. |
 
 ## Code cells and `{eval}`
 

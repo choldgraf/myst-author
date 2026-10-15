@@ -83,7 +83,8 @@ flowchart TB
    If the connection drops, the browser reconnects and re-opens its files.
    mystmd-lsp's [How it works](https://chrisholdgraf.com/mystmd-lsp/how-it-works) explains how the server uses mystmd.
 
-The VS Code extension does the same without the host server: the language server tells it where mystmd is, and it fetches built pages from it directly.
+The VS Code extension does the same without the host server: the language server tells it each file's project and where that project's mystmd is, and it fetches built pages from there directly.
+The web app and JupyterLab hosts run the server with `--root`, so they are one project each.
 
 The JupyterLab extension uses the host server, which jupyter-server-proxy runs inside Jupyter.
 Lab's editors connect to its `/lsp` bridge, and live preview and the preview panel fetch built pages through its `/myst` proxy.

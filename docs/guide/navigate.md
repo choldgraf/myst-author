@@ -24,14 +24,14 @@ To open the outline:
 
 ## Find a label anywhere
 
-You can search every label in the project by its name or by its text.
+You can search every label in the project by its name or by its text; in VS Code, that's every project in the window.
 For example, `sea` finds a figure labeled `fig-slr` if its caption mentions sea level.
 
 - In the web editor, press {kbd}`Cmd+P` and type `@` followed by your search.
   This matches how you write a reference to a label in MyST, `@label`.
 - In VS Code, press {kbd}`Cmd+T` (Go to Symbol in Workspace).
 
-Reference completion searches the same way: after `` {ref}` ``, type words from a heading or caption instead of the label.
+Reference completion searches the same way, within the file's own project: after `` {ref}` ``, type words from a heading or caption instead of the label.
 
 ## Things to try
 

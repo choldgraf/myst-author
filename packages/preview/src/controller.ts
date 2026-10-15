@@ -129,9 +129,12 @@ export type Request = (method: string, params: unknown) => Promise<unknown>;
 
 type WorkspaceSymbol = { name: string; location: { uri: string; range: { start: { line: number } } } };
 
-/** Where label `id` is defined, from the language server's workspace symbols. The server names each symbol by its lowercased label. */
-export async function findLabel(request: Request, id: string): Promise<{ uri: string; line: number } | undefined> {
+/**
+ * Where label `id` is defined, from the language server's workspace symbols. The server names each symbol by its lowercased label.
+ * A server can hold several projects, so `inProject` keeps the lookup to this one's files.
+ */
+export async function findLabel(request: Request, id: string, inProject: (uri: string) => boolean = () => true): Promise<{ uri: string; line: number } | undefined> {
   const symbols = (await request('workspace/symbol', { query: id })) as WorkspaceSymbol[] | null;
-  const s = symbols?.find((s) => s.name === id.toLowerCase());
+  const s = symbols?.find((s) => s.name === id.toLowerCase() && inProject(s.location.uri));
   return s && { uri: s.location.uri, line: s.location.range.start.line };
 }

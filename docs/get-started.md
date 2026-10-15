@@ -48,7 +48,7 @@ To point it at another folder, stop it with {kbd}`Ctrl+C` in the terminal and ru
 
 Binder builds the repository and opens the tour in JupyterLab, with the [JupyterLab extension](guide/jupyterlab.md).
 The Launcher also has **VS Code**, with the [VS Code extension](guide/vscode.md), and **MyST Author**, the web editor.
-Only the tour project gets the whole-project features.
+In JupyterLab and the web editor, only the tour project gets the whole-project features; in VS Code, so does any folder with a `myst.yml`, such as `docs/`.
 The first launch can take a few minutes.
 Changes are lost when the Binder session ends.
 

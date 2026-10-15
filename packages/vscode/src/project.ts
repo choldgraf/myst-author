@@ -5,10 +5,13 @@ import type { ContentServer } from 'mystmd-client/content-server';
 import { findLabel, type Request } from '@myst-author/preview/controller';
 
 /**
- * The MyST project the language server chose: its folder, requests to it, and `server`, the server bundle the live editor spawns for its webviews.
+ * A MyST project the language server found: its folder, requests to it, and `server`, the server bundle the live editor spawns for its webviews.
  * `url` is mystmd's content server, `assets` the same URL as webviews reach it, and `content` a client for it.
  */
 export type Project = { root: string; request: Request; server: string; url: string; assets: string; content: ContentServer };
+
+/** The project a document is a page of; undefined when it isn't one (see `extension.ts`). */
+export type ProjectFor = (uri: vscode.Uri) => Promise<Project | undefined>;
 
 /** Project-relative path with `/` separators, matching the content server's page `location`. */
 export const projectPath = (root: string, uri: vscode.Uri) => relative(root, uri.fsPath).split(sep).join('/');
@@ -17,13 +20,13 @@ export const projectPath = (root: string, uri: vscode.Uri) => relative(root, uri
 export const webviewUrl = (url: string) => vscode.env.asExternalUri(vscode.Uri.parse(url)).then((u) => u.toString().replace(/\/$/, ''));
 
 // Markdown files, not notebook cells (which are Markdown documents too).
-export const isMarkdown = (d?: vscode.TextDocument) => d?.languageId === 'markdown' && d.uri.scheme === 'file';
+export const isMarkdown = (d?: vscode.TextDocument): d is vscode.TextDocument => d?.languageId === 'markdown' && d.uri.scheme === 'file';
 
 /** What the preview and the live editor both give `followLink`: external links, labels through the language server, and warnings. */
 export const linkHost = ({ root, request }: Project) => ({
   openExternal: (url: string) => vscode.env.openExternal(vscode.Uri.parse(url)),
   findLabel: async (id: string) => {
-    const s = await findLabel(request, id);
+    const s = await findLabel(request, id, (uri) => !projectPath(root, vscode.Uri.parse(uri)).startsWith('..'));
     return s && { path: projectPath(root, vscode.Uri.parse(s.uri)), line: s.line };
   },
   warn: (message: string) => vscode.window.showWarningMessage(message),

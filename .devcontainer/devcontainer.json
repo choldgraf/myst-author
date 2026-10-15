@@ -1,5 +1,5 @@
 // GitHub Codespaces: VS Code with the MyST Author extension, plus the web app on port 4321.
-// The extension starts when you open a Markdown file; the tour opens on start.
+// The extension starts when a workspace folder contains a myst.yml; the tour opens on start.
 {
   "name": "MyST Author",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24",

@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
 import type { BuiltPage } from 'mystmd-client/content-server';
 import { followLink } from '@myst-author/preview/controller';
-import { linkHost, projectPath, webviewHtml, type Project } from './project.ts';
+import { linkHost, projectPath, webviewHtml, type Project, type ProjectFor } from './project.ts';
 
 /** A position as VS Code and LSP count it (0-based). Not an offset: CodeMirror counts a CRLF as one character, VS Code as two. */
 export type Pos = { line: number; character: number };
@@ -36,14 +36,14 @@ const toPos = (p: vscode.Position): Pos => ({ line: p.line, character: p.charact
 export class LiveEditor implements vscode.CustomTextEditorProvider {
   constructor(
     private context: vscode.ExtensionContext,
-    private project: Promise<Project | undefined>, // undefined outside a MyST project
+    private projectFor: ProjectFor,
   ) {}
 
   async resolveCustomTextEditor(document: vscode.TextDocument, panel: vscode.WebviewPanel) {
     const { webview } = panel;
     const post = (m: ToLive) => webview.postMessage(m);
     const at = (p: Pos) => new vscode.Position(p.line, p.character);
-    const project = await this.project;
+    const project = await this.projectFor(document.uri);
     const dist = vscode.Uri.joinPath(this.context.extensionUri, 'dist');
     webview.options = { enableScripts: true, localResourceRoots: [dist] };
     webview.html = webviewHtml(webview, dist, 'live', project?.assets);
