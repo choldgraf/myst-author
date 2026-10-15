@@ -10,7 +10,7 @@ The other top-level folders are:
 
 - `docs/`: this documentation site.
 - `docs/examples/tour/`: the example project used by the tour, Codespaces, and Binder.
-- `upstream/`: proposals for mystmd, myst-theme, and CodeMirror.
+- `upstream/`: proposals for the projects MyST Author builds on, ranked.
 - `.devcontainer/`: the GitHub Codespaces config.
 - `binder/`: the Binder config.
 

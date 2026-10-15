@@ -1,21 +1,32 @@
 # Upstream proposals from myst-author
 
-These are proposals for the mystmd, myst-theme, and CodeMirror maintainers to decide on, not commitments.
+These are proposals for the maintainers of the projects MyST Author builds on (mystmd, myst-theme, CodeMirror, JupyterLab, jupyterlab-lsp, Shiki) to decide on, not commitments.
 
-| # | Proposal | Where | Status |
+Ranked by benefit over cost, best first; the number is only an id.
+The next step says what each one needs: a PR we can open, an issue with a repro, or a design discussion before any code.
+
+| # | Proposal | Where | Next step |
 |---|---|---|---|
-| U1 | [Richer xref entries: `title`, `enumerator`](U1-richer-xref-entries.md) | mystmd | written up |
-| U2 | [Structured diagnostics over `/socket` and in page JSON](U2-structured-diagnostics.md) | mystmd | written up |
-| U3 | MyST syntax highlighting for CodeMirror and TextMate: [myst-syntax](https://github.com/choldgraf/myst-syntax) | jupyter-book org | own repository |
-| U4 | Language server: [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) | jupyter-book org | own repository |
-| U5 | Reusable single-page browser preview (from `myst-demo`) | myst-theme | idea |
-| U6 | `baseurl` fix for sites served under a sub-path, e.g. on JupyterHub ([mystmd#302](https://github.com/jupyter-book/mystmd/issues/302)) | myst-theme | idea |
-| U7 | Column-accurate inline positions in myst-parser (large) | mystmd | idea |
-| U8 | Export the helpers that MyST Author and mystmd-lsp share through [mystmd-client](https://github.com/choldgraf/mystmd-client): a single-page parse, a `myst start --headless` launcher, and a content-server client | mystmd | idea |
-| U9 | [Inlay hints and requests from the server](U9-lsp-client-inlay-hints.md) | `@codemirror/lsp-client` | written up |
-| U10 | [An mdast → mystmd adapter, to adopt a micromark parser](U10-mdast-adapter.md) | mystmd | written up |
+| U1 | [Richer xref entries: `title`, `enumerator`](U1-richer-xref-entries.md) | mystmd | PR: a few additive lines, plus the one-line fix so `myst start` rewrites `myst.xref.json` on edits |
+| U2 | [Structured diagnostics over `/socket` and in page JSON](U2-structured-diagnostics.md) | mystmd | PR for the websocket part; the page-JSON part can wait |
+| U13 | Injected grammars are dropped once two of Markdown's lazily embedded languages load; the load order that avoids it is in [myst-syntax's README](https://github.com/choldgraf/myst-syntax#readme) | Shiki | Issue with the repro from `shiki.test.ts` |
+| U9 | [Inlay hints and requests from the server](U9-lsp-client-inlay-hints.md) | `@codemirror/lsp-client` | PR for request handlers; discussion first for inlay hints |
+| U8 | Export the helpers that MyST Author and mystmd-lsp share through [mystmd-client](https://github.com/choldgraf/mystmd-client): a single-page parse, a `myst start --headless` launcher, a content-server client, and finding which `myst.yml` governs a file | mystmd | Discussion, leading with the single-page parse; lands the biggest deletion here, a whole repository |
+| U12 | Let an extension add CodeMirror extensions to a language Lab has already registered; [jupyterlab-myst-syntax](https://github.com/choldgraf/myst-syntax/tree/main/packages/jupyterlab) overwrites the registered entry's `support` field, which works but isn't documented | JupyterLab | Issue; documenting that `support` is writable would be enough |
+| U6 | `baseurl` fix for sites served under a sub-path, e.g. on JupyterHub ([mystmd#302](https://github.com/jupyter-book/mystmd/issues/302)) | myst-theme | Write up which URLs break, then a PR |
+| U11 | Send notebook Markdown cells to language servers, so MyST (and any Markdown server) works in cells through the standard client; MyST Author's JupyterLab extension carries its own client only because of this | jupyterlab-lsp | Design discussion; changes the virtual-document model |
+| U7 | Column-accurate inline positions in myst-parser ([mystmd#2864](https://github.com/jupyter-book/mystmd/issues/2864)) | mystmd | Large; would remove mystmd-lsp's reference regexes and conformance script |
+| U5 | Reusable single-page browser preview (from `myst-demo`) | myst-theme | File the three packaging gaps below as small issues; the rest only if someone else wants an embeddable preview |
+| U10 | [An mdast → mystmd adapter, to adopt a micromark parser](U10-mdast-adapter.md) | mystmd | Discussion on [mystmd#1705](https://github.com/jupyter-book/mystmd/issues/1705); depends on wanting U7's outcome |
 
-## Data and packaging gaps (candidates for small fixes)
+## Repositories offered to jupyter-book
+
+Not ranked with the proposals, since they are a governance conversation rather than a change to merge.
+
+- U3: MyST syntax highlighting for CodeMirror and TextMate, with the VS Code and JupyterLab extensions: [myst-syntax](https://github.com/choldgraf/myst-syntax).
+- U4: the language server, with its VS Code extension: [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp).
+
+## Data and packaging gaps (file as small bug reports)
 
 In built page JSON (`_build/site/content/*.json`, mystmd 1.10.1):
 
