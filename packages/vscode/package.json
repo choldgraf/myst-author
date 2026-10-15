@@ -77,7 +77,7 @@
     }
   },
   "extensionDependencies": [
-    "myst-author.myst-syntax"
+    "myst-author.myst-syntax-vscode"
   ],
   "scripts": {
     "build": "node build.mjs",
