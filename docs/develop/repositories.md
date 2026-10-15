@@ -20,7 +20,7 @@ flowchart LR
   theme[("myst-theme")]
   hosts --> preview
   hosts -- "package" --> lsp
-  hosts -- "package" --> syntax
+  hosts -- "extension" --> syntax
   hosts -- "package" --> client
   preview -- "package" --> client
   preview --> theme
@@ -36,7 +36,7 @@ flowchart LR
 | [mystmd](https://github.com/jupyter-book/mystmd) | What MyST means: parsing, transforms, builds, and the content server | Everyone |
 | [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) | What an editor knows about a MyST project: references, labels, completion, hover, warnings | Any LSP editor (Neovim, Helix) |
 | [mystmd-client](https://github.com/choldgraf/mystmd-client) | Starting mystmd, reading its content server, and parsing one page the way mystmd does | Any tool that runs mystmd or parses a single page |
-| [myst-syntax](https://github.com/choldgraf/myst-syntax) | Highlighting MyST syntax, for CodeMirror and TextMate | VS Code extensions and CodeMirror editors |
+| [myst-syntax](https://github.com/choldgraf/myst-syntax) | Highlighting MyST syntax, for CodeMirror and TextMate, and the VS Code and JupyterLab extensions that ship it | Anyone who wants MyST highlighted in VS Code, JupyterLab, CodeMirror, or Shiki |
 | [myst-parser-unified](https://github.com/choldgraf/myst-parser-unified) | Parsing MyST with micromark, with line and column positions on every node | People using the unified Markdown tools (remark), and mystmd as a possible future parser |
 | [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview, once it's published |
 | [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
@@ -64,7 +64,7 @@ Put each feature in the lowest repository that can hold it:
 
 ## Keeping them independent
 
-- Repositories depend on each other only through packages, from npm or git, never by path.
+- Repositories depend on each other only through published artifacts, a package from npm or git or an editor extension, never by path.
 - A rule that one repository relies on is part of the other's documented interface.
   For example, MyST Author follows preview links to labels through mystmd-lsp's workspace symbols, so mystmd-lsp [documents how it names them](https://chrisholdgraf.com/mystmd-lsp/features#symbols).
 - When repositories recognise the same syntax, each one follows mystmd's rule and names where that rule lives, instead of copying another repository.

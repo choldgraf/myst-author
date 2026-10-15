@@ -74,17 +74,11 @@
     },
     "configurationDefaults": {
       "markdown.suggest.paths.enabled": false
-    },
-    "grammars": [
-      {
-        "scopeName": "text.myst.injection",
-        "path": "./dist/myst.tmLanguage.json",
-        "injectTo": [
-          "text.html.markdown"
-        ]
-      }
-    ]
+    }
   },
+  "extensionDependencies": [
+    "myst-author.myst-syntax"
+  ],
   "scripts": {
     "build": "node build.mjs",
     "package": "node build.mjs && vsce package --no-dependencies --skip-license -o myst-author.vsix"

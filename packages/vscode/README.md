@@ -25,6 +25,7 @@ code --install-extension packages/vscode/myst-author.vsix
 ```
 
 `npm run vscode` from the repo root does both, replacing any copy you installed before.
+Until MyST Syntax is on the Marketplace, build and install its `.vsix` from the [myst-syntax](https://github.com/choldgraf/myst-syntax) repo first (`npm run package -w packages/vscode` there), since VS Code resolves extension dependencies from the Marketplace.
 Reload open VS Code windows afterwards.
 `npm run demo:vscode` instead opens a fresh copy of the tour.
 It opens in a separate VS Code with its own settings and extensions, so your own setup doesn't change and extensions you've installed don't load.
@@ -54,8 +55,8 @@ The tour opens Markdown files in the live editor.
 
 ## Notes
 
-- MyST syntax is highlighted on top of VS Code's Markdown grammar, with [myst-syntax](https://github.com/choldgraf/myst-syntax).
-  Other MyST highlighting extensions cover the same syntax, so turn them off.
+- Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension, which this extension depends on, so VS Code installs it with it.
+  Nothing else is needed for highlighting.
 - The extension turns off VS Code's own Markdown link suggestions (`markdown.suggest.paths.enabled`) in every Markdown file, since they suggest GitHub-style heading slugs that mystmd doesn't use for labeled headings.
   The language server completes files and labels instead.
 - mystmd's and the language server's output go to the **MyST** output channel; **MyST: Show Log** opens it.

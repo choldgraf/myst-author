@@ -46,7 +46,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 `packages/vscode`
 : The VS Code extension.
-  It runs the language server through VS Code's language client, adds a MyST grammar, and shows the same preview in a webview.
+  It runs the language server through VS Code's language client, depends on the MyST Syntax extension for highlighting, and shows the same preview in a webview.
   Its live editor is a custom editor: a webview that runs CodeMirror with the same live preview.
   VS Code can't pass its language features into a webview, so the live editor's language client talks to a server process of its own.
 
