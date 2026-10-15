@@ -70,7 +70,7 @@ Preview them while you edit, or build the HTML site:
 
 ```bash
 npm run docs:live
-npm run build:docs
+npm run docs
 ```
 
 Pages use `{include}` to pull in the package READMEs where they can, so update the README rather than copying text into a docs page.

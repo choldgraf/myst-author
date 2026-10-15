@@ -3,8 +3,12 @@
   "private": true,
   "license": "CC0-1.0",
   "type": "module",
-  "workspaces": ["packages/*"],
-  "engines": { "node": ">=24" },
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "start": "node packages/app/server/index.ts",
     "demo": "d=$(mktemp -d) && cp -R docs/examples/tour/. \"$d\" && npm start -- \"$d\"",
@@ -16,8 +20,12 @@
     "vscode": "npm run package -w packages/vscode && code --install-extension packages/vscode/myst-author.vsix --force",
     "test": "npm test --workspaces --if-present",
     "typecheck": "tsc",
-    "build:docs": "cd docs && npx -y mystmd build --html",
-    "docs:live": "cd docs && npx -y mystmd start"
+    "docs:live": "cd docs && myst start",
+    "docs": "cd docs && myst build --html"
   },
-  "devDependencies": { "@types/node": "^26.6.3", "typescript": "^7.0.2" }
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "mystmd": "^1.11.0",
+    "typescript": "^7.0.2"
+  }
 }
