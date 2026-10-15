@@ -19,5 +19,5 @@
     "build:docs": "cd docs && npx -y mystmd build --html",
     "docs:live": "cd docs && npx -y mystmd start"
   },
-  "devDependencies": { "typescript": "^7.0.2" }
+  "devDependencies": { "@types/node": "^26.6.3", "typescript": "^7.0.2" }
 }

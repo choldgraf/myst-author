@@ -48,7 +48,7 @@ See [Get started](https://chrisholdgraf.com/myst-author/get-started) for more op
 See [the documentation](https://chrisholdgraf.com/myst-author/) to get started, take the guided tour, and learn how the pieces fit together.
 To work on MyST Author itself, see [Contributing](docs/develop/contributing.md).
 
-## Development workflow
+## How it was written
 
 A lot of this has been written with the assistance of Claude Opus 5.5.
 This is partially because the main goal of this repo is to create a proof of concept, see what is possible, and see what opportunities there are for upstreaming pieces that need more attention and care.

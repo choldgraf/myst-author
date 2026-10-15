@@ -1,6 +1,6 @@
 ---
 title: Upstream proposals
-description: Changes to mystmd, myst-theme, CodeMirror, JupyterLab and Shiki that would help MyST Author and other editors.
+description: Changes to the projects MyST Author builds on that would help it and other editors.
 ---
 
 Building MyST Author and its sibling repositories turned up things that would be better fixed in the projects they build on.

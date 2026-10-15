@@ -24,7 +24,7 @@ import liveCss from '../dist/live.css'; // the preview's CSS, for the extension'
 
 type Editor = IDocumentWidget<FileEditor>;
 
-// The MyST Author server, which jupyter-server-proxy runs at <base>/myst-author/ (see binder/jupyter_server_config.py).
+// The host server, which jupyter-server-proxy runs at <base>/myst-author/ (see binder/jupyter_server_config.py).
 const server = URLExt.join(PageConfig.getBaseUrl(), 'myst-author/');
 // Jupyter's root folder as a file:// URI (set by jupyter-lsp, which ships with JupyterLab), to map Lab paths to document URIs.
 // The server's `/lsp` bridge starts the language server with the project folder, which overrides this root.

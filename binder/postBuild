@@ -6,7 +6,7 @@ npm run build
 mkdir -p ~/.jupyter
 ln -sf "$PWD/binder/jupyter_server_config.py" ~/.jupyter/jupyter_server_config.py
 
-# The JupyterLab extension, which talks to the MyST Author server that jupyter_server_config.py sets up.
+# The JupyterLab extension, which talks to the host server that jupyter_server_config.py sets up.
 npm run build -w packages/jupyterlab
 labextensions="$(jupyter --data-dir)/labextensions/@myst-author"
 mkdir -p "$labextensions"

@@ -50,7 +50,7 @@ export class MystPreview {
       { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [dist] },
     );
     const { webview } = panel;
-    webview.html = webviewHtml(webview, dist, 'webview', this.project.assets);
+    webview.html = webviewHtml(webview, dist, 'preview', this.project.assets);
     webview.onDidReceiveMessage((m) => this.preview.onMessage(m));
     panel.onDidDispose(() => (this.panel = undefined));
     this.panel = panel;

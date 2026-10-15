@@ -11,7 +11,7 @@ const node = { alias, bundle: true, platform: 'node', format: 'cjs', target: 'no
 const webview = { alias, bundle: true, platform: 'browser', format: 'iife', jsx: 'automatic', minify: true, define: { 'process.env.NODE_ENV': '"production"' }, logLevel: 'warning' };
 await Promise.all([
   build({ ...node, entryPoints: ['src/extension.ts'], outfile: 'dist/extension.js', external: ['vscode'] }),
-  build({ ...webview, entryPoints: ['src/webview.tsx'], outfile: 'dist/webview.js' }),
+  build({ ...webview, entryPoints: ['src/preview-webview.tsx'], outfile: 'dist/preview.js' }),
   build({ ...webview, entryPoints: ['src/live-webview.tsx'], outfile: 'dist/live.js' }),
 ]);
 

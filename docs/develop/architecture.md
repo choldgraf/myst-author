@@ -9,11 +9,8 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 
 ## Packages
 
-[`mystmd-client`](https://github.com/choldgraf/mystmd-client) (from GitHub)
-: Starts and talks to mystmd.
-  `mystmd-client/start` runs `myst start --headless`.
-  `mystmd-client/content-server` reads built page JSON from mystmd's *content server*, the local HTTP server that `myst start --headless` runs.
-  `mystmd-client/parse` parses a single page with mystmd's parser and transforms.
+The language server (mystmd-lsp) and the mystmd helpers (mystmd-client) live in their own repositories; see [What each one owns](repositories.md#what-each-one-owns).
+The packages here read built pages from mystmd's *content server*, the local HTTP server that `myst start --headless` runs.
 
 `packages/preview` (`@myst-author/preview`)
 : Renders a MyST page with `myst-to-react`, from the [fast in-browser parse or mystmd's built page](../guide/preview.md#fast-and-built-previews).
@@ -27,11 +24,6 @@ The editor features live in reusable packages, and each host (the web app, VS Co
   Its `pageLook` extension makes the editor read like the page, as in the web app and the VS Code live editor.
   `@myst-author/preview/build` compiles the preview's CSS for hosts that bundle it.
   Each extension implements the preview's `PreviewHost` interface to open files and look up labels.
-
-[`mystmd-lsp`](https://github.com/choldgraf/mystmd-lsp) (from npm)
-: The language server for MyST references: completion, hover, go to definition, warnings, hints, and external references.
-  It lives in its own repository and works in any LSP client; the hosts here are its editor integrations.
-  The web app and JupyterLab run its npm bundle, `mystmd-lsp/dist/server.cjs`; see [How the repositories fit together](repositories.md#what-each-one-owns) for VS Code.
 
 `packages/lsp-client` (`@myst-author/lsp-client`)
 : Connects the hosts to the language server.
@@ -91,7 +83,7 @@ flowchart TB
    If the connection drops, the browser reconnects and re-opens its files.
    mystmd-lsp's [How it works](https://chrisholdgraf.com/mystmd-lsp/how-it-works) explains how the server uses mystmd.
 
-The VS Code extension does the same without the host server: it asks the MyST Language Server extension's server where mystmd is (see [How the repositories fit together](repositories.md#what-each-one-owns)) and fetches built pages from it directly.
+The VS Code extension does the same without the host server: the language server tells it where mystmd is, and it fetches built pages from it directly.
 
 The JupyterLab extension uses the host server, which jupyter-server-proxy runs inside Jupyter.
 Lab's editors connect to its `/lsp` bridge, and live preview and the preview panel fetch built pages through its `/myst` proxy.
