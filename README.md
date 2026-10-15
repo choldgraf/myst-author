@@ -7,7 +7,7 @@ An editor for [MyST](https://mystmd.org) projects.
 You write Markdown and see it rendered in place, with the block you're editing showing its source.
 Cross-references are completed and checked as you type, across the whole project.
 
-![The editor: a file list, the Markdown source with reference hints, and the rendered preview](docs/images/editor.png)
+![Clicking a rendered block shows its Markdown, editing it, clicking away to render it again, then opening the side-by-side preview](docs/images/myst-author.gif)
 
 > [!NOTE]
 > This is an early prototype.
