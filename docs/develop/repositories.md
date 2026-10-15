@@ -67,6 +67,7 @@ Put each feature in the lowest repository that can hold it:
 ## Keeping them independent
 
 - Repositories depend on each other only through published artifacts, a package from npm or git or an editor extension, never by path.
+  VS Code extensions go to both the Marketplace and Open VSX (which code-server uses), lowest layer first, since extension dependencies carry no version and are resolved from whichever gallery the editor uses.
 - A rule that one repository relies on is part of the other's documented interface.
   For example, MyST Author follows preview links to labels through mystmd-lsp's workspace symbols, so mystmd-lsp [documents how it names them](https://chrisholdgraf.com/mystmd-lsp/features#symbols).
   Likewise, MyST Author asks where the project is with mystmd-lsp's `myst/project` request, which its [configuration page](https://chrisholdgraf.com/mystmd-lsp/configuration) documents.

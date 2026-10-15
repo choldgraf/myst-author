@@ -8,7 +8,7 @@ import { webviewUrl, type Project } from './project.ts';
 export function activate(context: vscode.ExtensionContext) {
   let preview: MystPreview | undefined;
   // The live editor can open before the project is known (a restored tab), so it gets the promise.
-  const started = project();
+  const started = project().catch((e) => void vscode.window.showErrorMessage(`MyST Author: ${e.message}`));
   started.then((p) => {
     if (p) preview = new MystPreview(context, p);
   });

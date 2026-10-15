@@ -59,8 +59,6 @@ The tour opens Markdown files in the live editor.
 
 - Highlighting comes from the [MyST Syntax](https://github.com/choldgraf/myst-syntax) extension, which the MyST Language Server extension depends on, so VS Code installs it with them.
   Nothing else is needed for highlighting.
-- The extension turns off VS Code's own Markdown link suggestions (`markdown.suggest.paths.enabled`) in every Markdown file, since they suggest GitHub-style heading slugs that mystmd doesn't use for labeled headings.
-  The language server completes files and labels instead.
 - mystmd's and the language server's output go to the MyST Language Server extension's output channel.
 - To use your own build of the language server, set its `mystmdLsp.serverPath` setting.
 

@@ -52,9 +52,6 @@
           "group": "navigation"
         }
       ]
-    },
-    "configurationDefaults": {
-      "markdown.suggest.paths.enabled": false
     }
   },
   "extensionDependencies": [
