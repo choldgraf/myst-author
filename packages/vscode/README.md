@@ -25,7 +25,8 @@ code --install-extension packages/vscode/myst-author.vsix
 ```
 
 `npm run vscode` from the repo root does both, replacing any copy you installed before.
-Until MyST Syntax is on the Marketplace, build and install its `.vsix` from the [myst-syntax](https://github.com/choldgraf/myst-syntax) repo first (`npm run package -w packages/vscode` there), since VS Code resolves extension dependencies from the Marketplace.
+Until MyST Syntax is on the Marketplace, build and install its `.vsix` from the [myst-syntax](https://github.com/choldgraf/myst-syntax) repo first (`npm run package -w packages/vscode` there), since VS Code resolves extension dependencies from the Marketplace and won't activate this extension without it.
+The same goes for `--extensionDevelopmentPath` above and for `npm run demo:vscode` below, whose fresh extensions folder has nothing in it.
 Reload open VS Code windows afterwards.
 `npm run demo:vscode` instead opens a fresh copy of the tour.
 It opens in a separate VS Code with its own settings and extensions, so your own setup doesn't change and extensions you've installed don't load.

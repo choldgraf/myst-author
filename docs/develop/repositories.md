@@ -20,7 +20,7 @@ flowchart LR
   theme[("myst-theme")]
   hosts --> preview
   hosts -- "package" --> lsp
-  hosts -- "extension" --> syntax
+  hosts -- "extension · package" --> syntax
   hosts -- "package" --> client
   preview -- "package" --> client
   preview --> theme
@@ -42,6 +42,7 @@ flowchart LR
 | [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
 
 Hosts start mystmd themselves and pass its address to mystmd-lsp, even though mystmd-lsp can start it.
+The web app and the VS Code live editor import `myst-syntax/codemirror` from the package, since a TextMate grammar doesn't reach a CodeMirror webview; VS Code's Markdown files get the grammar from the extension.
 A host runs several language servers for one project (one per browser tab or VS Code live editor), and they all share one mystmd.
 
 Nothing depends on [myst-parser-unified](https://chrisholdgraf.com/myst-parser-unified/) yet.
