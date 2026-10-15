@@ -213,7 +213,7 @@ export function bodyStart(text: string) {
 /**
  * Live preview that reads like the page: a centred column, a proportional font (code stays monospace), and no gutters.
  * Source text and headings use the rendered page's sizes, so showing a block's source doesn't reflow the page.
- * The web app and the VS Code live editor use it. JupyterLab keeps Lab's editor look.
+ * The web editor and the VS Code live editor use it. JupyterLab keeps Lab's editor look.
  */
 export const pageLook: Extension = [
   EditorView.theme({

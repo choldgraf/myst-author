@@ -7,7 +7,7 @@ Install it from source, as below, or try it on [Binder](https://chrisholdgraf.co
 ## How it works
 
 The extension is a frontend only.
-It talks to the web app's host server (`packages/app/server`), which runs mystmd and the language server for one project.
+It talks to the web editor's host server (`packages/app/server`), which runs mystmd and the language server for one project.
 [jupyter-server-proxy](https://jupyter-server-proxy.readthedocs.io) runs that server at `/myst-author/` under the Jupyter server's URL.
 See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) for the setup.
 `MYST_AUTHOR_PROJECT` sets the project folder.
@@ -25,7 +25,7 @@ npm run demo:lab                   # a copy of the tour
 npm run lab -- path/to/project     # or your own MyST project
 ```
 
-`npm run lab` builds the web app and the extension, then starts JupyterLab in the project folder with both.
+`npm run lab` builds the web editor and the extension, then starts JupyterLab in the project folder with both.
 JupyterLab and jupyter-server-proxy run in a throwaway `uvx` environment, with Jupyter's config and extensions in `packages/jupyterlab/dist/jupyter/`.
 Your own Jupyter setup doesn't change, and extensions you've installed, such as jupyterlab-myst, don't load.
 Options after the project go to `jupyter lab`, for example `npm run lab -- . --port 9000`.

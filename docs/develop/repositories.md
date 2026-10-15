@@ -10,7 +10,7 @@ Each repository documents its own interface.
 ```{mermaid}
 flowchart LR
   subgraph author["myst-author"]
-    hosts["Hosts<br/>web app · VS Code · JupyterLab"]
+    hosts["Hosts<br/>web editor · VS Code · JupyterLab"]
     preview["preview"]
   end
   lsp["mystmd-lsp<br/>language server"]
@@ -43,10 +43,10 @@ flowchart LR
 | [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview, once it's published |
 | [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server where no extension does, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
 
-The web app and JupyterLab hosts start mystmd and pass its address to the language server, along with `--root` for their one project.
+The web editor and JupyterLab hosts start mystmd and pass its address to the language server, along with `--root` for their one project.
 In VS Code the MyST Language Server extension owns the language server, which finds each file's project and starts one mystmd per project.
 MyST Author asks it which project a file belongs to, and where that project's mystmd is, through the server's `myst/project` request.
-The web app and the VS Code live editor import `myst-syntax/codemirror` from the package, since a TextMate grammar doesn't reach a CodeMirror webview.
+The web editor and the VS Code live editor import `myst-syntax/codemirror` from the package, since a TextMate grammar doesn't reach a CodeMirror webview.
 VS Code's Markdown files get the grammar from the extension.
 Each browser tab and each VS Code live editor also runs a language server of its own, and those for one project share its mystmd.
 
@@ -65,7 +65,7 @@ Put each feature in the lowest repository that can hold it:
    Every LSP editor then gets it, not just MyST Author's hosts.
 3. **myst-syntax**, if it's about how MyST source looks.
 4. **`packages/preview`**, if it's about how MyST renders.
-   The web app, JupyterLab and the VS Code live editor all share it.
+   The web editor, JupyterLab and the VS Code live editor all share it.
 5. **A host**, only for what depends on that editor (see [Adding a host](architecture.md#adding-a-host)).
 
 ## Keeping them independent

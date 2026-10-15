@@ -5,7 +5,7 @@ description: The packages that make up MyST Author and how they talk to each oth
 
 MyST Author is a set of small packages in one repository.
 For how it fits with mystmd-lsp, myst-syntax and the other repositories, see [How the repositories fit together](repositories.md).
-The editor features live in reusable packages, and each host (the web app, VS Code, JupyterLab) wires them together.
+The editor features live in reusable packages, and each host (the web editor, VS Code, JupyterLab) wires them together.
 
 ## Packages
 
@@ -21,7 +21,7 @@ The packages here read built pages from mystmd's *content server*, the local HTT
   `@myst-author/preview/controller` runs in the extension and drives that page: it sends the current file and handles clicks.
   Its `findLabel` finds where a label is defined, through the language server's workspace symbols.
   `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block with the cursor.
-  Its `pageLook` extension makes the editor read like the page, as in the web app and the VS Code live editor.
+  Its `pageLook` extension makes the editor read like the page, as in the web editor and the VS Code live editor.
   `@myst-author/preview/build` compiles the preview's CSS for hosts that bundle it.
   The VS Code and JupyterLab hosts implement the preview's `PreviewHost` interface to open files and look up labels.
 
@@ -47,7 +47,7 @@ The packages here read built pages from mystmd's *content server*, the local HTT
   It adds live preview to them, and shows the preview page beside them.
   Notebook Markdown cells you aren't editing render with mystmd's build.
 
-## How the web app fits together
+## How the web editor fits together
 
 ```{mermaid}
 flowchart TB
@@ -85,7 +85,7 @@ flowchart TB
 
 The VS Code extension does the same without the host server.
 The language server tells it which project each file belongs to and where that project's mystmd is, and it fetches built pages from there directly.
-The web app and JupyterLab hosts start the language server with `--root`, so each of them is one project.
+The web editor and JupyterLab hosts start the language server with `--root`, so each of them is one project.
 
 The JupyterLab extension uses the host server, which jupyter-server-proxy runs inside Jupyter.
 Lab's editors connect to its `/lsp` bridge, and live preview and the preview panel fetch built pages through its `/myst` proxy.
@@ -110,7 +110,7 @@ A host does only what depends on where it runs:
 ## Design choices
 
 - Each feature goes in the lowest layer that can hold it, as [Where a feature goes](repositories.md#where-a-feature-goes) describes.
-  The web app is the simplest host, not a full IDE.
+  The web editor is the simplest host, not a full IDE.
   Features that VS Code and JupyterLab already have, such as git or file management, are left to them.
 - The preview uses mystmd's own code.
   The fast preview uses mystmd's parser and transforms, through mystmd-client, as the language server does, so the running system has no second parser.

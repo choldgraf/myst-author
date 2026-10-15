@@ -29,7 +29,7 @@ export type FromLive =
 const toPos = (p: vscode.Position): Pos => ({ line: p.line, character: p.character });
 
 /**
- * Edits Markdown files in a webview with the same CodeMirror live preview as the web app and JupyterLab.
+ * Edits Markdown files in a webview with the same CodeMirror live preview as the web editor and JupyterLab.
  * VS Code doesn't let extensions render HTML inside its text editor, so this is a custom editor on the same TextDocument:
  * saving, the dirty flag, and a text editor open on the same file all stay VS Code's.
  */
@@ -64,7 +64,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     let server: ReturnType<typeof spawnLsp> | undefined;
     let stopWatch: (() => void) | undefined;
     const connect = (p: Project) => {
-      // A server of its own, as each web app tab gets: lsp-client speaks raw LSP, which VS Code's language client can't pass on.
+      // A server of its own, as each web editor tab gets: lsp-client speaks raw LSP, which VS Code's language client can't pass on.
       server = spawnLsp(p.server, [`--content-server=${p.url}`, `--root=${p.root}`], (message) => post({ type: 'lsp', message }));
       post({ type: 'connect', root: vscode.Uri.file(p.root).toString(), uri: document.uri.toString() });
       // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.

@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { PreviewController } from '@myst-author/preview/controller';
 import { isMarkdown, linkHost, projectPath, webviewHtml, type Project, type ProjectFor } from './project.ts';
 
-/** A webview beside the editor that previews the active markdown file, like the web app's preview pane. */
+/** A webview beside the editor that previews the active markdown file, like the web editor's preview pane. */
 export class MystPreview {
   private panel?: vscode.WebviewPanel;
   private editor?: vscode.TextEditor; // the last Markdown editor that is a page of a project
