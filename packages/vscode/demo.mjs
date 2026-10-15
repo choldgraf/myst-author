@@ -14,5 +14,8 @@ cpSync(join(repo, 'docs/examples/tour'), tour, { recursive: true });
 execFileSync('npm', ['run', 'package'], { cwd: import.meta.dirname, stdio: 'inherit' });
 const vscode = join(tmpdir(), 'myst-author-vscode');
 const dirs = ['--user-data-dir', join(vscode, 'user'), '--extensions-dir', join(vscode, 'extensions')];
-execFileSync('code', [...dirs, '--install-extension', join(import.meta.dirname, 'myst-author.vsix'), '--force'], { stdio: 'inherit' });
+// The extensions this one depends on come from deps/ (see deps.mjs); build them once with `node deps.mjs`.
+for (const vsix of ['deps/myst-syntax.vsix', 'deps/mystmd-lsp.vsix', 'myst-author.vsix']) {
+  execFileSync('code', [...dirs, '--install-extension', join(import.meta.dirname, vsix), '--force'], { stdio: 'inherit' });
+}
 execFileSync('code', [...dirs, tour, join(tour, 'index.md')], { stdio: 'inherit' });

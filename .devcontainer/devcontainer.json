@@ -3,10 +3,10 @@
 {
   "name": "MyST Author",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
-  "postCreateCommand": "npm ci && npm install -g mystmd && npm run package -w packages/vscode",
+  "postCreateCommand": "npm ci && npm install -g mystmd && npm run package -w packages/vscode && node packages/vscode/deps.mjs",
   // `code` only reaches the editor once it has attached, so install the extension here rather than in postCreateCommand.
   "postAttachCommand": {
-    "extension": "code --install-extension packages/vscode/myst-author.vsix",
+    "extension": "code --install-extension packages/vscode/deps/myst-syntax.vsix && code --install-extension packages/vscode/deps/mystmd-lsp.vsix && code --install-extension packages/vscode/myst-author.vsix",
     "app": "npm start -- docs/examples/tour"
   },
   "forwardPorts": [4321],
