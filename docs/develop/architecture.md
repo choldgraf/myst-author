@@ -31,8 +31,7 @@ The editor features live in reusable packages, and each host (the web app, VS Co
 [`mystmd-lsp`](https://github.com/choldgraf/mystmd-lsp) (from npm)
 : The language server for MyST references: completion, hover, go to definition, warnings, hints, and external references.
   It lives in its own repository and works in any LSP client; the hosts here are its editor integrations.
-  The web app and JupyterLab run its npm bundle, `mystmd-lsp/dist/server.cjs`; in VS Code the MyST Language Server extension runs it.
-  [How the repositories fit together](repositories.md#what-each-one-owns) explains who starts mystmd for it.
+  The web app and JupyterLab run its npm bundle, `mystmd-lsp/dist/server.cjs`; see [How the repositories fit together](repositories.md#what-each-one-owns) for VS Code.
 
 `packages/lsp-client` (`@myst-author/lsp-client`)
 : Connects the hosts to the language server.

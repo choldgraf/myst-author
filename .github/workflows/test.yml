@@ -23,5 +23,5 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npm run build -w packages/vscode
+      - run: npm run package -w packages/vscode
       - run: npm run build -w packages/jupyterlab

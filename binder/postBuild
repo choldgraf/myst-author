@@ -16,8 +16,8 @@ ln -sfn "$PWD/packages/jupyterlab/dist/labextension" "$labextensions/jupyterlab"
 # The standalone release bundles its own Node; conda-forge's code-server needs an older Node than this repo.
 curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix="$HOME/.local"
 npm run package -w packages/vscode
-node packages/vscode/deps.mjs # the extensions it depends on, until they are on Open VSX
-for vsix in packages/vscode/deps/myst-syntax.vsix packages/vscode/deps/mystmd-lsp.vsix packages/vscode/myst-author.vsix; do
+node packages/vscode/deps.mjs # the extensions it depends on, until they are published (see deps.mjs)
+for vsix in packages/vscode/deps/*.vsix packages/vscode/myst-author.vsix; do
   ~/.local/bin/code-server --install-extension "$vsix"
 done
 # A Binder is a throwaway copy of this repo, so skip the "trust this folder?" prompt that disables extensions.

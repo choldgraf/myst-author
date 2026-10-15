@@ -26,7 +26,7 @@ code --install-extension packages/vscode/myst-author.vsix
 ```
 
 `npm run vscode` from the repo root does both, replacing any copy you installed before.
-Until MyST Language Server and MyST Syntax are published, install their `.vsix` files first, since VS Code resolves extension dependencies from its gallery (the Marketplace, or Open VSX for code-server) and won't activate this extension without them.
+Until MyST Language Server and MyST Syntax are published, install their `.vsix` files first, since VS Code resolves extension dependencies from its gallery and won't activate this extension without them.
 `node packages/vscode/deps.mjs` builds both into `packages/vscode/deps/`; install each with `code --install-extension`.
 The same goes for `--extensionDevelopmentPath` above and for `npm run demo:vscode` below, whose fresh extensions folder has nothing in it.
 Reload open VS Code windows afterwards.

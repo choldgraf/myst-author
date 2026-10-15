@@ -25,6 +25,7 @@ flowchart LR
   preview -- "package" --> client
   preview --> theme
   lsp -- "package" --> client
+  lsp -- "extension" --> syntax
   client --> mystmd
   parser -. "output compared with mystmd's parser" .-> mystmd
 ```
@@ -39,7 +40,7 @@ flowchart LR
 | [myst-syntax](https://github.com/choldgraf/myst-syntax) | Highlighting MyST syntax, for CodeMirror and TextMate, and the VS Code and JupyterLab extensions that ship it | Anyone who wants MyST highlighted in VS Code, JupyterLab, CodeMirror, or Shiki |
 | [myst-parser-unified](https://github.com/choldgraf/myst-parser-unified) | Parsing MyST with micromark, with line and column positions on every node | People using the unified Markdown tools (remark), and mystmd as a possible future parser |
 | [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview, once it's published |
-| [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
+| [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server where no extension does, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
 
 The web app and JupyterLab hosts start mystmd and pass its address to the server.
 In VS Code the MyST Language Server extension owns the server, which starts mystmd, and MyST Author asks it for the address through the server's `myst/project` request.
@@ -68,6 +69,7 @@ Put each feature in the lowest repository that can hold it:
 
 - Repositories depend on each other only through published artifacts, a package from npm or git or an editor extension, never by path.
   VS Code extensions go to both the Marketplace and Open VSX (which code-server uses), lowest layer first, since extension dependencies carry no version and are resolved from whichever gallery the editor uses.
+  Until they are published, `packages/vscode/deps.mjs` builds them from their repositories for Binder, Codespaces and the demo; its header says what to clean up afterwards.
 - A rule that one repository relies on is part of the other's documented interface.
   For example, MyST Author follows preview links to labels through mystmd-lsp's workspace symbols, so mystmd-lsp [documents how it names them](https://chrisholdgraf.com/mystmd-lsp/features#symbols).
   Likewise, MyST Author asks where the project is with mystmd-lsp's `myst/project` request, which its [configuration page](https://chrisholdgraf.com/mystmd-lsp/configuration) documents.
