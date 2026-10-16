@@ -94,7 +94,7 @@ async function show(docs: IDocumentManager, path: string, line: number) {
   w?.content.editor?.focus();
 }
 
-/** A left sidebar panel listing the project's table of contents, which opens a page on click. */
+/** A left sidebar panel with the project's table of contents. Clicking a page opens it. The plugin's `watch` callback calls `refresh()`. */
 class MystToc extends Widget {
   constructor(
     private docs: IDocumentManager,
@@ -103,13 +103,12 @@ class MystToc extends Widget {
     super();
     this.id = 'myst-author-toc';
     this.title.label = 'MyST';
-    this.title.caption = 'MyST pages';
+    this.title.caption = 'MyST Pages';
     this.addClass('myst-author-toc');
-    this.refresh();
   }
 
   async refresh() {
-    const [entries, root] = await Promise.all([content.toc().catch(() => []), this.project]);
+    const [entries, root] = await Promise.all([content.toc().catch((err) => { console.warn(`MyST Author: no table of contents (${err})`); return []; }), this.project]);
     this.node.replaceChildren(
       ...entries.map(({ title, level, file }) => {
         const item = document.createElement(file ? 'button' : 'div');

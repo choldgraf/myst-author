@@ -40,6 +40,12 @@
         }
       ]
     },
+    "viewsWelcome": [
+      {
+        "view": "mystAuthor.toc",
+        "contents": "Open a page of a MyST project (a folder with myst.yml) to see its table of contents."
+      }
+    ],
     "commands": [
       {
         "command": "mystAuthor.openPreview",

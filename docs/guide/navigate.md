@@ -1,14 +1,16 @@
 ---
 title: Find your way around
-description: The project's table of contents, a MyST-aware page outline, and searching labels by name or title.
+description: The project's table of contents, a MyST-aware page outline, and a search for labels by name or title.
 ---
 
 MyST Author knows your project's table of contents and its labels, not just its files and headings.
-It uses them to list the project's pages, to show each page's outline, and to find any label in the project.
+So it can list the project's pages, outline a page by its sections and figures, and find any label in the project.
 
 ## The table of contents
 
-The pages of your project, in the order mystmd shows them, with parts and nesting from `myst.yml` or from the folder layout.
+This lists the pages of your project in the order the built site shows them.
+It comes from the `toc` in `myst.yml`, or from the files and folders when `myst.yml` has no `toc`.
+A part is a title-only entry in the `toc` that groups pages, and pages nest under their parent page.
 Click a page to open it.
 The list updates when mystmd rebuilds.
 

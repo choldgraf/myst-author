@@ -5,10 +5,10 @@ import { isMarkdown, type Project, type ProjectFor } from './project.ts';
 
 type TocNode = TocEntry & { children: TocNode[] };
 
-/** Nest a flat table of contents by level: each entry goes under the nearest earlier entry with a lower level. */
+/** Nest a flat table of contents by level: each entry goes under the nearest earlier entry with a smaller level. */
 function nest(entries: TocEntry[]) {
   const roots: TocNode[] = [];
-  const open: TocNode[] = []; // the entries a next one could go under, outermost first
+  const open: TocNode[] = []; // the ancestors a next entry could go under, outermost first
   for (const entry of entries) {
     const node: TocNode = { ...entry, children: [] };
     while (open.length && open[open.length - 1].level >= entry.level) open.pop();
@@ -18,13 +18,13 @@ function nest(entries: TocEntry[]) {
   return roots;
 }
 
-/** The "MyST Pages" view in the Explorer: the table of contents of the active Markdown file's project, which opens a page on click. */
+/** The "MyST Pages" view in the Explorer: the table of contents of the active Markdown file's project. Clicking a page opens it. */
 export class MystToc implements vscode.TreeDataProvider<TocNode> {
   private changed = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this.changed.event;
   private project?: Project;
   private unwatch?: () => void;
-  private following?: vscode.TextEditor; // as in MystPreview: a slow project lookup can't overtake a newer one
+  private following?: vscode.TextEditor; // the editor whose project is being looked up, so a slow answer can't overtake a newer one (as in MystPreview)
 
   constructor(context: vscode.ExtensionContext, private projectFor: ProjectFor) {
     context.subscriptions.push(
@@ -36,7 +36,7 @@ export class MystToc implements vscode.TreeDataProvider<TocNode> {
     if (active && isMarkdown(active.document)) this.follow(active);
   }
 
-  /** Show `editor`'s project, and refresh on each of its rebuilds. A file with no project leaves the view on the last one. */
+  /** Follow `editor`'s project. The project's `watch` calls back on connect, which fills the view, and on each rebuild. A file with no project leaves the view on the last one. */
   private async follow(editor: vscode.TextEditor) {
     this.following = editor;
     const project = await this.projectFor(editor.document.uri);
