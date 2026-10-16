@@ -38,7 +38,7 @@ There are two versions of the preview, shown in the same pane:
   Embeds and references whose label mystmd can't find show in red with a ⚠, where mystmd's own site shows nothing.
 
 The editor shows the built preview whenever mystmd's latest build matches the text in the editor, and the fast preview otherwise.
-In the fast preview, blocks you haven't changed since the last matching build still show that build.
+In the fast preview, blocks you haven't touched since the last build keep showing the built version.
 The badge in the toolbar tells you which one you're looking at:
 
 | Badge | Meaning |
@@ -62,7 +62,7 @@ In JupyterLab, set `MYST_AUTHOR_EXECUTE=0` before you start Jupyter.
 
 Outputs look like they do on a mystmd site.
 HTML output, such as a pandas table, shows too.
-HTML with scripts, such as a plotly plot, shows its plain text instead, because its scripts would run with the editor's access to your files.
+HTML with scripts, such as a plotly plot, shows its plain text instead, because scripts there could read your files.
 
 ## mystmd's logs
 

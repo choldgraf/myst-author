@@ -43,12 +43,12 @@ flowchart LR
 | [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview, once it's published |
 | [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server where no extension does, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
 
-Each host starts mystmd and the language server its own way, as [Architecture](architecture.md#how-the-web-editor-fits-together) describes.
+Each host, the web editor, VS Code or JupyterLab, starts mystmd and the language server its own way, as [Architecture](architecture.md#how-the-web-editor-fits-together) describes.
 
 Nothing depends on [myst-parser-unified](https://chrisholdgraf.com/myst-parser-unified/) yet.
 It's a candidate to replace the parser that mystmd-lsp and the preview use.
 mystmd-lsp's design notes list [what a parser must provide to replace its regexes](https://chrisholdgraf.com/mystmd-lsp/design#replacing-the-reference-regexes).
-Its `mystParse` drop-in matches the output of mystmd's parser, myst-parser, on nearly every myst-spec example.
+Its parser matches mystmd's on nearly every myst-spec example.
 
 ## Where a feature goes
 

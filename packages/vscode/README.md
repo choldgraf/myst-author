@@ -26,7 +26,7 @@ npm run package -w packages/vscode   # from the repo root, writes packages/vscod
 code --install-extension packages/vscode/myst-author.vsix
 ```
 
-`npm run vscode` from the repo root does both, replacing any copy you installed before.
+`npm run vscode` from the repo root packages and installs it, replacing any copy you installed before.
 Reload open VS Code windows afterwards.
 
 Until MyST Language Server and MyST Syntax are published, install them first, as [Develop](https://github.com/choldgraf/myst-author/tree/main/packages/vscode#develop) says.

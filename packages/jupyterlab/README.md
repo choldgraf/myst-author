@@ -15,8 +15,8 @@ See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author
 ## Try it
 
 You need Node 24 and [uv](https://docs.astral.sh/uv/).
-Building the extension also needs a `python` with JupyterLab installed, to read which packages Lab shares.
-The `uvx` environment below is only for running Lab.
+You also need JupyterLab installed in your `python`, so the build can see Lab's shared packages.
+`uvx` runs Lab itself.
 From the repo root:
 
 ```sh

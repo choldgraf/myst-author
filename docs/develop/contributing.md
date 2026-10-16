@@ -10,7 +10,7 @@ The other top-level folders are:
 
 - `docs/`: this documentation site.
 - `docs/examples/tour/`: the example project used by the tour, Codespaces, and Binder.
-- `upstream/`: proposals for the projects MyST Author builds on, ranked.
+- `upstream/`: proposals for the projects MyST Author builds on.
 - `.devcontainer/`: the GitHub Codespaces config.
 - `binder/`: the Binder config.
 
@@ -78,4 +78,4 @@ The tour project in `docs/examples/tour/` is a separate MyST project, not part o
 ## Publish the VS Code extension
 
 Publish it to both the Marketplace and Open VSX, which code-server uses.
-Publish the extensions it depends on first, myst-syntax and then mystmd-lsp, since extension dependencies carry no version and resolve from whichever gallery the editor uses.
+Publish the extensions it depends on first, myst-syntax and then mystmd-lsp, since extension dependencies have no version pin and each gallery must already have them.

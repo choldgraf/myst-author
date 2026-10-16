@@ -16,7 +16,7 @@ The packages here read built pages from mystmd's *content server*, the local HTT
 : Renders a MyST page with `myst-to-react`, from the [fast in-browser parse or mystmd's built page](../guide/preview.md#fast-and-built-previews).
   Each rendered block keeps its source line range, which is what click-to-source and scroll sync use.
   `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews show.
-  `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block with the cursor.
+  `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block your cursor is in.
   Smaller entry points parse a page into blocks, drive the preview page from an extension, and compile the preview's CSS.
 
 `packages/lsp-client` (`@myst-author/lsp-client`)
@@ -79,7 +79,7 @@ flowchart TB
 The VS Code extension does the same without the host server.
 The MyST Language Server extension owns the language server, which finds each file's project and starts one mystmd per project.
 MyST Author asks it which project a file belongs to, and where that project's mystmd is, through the server's `myst/project` request, and fetches built pages from there directly.
-Each VS Code live editor runs a language server of its own, and those for one project share its mystmd.
+Each VS Code live editor runs a language server of its own, and live editors in the same project share one mystmd.
 The web editor and JupyterLab hosts start the language server with `--root`, so each of them is one project.
 
 The JupyterLab extension uses the host server, which jupyter-server-proxy runs inside Jupyter.
@@ -91,7 +91,7 @@ Lab reads and saves the files itself, so it doesn't use `/api/files`.
 Everything about MyST lives in the packages.
 A host does only what depends on where it runs:
 
-- It holds the document, wherever the editor keeps its text.
+- It owns the document text.
 - It runs a language server, started with `spawnLsp` and connected to the editor through the LSP client with a project root.
 - It fetches built pages from mystmd and passes each build of the open file to live preview with `offerBuilt`.
 - It opens files and finds labels for the preview through `PreviewHost`, and adds its own commands and toggles.
