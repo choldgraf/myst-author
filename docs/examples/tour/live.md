@@ -77,7 +77,8 @@ Hidden until you open it.
 
 :::{tip} Try this: use a rendered block
 Switch tabs and open the dropdown: they work without showing their Markdown.
-Click the code inside a tab to edit it; code stays in a fixed-width font.
+Click the code inside a tab to edit it.
+Code stays in a fixed-width font.
 :::
 
 ## Warnings

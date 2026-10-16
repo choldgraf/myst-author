@@ -51,10 +51,8 @@ Rebuild and reload the page after changes.
 - Live preview in Markdown files, and in notebooks' Markdown cells while you edit them, as in the web editor.
   Turn it on or off with **MyST: Live Preview** in the Command Palette.
 - Notebooks' Markdown cells that you aren't editing render with mystmd's build, so references to other pages resolve.
-  A cell you've changed since saving shows the fast preview, as while editing, until you save and mystmd rebuilds.
-  If you also have jupyterlab-myst installed, both work, but you may see its rendering flash before MyST Author's appears, because Lab renders the cell with it first.
-  You don't need both, so try MyST Author on its own if that bothers you.
-  In cells that show the build, Cmd/Ctrl-click opens web links, and links to other pages do nothing.
+  A cell you've changed since saving shows the fast preview until the next build.
+  If jupyterlab-myst is also installed, Lab renders the cell with it first, so you may see it flash before MyST Author's rendering.
 - For MyST syntax highlighting while editing, install [jupyterlab-myst-syntax](https://github.com/choldgraf/myst-syntax) (until it is published, build it from that repository).
   The throwaway environments that `npm run lab` and Binder use don't include it yet.
   MyST Author's Lab extension doesn't highlight, by design, so the two don't overlap.

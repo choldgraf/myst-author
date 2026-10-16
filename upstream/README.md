@@ -1,6 +1,6 @@
 # Upstream proposals from myst-author
 
-These are proposals for the maintainers of the projects MyST Author builds on (mystmd, myst-theme, CodeMirror, JupyterLab, jupyterlab-lsp, Shiki) to decide on, not commitments.
+These are proposals for the maintainers of the projects MyST Author builds on to decide on, not commitments.
 
 Ranked by benefit over cost, best first.
 The number is only an id.

@@ -43,11 +43,11 @@ The badge in the toolbar tells you which one you're looking at:
 
 | Badge | Meaning |
 |---|---|
-| `fast preview · unsaved` | The file has unsaved changes, and mystmd only builds saved files. The web editor saves as you type. In JupyterLab and VS Code, save the file to build it. |
-| `fast preview` | mystmd hasn't built this file yet. This happens while mystmd starts, if it fails or stops, and for files it doesn't build, such as files left out of the `toc` in `myst.yml`. In VS Code a file mystmd doesn't build gets no preview at all. |
-| `building…` | Your changes are saved and mystmd is rebuilding. You only see it for files mystmd has built before. A file's first build shows `fast preview`. |
+| `fast preview · unsaved` | The file has unsaved changes, and mystmd only builds saved files. |
+| `fast preview` | mystmd hasn't built this file yet, or doesn't build it. |
+| `building…` | Your changes are saved and mystmd is rebuilding. |
 | `built ✓` | You're looking at mystmd's build of exactly this text. |
-| `no mystmd` | mystmd isn't installed, so only the fast preview is available. In VS Code the MyST Language Server extension shows the warning instead, and the preview doesn't open. |
+| `no mystmd` | mystmd isn't installed, so only the fast preview is available. |
 
 ## Code cells and `{eval}`
 
@@ -55,14 +55,10 @@ The web editor and JupyterLab have mystmd run code cells and inline `{eval}` exp
 In VS Code it's off unless you turn on the MyST Language Server extension's `mystmdLsp.execute` setting, since that extension starts mystmd.
 Running code needs Jupyter.
 Without Jupyter, pages still build and notebooks keep their saved outputs.
-An `{eval}` that hasn't run shows mystmd's "Unexecuted inline expression" warning, as on a mystmd site.
 mystmd runs a page again each time you save a change to its code.
 
 To turn it off in the web editor, run `npm start -- --no-execute path/to/project`.
 In JupyterLab, set `MYST_AUTHOR_EXECUTE=0` before you start Jupyter.
-
-While you edit, results and outputs from the last build stay in place, and an edited code cell's outputs are dimmed until the next build.
-A new `{eval}` shows its code in grey until then.
 
 Outputs look like they do on a mystmd site.
 HTML output, such as a pandas table, shows too.

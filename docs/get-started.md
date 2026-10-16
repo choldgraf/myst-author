@@ -49,8 +49,6 @@ To point it at another folder, stop it with {kbd}`Ctrl+C` in the terminal and ru
 
 Binder builds the repository and opens the tour in JupyterLab, with the [JupyterLab extension](guide/jupyterlab.md).
 The Launcher also has **VS Code**, with the [VS Code extension](guide/vscode.md), and **MyST Author**, the web editor.
-The web editor and JupyterLab only know the tour project, so other files open with the fast preview and no reference help.
-In VS Code, every page of a MyST project gets reference help and the built preview, so the pages of `docs/` do too.
 The first launch can take a few minutes.
 Changes are lost when the Binder session ends.
 

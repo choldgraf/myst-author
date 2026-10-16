@@ -15,15 +15,9 @@ The packages here read built pages from mystmd's *content server*, the local HTT
 `packages/preview` (`@myst-author/preview`)
 : Renders a MyST page with `myst-to-react`, from the [fast in-browser parse or mystmd's built page](../guide/preview.md#fast-and-built-previews).
   Each rendered block keeps its source line range, which is what click-to-source and scroll sync use.
-  `@myst-author/preview/parse` turns a page into blocks with source lines, from the fast parse or from a built page.
-  Its `cellPages` splits a notebook's build into one page per cell.
   `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews show.
-  `@myst-author/preview/controller` runs in the extension and drives that page: it sends the current file and handles clicks.
-  Its `findLabel` finds where a label is defined, through the language server's workspace symbols.
   `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block with the cursor.
-  Its `pageLook` extension makes the editor read like the page, as in the web editor and the VS Code live editor.
-  `@myst-author/preview/build` compiles the preview's CSS for hosts that bundle it.
-  The VS Code and JupyterLab hosts implement the preview's `PreviewHost` interface to open files and look up labels.
+  Smaller entry points parse a page into blocks, drive the preview page from an extension, and compile the preview's CSS.
 
 `packages/lsp-client` (`@myst-author/lsp-client`)
 : Connects the hosts to the language server.
@@ -77,14 +71,15 @@ flowchart TB
 4. The preview fetches the rebuilt page JSON through `/myst` and shows it if it matches the editor text.
    Until then it shows the fast in-browser render.
 5. On each reload event, the editor also re-reads the open file, to show changes made outside it, such as by an LLM or git.
-   A save sends the hash of the text it replaces, and the host server refuses it if the file has changed on disk since.
-   Either way, if you have unsaved edits, the editor asks whether to keep yours or load the file from disk.
+   A save that would overwrite a change on disk is refused, and the editor asks whether to keep your edits or load the file.
 6. Each browser connection to `/lsp` gets its own language server process, started with the project folder and mystmd's address.
    If the connection drops, the browser reconnects and re-opens its files.
    mystmd-lsp's [How it works](https://chrisholdgraf.com/mystmd-lsp/how-it-works) explains how the server uses mystmd.
 
 The VS Code extension does the same without the host server.
-The language server tells it which project each file belongs to and where that project's mystmd is, and it fetches built pages from there directly.
+The MyST Language Server extension owns the language server, which finds each file's project and starts one mystmd per project.
+MyST Author asks it which project a file belongs to, and where that project's mystmd is, through the server's `myst/project` request, and fetches built pages from there directly.
+Each VS Code live editor runs a language server of its own, and those for one project share its mystmd.
 The web editor and JupyterLab hosts start the language server with `--root`, so each of them is one project.
 
 The JupyterLab extension uses the host server, which jupyter-server-proxy runs inside Jupyter.
@@ -96,16 +91,10 @@ Lab reads and saves the files itself, so it doesn't use `/api/files`.
 Everything about MyST lives in the packages.
 A host does only what depends on where it runs:
 
-- It holds the document: the editor's text, and edits to and from wherever it keeps that text (a file on disk, Lab's document model, or VS Code's `TextDocument`).
-- It runs a language server.
-  It starts one with `spawnLsp`, relays its messages to `connectLsp`, and gives the client a project root URI.
-  `connectLsp` takes a websocket URL, or a `messageTransport` over any message channel.
-- It fetches built pages with `contentServer`, and passes each build of the open file to live preview with `offerBuilt`, which shows it if it matches the editor text.
-  For a notebook, it splits the build with `cellPages`, which leaves out cells changed since the build, and passes each remaining page to its cell's editor with `showBuilt`.
-- It opens a file at a line, and finds a label.
-  The preview pane asks for these through `PreviewHost`, and live preview follows links through `followLink`.
-  The language client opens files through `workspace.displayFile`.
-- It adds its own chrome: commands, toggles, and prompts in the host's own UI.
+- It holds the document, wherever the editor keeps its text.
+- It runs a language server, started with `spawnLsp` and connected to the editor through the LSP client with a project root.
+- It fetches built pages from mystmd and passes each build of the open file to live preview with `offerBuilt`.
+- It opens files and finds labels for the preview through `PreviewHost`, and adds its own commands and toggles.
 
 ## Design choices
 

@@ -74,3 +74,8 @@ npm run docs
 
 Pages use `{include}` to pull in the package READMEs where they can, so update the README rather than copying text into a docs page.
 The tour project in `docs/examples/tour/` is a separate MyST project, not part of the docs site.
+
+## Publish the VS Code extension
+
+Publish it to both the Marketplace and Open VSX, which code-server uses.
+Publish the extensions it depends on first, myst-syntax and then mystmd-lsp, since extension dependencies carry no version and resolve from whichever gallery the editor uses.

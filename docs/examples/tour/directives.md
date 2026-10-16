@@ -40,7 +40,8 @@ Content of the second tab.
 
 :::{tip} Try this: edit a nested directive
 Add a third `{tab-item}` inside the `{tab-set}` above.
-Click a tab to switch to it; that doesn't show the Markdown, but clicking the tab's text does.
+Click a tab to switch to it.
+That doesn't show the Markdown, but clicking the tab's text does.
 :::
 
 ## Next
