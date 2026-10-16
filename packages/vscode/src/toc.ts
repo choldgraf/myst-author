@@ -18,7 +18,7 @@ function nest(entries: TocEntry[]) {
   return roots;
 }
 
-/** The "MyST Pages" view in the Explorer: the table of contents of the active Markdown file's project. Clicking a page opens it. */
+/** The "MyST TOC" view in the Explorer: the table of contents of the active Markdown file's project. Clicking a page opens it. */
 export class MystToc implements vscode.TreeDataProvider<TocNode> {
   private changed = new vscode.EventEmitter<void>();
   readonly onDidChangeTreeData = this.changed.event;

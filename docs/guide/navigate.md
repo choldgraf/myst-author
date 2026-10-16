@@ -14,7 +14,7 @@ A part is a title-only entry in the `toc` that groups pages, and pages nest unde
 Click a page to open it.
 The list updates when mystmd rebuilds.
 
-- In VS Code, it's the **MyST Pages** view in the Explorer sidebar.
+- In VS Code, it's the **MyST TOC** view in the Explorer sidebar.
   It shows the project of the file you're editing.
 - In JupyterLab, it's the **MyST** tab in the left sidebar.
 
