@@ -107,5 +107,8 @@ A host does only what depends on where it runs:
   [myst-parser-unified](repositories.md#what-each-one-owns) is a separate experiment, not a dependency.
 - Markdown is the source of truth.
   Changes go one way, from the Markdown to the preview.
+- When an editing choice is open, do what [Obsidian](https://obsidian.md) does.
+  Its live preview is the closest thing to what we want, and people already know it.
+  For example, a click on a rendered link follows it instead of showing its source.
 - Everything works with released mystmd.
   Changes that would make it better are written up as [upstream proposals](upstream.md).

@@ -19,7 +19,7 @@ const mounted = new WeakMap<HTMLElement, { root: Root; resize: ResizeObserver }>
 const shadowStyles = Facet.define<CSSStyleSheet, CSSStyleSheet | undefined>({ combine: (sheets) => sheets[0] });
 
 type FollowLink = (href: string, line?: number) => void;
-// What Cmd/Ctrl-click on a rendered link does, when the host passes `onFollowLink` (see `livePreview`).
+// What a click on a rendered link does, when the host passes `onFollowLink` (see `livePreview`).
 const linkFollower = Facet.define<FollowLink, FollowLink | undefined>({ combine: (fs) => fs[0] });
 
 // Node positions and keys change on every parse, so leave them out, and unchanged blocks keep their DOM.
@@ -54,7 +54,7 @@ class Rendered extends WidgetType {
     dom.addEventListener('mousedown', (e) => {
       const target = e.composedPath()[0] as Element; // the target inside a shadow root
       if (e.button !== 0 || target.closest?.(INTERACTIVE)) return;
-      if ((e.metaKey || e.ctrlKey) && target.closest?.('a[href]')) return; // Preview follows the link on click, as in the preview pane
+      if (!(e.metaKey || e.ctrlKey) && target.closest?.('a[href]') && view.state.facet(linkFollower)) return; // Preview follows the link on click, as in the preview pane
       e.preventDefault();
       const span = view.state.field(liveField).spans.find((s) => s.from === view.posAtDOM(dom));
       if (!span) return;
@@ -182,7 +182,7 @@ const theme = EditorView.baseTheme({
  * Like `Preview`, blocks need myst-theme's and KaTeX's CSS. By default that's the page's CSS.
  * A host whose own CSS clashes with it (JupyterLab) passes the CSS as `css`: blocks then render in shadow roots that share it.
  * KaTeX's fonts still need its CSS on the page, because shadow roots ignore `@font-face`. The host sets the editor's font.
- * `onFollowLink` handles Cmd/Ctrl-click on a rendered link, like `Preview`'s. A plain click shows the source.
+ * `onFollowLink` handles a click on a rendered link, like `Preview`'s. Cmd/Ctrl-click shows the source.
  */
 export function livePreview({ css, onFollowLink }: { css?: string; onFollowLink?: FollowLink } = {}): Extension {
   const base = [liveField, arrows, theme, onFollowLink ? linkFollower.of(onFollowLink) : []];

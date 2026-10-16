@@ -76,6 +76,7 @@ mystmd's build output, including its warnings, shows up as `[myst]` lines:
 
 Click a paragraph, heading, or other block in the preview and the editor moves to its first line.
 Clicking tabs, dropdowns, or buttons in the preview doesn't move the editor, and neither does selecting text.
+A click on a link [follows it](#links-in-the-preview).
 
 ## Scroll sync
 
@@ -85,7 +86,7 @@ It works in one direction only: scrolling the preview doesn't move the editor.
 ## Links in the preview
 
 - Hovering a reference to another page shows its target, such as the figure or equation, in the built preview.
-- A plain click on a link jumps to its source line, like any other block.
-- Cmd-click (or Ctrl-click) follows the link.
+- A click on a link follows it.
   Web links open in a new browser tab.
   Links to other pages or labels open that file in the editor, at the target.
+- Cmd-click (or Ctrl-click) a link to jump to its source line instead, like any other block.

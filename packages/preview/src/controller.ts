@@ -106,7 +106,7 @@ type LinkHost = Pick<PreviewHost, 'open' | 'openExternal' | 'findLabel' | 'warn'
   fileForSlug(slug: string): string | undefined; // see `ContentServer`
 };
 
-/** Cmd/Ctrl-click on a preview link in file `here`. `line` is where an in-page `#id` target renders, if found. */
+/** A click on a preview link in file `here`. `line` is where an in-page `#id` target renders, if found. */
 export async function followLink(host: LinkHost, here: string, href: string, line?: number) {
   if (/^[a-z][\w+.-]*:/i.test(href)) return host.openExternal(href); // http:, mailto:, …
   const [path, id] = href.split('#');

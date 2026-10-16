@@ -63,7 +63,7 @@ function showCell(cell: Cell) {
     shadow.adoptedStyleSheets = [cellSheet];
     cellRoots.set(node, (root = createRoot(shadow.appendChild(document.createElement('div')))));
   }
-  // Preview ignores a plain click on a link, so Lab stays open. Cmd/Ctrl-click opens external links, and other pages' links do nothing.
+  // A click opens external links in a new tab, and other pages' links do nothing.
   const onFollowLink = (href: string) => /^[a-z][\w+.-]*:/i.test(href) && openExternal(href);
   root.render(result ? createElement(Preview, { result, onFollowLink }) : createElement('slot'));
 }
@@ -103,7 +103,7 @@ class MystToc extends Widget {
     super();
     this.id = 'myst-author-toc';
     this.title.label = 'MyST';
-    this.title.caption = 'MyST Pages';
+    this.title.caption = 'MyST TOC';
     this.addClass('myst-author-toc');
   }
 

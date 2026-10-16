@@ -62,7 +62,7 @@ type Props = {
   topLine?: number;
   onLineClick?: (line: number) => void;
   /**
-   * Cmd/Ctrl-click on a link, with its raw `href`. The preview never navigates by itself.
+   * A click on a link, with its raw `href`. The preview never navigates by itself.
    * For an in-page `#id` link, `line` is where the target renders, in case the host can't find the label.
    */
   onFollowLink?: (href: string, line?: number) => void;
@@ -92,9 +92,9 @@ export function Preview({ result, topLine, onLineClick, onFollowLink }: Props) {
     const target = e.target as HTMLElement;
     const href = target.closest('a')?.getAttribute('href');
     if (href != null) {
-      // A plain click on a link jumps to its source like any other block.
+      // A click follows the link, as in Obsidian. Cmd/Ctrl-click jumps to its source like any other block.
       e.preventDefault();
-      if (e.metaKey || e.ctrlKey) {
+      if (!(e.metaKey || e.ctrlKey)) {
         const id = href.startsWith('#') ? decodeURIComponent(href.slice(1)) : '';
         const block = id ? article.current!.querySelector(`[id="${CSS.escape(id)}"]`)?.closest<HTMLElement>('[data-line-start]') : null;
         return onFollowLink?.(href, block ? Number(block.dataset.lineStart) : undefined);

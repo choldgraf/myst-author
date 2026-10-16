@@ -24,7 +24,7 @@ export type FromLive =
   | { type: 'edit'; changes: Change[] } // one CodeMirror transaction: positions in the text before it, as in a WorkspaceEdit
   | { type: 'lsp'; message: string }
   | { type: 'definition' | 'references' | 'rename'; at: Pos } // cross-file actions, which VS Code handles
-  | { type: 'follow'; href: string; line?: number }; // Cmd/Ctrl-click on a rendered link
+  | { type: 'follow'; href: string; line?: number }; // a click on a rendered link
 
 const toPos = (p: vscode.Position): Pos => ({ line: p.line, character: p.character });
 

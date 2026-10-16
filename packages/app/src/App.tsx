@@ -19,7 +19,7 @@ type Doc = { path: string; text: string };
 const content = contentServer('myst');
 // Live preview in the editor, switched on and off without remounting it.
 const liveMode = new Compartment();
-// Cmd/Ctrl-click on a rendered link calls App's latest `follow`.
+// A click on a rendered link calls App's latest `follow`.
 const followRef: { current?: (href: string, line?: number) => void } = {};
 const liveExtensions = [livePreview({ onFollowLink: (href, line) => followRef.current?.(href, line) }), pageLook];
 
@@ -212,7 +212,7 @@ export function App() {
     else open(item.path);
   }
 
-  // Cmd/Ctrl-click on a preview link: external links open a tab, internal ones open the file at the target.
+  // A click on a preview link: external links open a tab, internal ones open the file at the target.
   function follow(href: string, line?: number) {
     if (!doc) return;
     followLink({
