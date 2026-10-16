@@ -1,10 +1,20 @@
 ---
 title: Find your way around
-description: A MyST-aware page outline, and searching labels by name or title.
+description: The project's table of contents, a MyST-aware page outline, and searching labels by name or title.
 ---
 
-MyST Author knows your project's labels, not just its headings.
-It uses them to show each page's outline and to find any label in the project.
+MyST Author knows your project's table of contents and its labels, not just its files and headings.
+It uses them to list the project's pages, to show each page's outline, and to find any label in the project.
+
+## The table of contents
+
+The pages of your project, in the order mystmd shows them, with parts and nesting from `myst.yml` or from the folder layout.
+Click a page to open it.
+The list updates when mystmd rebuilds.
+
+- In VS Code, it's the **MyST Pages** view in the Explorer sidebar.
+  It shows the project of the file you're editing.
+- In JupyterLab, it's the **MyST** tab in the left sidebar.
 
 ## The page outline
 

@@ -43,6 +43,7 @@ In `myst start`:
 - It listens on IPv6 `localhost` only, so `127.0.0.1` fails.
   This could be documented, or it could bind both.
 - It doesn't rewrite `myst.xref.json` on edits (see U1).
+- `config.json` lists each page's `slug`, `title` and `level` but not its file, so a table of contents that opens files has to fetch every page's JSON to learn them.
 
 For embedding the myst-theme preview (U5):
 

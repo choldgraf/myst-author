@@ -1,2 +1,8 @@
 /* KaTeX's fonts for the extension's shadow roots, which ignore @font-face. KaTeX's other rules only match its own classes. */
 @import 'katex/dist/katex.min.css';
+
+.myst-author-toc { overflow: auto; padding: 4px 0; font-size: var(--jp-ui-font-size1); color: var(--jp-ui-font-color1) }
+.myst-author-toc > * { display: block; width: 100%; padding: 2px 8px; border: 0; background: none; color: inherit; font: inherit; text-align: left; white-space: nowrap; text-overflow: ellipsis; overflow: hidden }
+.myst-author-toc > button { cursor: pointer }
+.myst-author-toc > button:hover { background: var(--jp-layout-color2) }
+.myst-author-toc > div { color: var(--jp-ui-font-color2); font-weight: 600 }

@@ -3,6 +3,7 @@ import type { LanguageClient } from 'vscode-languageclient/node';
 import { contentServer } from 'mystmd-client/content-server';
 import { LiveEditor } from './live.ts';
 import { MystPreview } from './preview.ts';
+import { MystToc } from './toc.ts';
 import { webviewUrl, type Project } from './project.ts';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -35,6 +36,7 @@ export function activate(context: vscode.ExtensionContext) {
   }
 
   const preview = new MystPreview(context, projectFor);
+  new MystToc(context, projectFor);
   context.subscriptions.push(
     vscode.commands.registerCommand('mystAuthor.openPreview', () => preview.open()),
     vscode.commands.registerCommand('mystAuthor.toggleLive', toggleLive),

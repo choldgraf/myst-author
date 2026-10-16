@@ -32,6 +32,14 @@
         "priority": "option"
       }
     ],
+    "views": {
+      "explorer": [
+        {
+          "id": "mystAuthor.toc",
+          "name": "MyST Pages"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "mystAuthor.openPreview",

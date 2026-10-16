@@ -94,6 +94,34 @@ async function show(docs: IDocumentManager, path: string, line: number) {
   w?.content.editor?.focus();
 }
 
+/** A left sidebar panel listing the project's table of contents, which opens a page on click. */
+class MystToc extends Widget {
+  constructor(
+    private docs: IDocumentManager,
+    private project: Promise<string>,
+  ) {
+    super();
+    this.id = 'myst-author-toc';
+    this.title.label = 'MyST';
+    this.title.caption = 'MyST pages';
+    this.addClass('myst-author-toc');
+    this.refresh();
+  }
+
+  async refresh() {
+    const [entries, root] = await Promise.all([content.toc().catch(() => []), this.project]);
+    this.node.replaceChildren(
+      ...entries.map(({ title, level, file }) => {
+        const item = document.createElement(file ? 'button' : 'div');
+        item.textContent = title;
+        item.style.paddingLeft = `${level}em`;
+        if (file) item.onclick = () => void this.docs.openOrReveal(PathExt.join(root, file));
+        return item;
+      }),
+    );
+  }
+}
+
 const plugin: JupyterFrontEndPlugin<void> = {
   id: '@myst-author/jupyterlab:plugin',
   description: 'Cross-reference help and live preview for MyST.',
@@ -119,6 +147,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
     }, (err) => console.warn(`MyST Author: no language features from ${server} (${err})`));
     // The project folder, relative to Jupyter's root.
     const project = Promise.all([lsp, fetch(server + 'api/root').then((r) => r.json())]).then(([l, { uri }]) => l.path(uri) ?? '', () => '');
+
+    const toc = new MystToc(docs, project);
 
     // Live preview, and the language client once it connects. `uri` is the editor's document URI.
     const attachEditor = (editor: CodeMirrorEditor, uri: (l: Lsp) => string) => {
@@ -180,6 +210,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     content.watch(() => {
       tracker.forEach((w) => isMarkdown(w) && sendBuilt(w));
       notebooks.forEach(sendBuiltCells);
+      toc.refresh();
     });
     const watch = (nb: NotebookPanel) =>
       nb.context.ready.then(() => {
@@ -222,6 +253,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
     });
     palette?.addItem({ command, category: 'MyST' });
     app.contextMenu.addItem({ command, selector: '.jp-FileEditor', rank: 0 });
+
+    app.shell.add(toc, 'left', { rank: 300 });
   },
 };
 
