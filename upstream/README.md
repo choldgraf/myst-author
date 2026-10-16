@@ -14,11 +14,11 @@ The next step says what each one needs: a PR we can open, an issue with a repro,
 | U9 | [Inlay hints and requests from the server](U9-lsp-client-inlay-hints.md) | `@codemirror/lsp-client` | PR for request handlers. Discussion first for inlay hints |
 | U8 | Export the helpers that MyST Author and mystmd-lsp share through [mystmd-client](https://github.com/choldgraf/mystmd-client): a single-page parse, a `myst start --headless` launcher, a content-server client, and finding which `myst.yml` governs a file | mystmd | Discussion, leading with the single-page parse. This is the biggest deletion on our side, a whole repository |
 | U12 | Let an extension add CodeMirror extensions to a language Lab has already registered. [jupyterlab-myst-syntax](https://github.com/choldgraf/myst-syntax/tree/main/packages/jupyterlab) overwrites the registered entry's `support` field, which works but isn't documented | JupyterLab | Issue. Documenting that `support` is writable would be enough |
-| U6 | `baseurl` fix for sites served under a sub-path, e.g. on JupyterHub ([mystmd#302](https://github.com/jupyter-book/mystmd/issues/302)) | myst-theme | Write up which URLs break, then a PR |
+| U6 | [`baseurl` fix for sites served under a sub-path, e.g. on JupyterHub](https://github.com/jupyter-book/mystmd/issues/302) | myst-theme | Write up which URLs break, then a PR |
 | U11 | Send notebook Markdown cells to language servers, so MyST (and any Markdown server) works in cells through the standard client. MyST Author's JupyterLab extension carries its own client only because of this | jupyterlab-lsp | Design discussion, since it changes the virtual-document model |
-| U7 | Column-accurate inline positions in myst-parser ([mystmd#2864](https://github.com/jupyter-book/mystmd/issues/2864)) | mystmd | Large. It would remove mystmd-lsp's reference regexes and conformance script |
+| U7 | [Column-accurate inline positions in myst-parser](https://github.com/jupyter-book/mystmd/issues/2864) | mystmd | Large. It would remove mystmd-lsp's reference regexes and conformance script |
 | U5 | Reusable single-page browser preview (from `myst-demo`) | myst-theme | File the packaging gaps below as small issues. The rest only if someone else wants an embeddable preview |
-| U10 | [An mdast → mystmd adapter, to adopt a micromark parser](U10-mdast-adapter.md) | mystmd | Discussion on [mystmd#1705](https://github.com/jupyter-book/mystmd/issues/1705). Depends on wanting U7's outcome |
+| U10 | [An mdast → mystmd adapter, to adopt a micromark parser](U10-mdast-adapter.md) | mystmd | Discussed in the [unified-native parser issue](https://github.com/jupyter-book/mystmd/issues/1705). Depends on wanting U7's outcome |
 
 ## Repositories offered to jupyter-book
 
