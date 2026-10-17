@@ -43,7 +43,7 @@ Choose **Trust** when VS Code asks, since it doesn't run the extension in Restri
 - [mystmd-lsp's features](https://chrisholdgraf.com/mystmd-lsp/features) work in Markdown files and notebooks' Markdown cells.
   The page outline shows in the Outline view and the breadcrumbs, and `Cmd+Shift+O` searches it.
 - To open the preview, run **MyST: Open Preview to the Side** from the Command Palette.
-  It follows the active Markdown text editor and works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
+  It follows the active Markdown file, in the text editor or the live editor, and works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
 - To edit with live preview, click the book button in a Markdown file's toolbar, or run **MyST: Toggle Live Editor**.
   It edits the same file as the text editor, so save and undo work as usual and you can keep both open.
   Rename, find references, and go to definition use VS Code's own commands, so they work across the project.

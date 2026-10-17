@@ -35,12 +35,13 @@ export function activate(context: vscode.ExtensionContext) {
     }
   }
 
-  const preview = new MystPreview(context, projectFor);
-  new MystToc(context, projectFor);
+  const live = new LiveEditor(context, projectFor);
+  const preview = new MystPreview(context, projectFor, live);
+  new MystToc(context, projectFor, live);
   context.subscriptions.push(
     vscode.commands.registerCommand('mystAuthor.openPreview', () => preview.open()),
     vscode.commands.registerCommand('mystAuthor.toggleLive', toggleLive),
-    vscode.window.registerCustomEditorProvider('mystAuthor.live', new LiveEditor(context, projectFor), { webviewOptions: { retainContextWhenHidden: true } }),
+    vscode.window.registerCustomEditorProvider('mystAuthor.live', live, { webviewOptions: { retainContextWhenHidden: true } }),
   );
 }
 

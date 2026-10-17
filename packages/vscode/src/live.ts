@@ -34,10 +34,16 @@ const toPos = (p: vscode.Position): Pos => ({ line: p.line, character: p.charact
  * saving, the dirty flag, and a text editor open on the same file all stay VS Code's.
  */
 export class LiveEditor implements vscode.CustomTextEditorProvider {
+  private active = new vscode.EventEmitter<vscode.TextDocument>();
+  /** The document of a live editor that just became active. A custom editor is never `activeTextEditor`, so the TOC and preview follow this too. */
+  readonly onDidChangeActiveDocument = this.active.event;
+
   constructor(
     private context: vscode.ExtensionContext,
     private projectFor: ProjectFor,
-  ) {}
+  ) {
+    context.subscriptions.push(this.active);
+  }
 
   async resolveCustomTextEditor(document: vscode.TextDocument, panel: vscode.WebviewPanel) {
     const { webview } = panel;
@@ -94,7 +100,9 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
         if (e.document !== document || applying || !e.contentChanges.length) return;
         post({ type: 'changes', changes: e.contentChanges.map((c) => ({ from: toPos(c.range.start), to: toPos(c.range.end), insert: c.text })) });
       }),
+      panel.onDidChangeViewState((e) => e.webviewPanel.active && this.active.fire(document)),
     ];
+    if (panel.active) this.active.fire(document);
     panel.onDidDispose(() => {
       server?.child.kill();
       stopWatch?.();

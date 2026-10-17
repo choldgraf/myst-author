@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import * as vscode from 'vscode';
 import type { TocEntry } from 'mystmd-client/content-server';
+import type { LiveEditor } from './live.ts';
 import { isMarkdown, type Project, type ProjectFor } from './project.ts';
 
 type TocNode = TocEntry & { children: TocNode[] };
@@ -24,23 +25,24 @@ export class MystToc implements vscode.TreeDataProvider<TocNode> {
   readonly onDidChangeTreeData = this.changed.event;
   private project?: Project;
   private unwatch?: () => void;
-  private following?: vscode.TextEditor; // the editor whose project is being looked up, so a slow answer can't overtake a newer one (as in MystPreview)
+  private following?: vscode.TextDocument; // the document whose project is being looked up, so a slow answer can't overtake a newer one (as in MystPreview)
 
-  constructor(context: vscode.ExtensionContext, private projectFor: ProjectFor) {
+  constructor(context: vscode.ExtensionContext, private projectFor: ProjectFor, live: LiveEditor) {
     context.subscriptions.push(
       vscode.window.createTreeView('mystAuthor.toc', { treeDataProvider: this }),
       new vscode.Disposable(() => this.unwatch?.()),
-      vscode.window.onDidChangeActiveTextEditor((e) => e && isMarkdown(e.document) && this.follow(e)),
+      vscode.window.onDidChangeActiveTextEditor((e) => e && isMarkdown(e.document) && this.follow(e.document)),
+      live.onDidChangeActiveDocument((d) => this.follow(d)),
     );
     const active = vscode.window.activeTextEditor;
-    if (active && isMarkdown(active.document)) this.follow(active);
+    if (active && isMarkdown(active.document)) this.follow(active.document);
   }
 
-  /** Follow `editor`'s project. The project's `watch` calls back on connect, which fills the view, and on each rebuild. A file with no project leaves the view on the last one. */
-  private async follow(editor: vscode.TextEditor) {
-    this.following = editor;
-    const project = await this.projectFor(editor.document.uri);
-    if (!project || this.following !== editor || project === this.project) return;
+  /** Follow `document`'s project. The project's `watch` calls back on connect, which fills the view, and on each rebuild. A file with no project leaves the view on the last one. */
+  private async follow(document: vscode.TextDocument) {
+    this.following = document;
+    const project = await this.projectFor(document.uri);
+    if (!project || this.following !== document || project === this.project) return;
     this.project = project;
     this.unwatch?.();
     this.unwatch = project.content.watch(() => this.changed.fire());
