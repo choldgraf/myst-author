@@ -48,7 +48,7 @@ Each host, the web editor, VS Code or JupyterLab, starts mystmd and the language
 Nothing depends on [myst-parser-unified](https://chrisholdgraf.com/myst-parser-unified/) yet.
 It's a candidate to replace the parser that mystmd-lsp and the preview use.
 mystmd-lsp's design notes list [what a parser must provide to replace its regexes](https://chrisholdgraf.com/mystmd-lsp/design#replacing-the-reference-regexes).
-Its parser matches mystmd's on nearly every myst-spec example.
+Its drop-in `mystParse` matches mystmd's tree on nearly every MyST example in myst-spec.
 
 ## Where a feature goes
 

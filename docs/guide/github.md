@@ -30,7 +30,7 @@ git push             # from this terminal, which has the new sign-in
 
 VS Code's **Source Control** view can commit as usual, but it may keep pushing with the Codespace's token, so push from that terminal.
 
-To edit the project in the web editor instead, stop the one running in the terminal with {kbd}`Ctrl+C` and run `npm start -- your-book`.
+To edit the project in the web editor instead, point it at the clone as [Get started](../get-started.md#open-it-in-github-codespaces) describes.
 
 ## JupyterHub
 
