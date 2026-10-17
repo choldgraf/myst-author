@@ -364,8 +364,8 @@ class MystPreview extends Widget {
     const preview = this.preview!;
     this.editor = w;
     this.title.label = `MyST: ${PathExt.basename(w.context.path)}`;
-    w.content.model.sharedModel.changed.connect(preview.sendText, preview);
-    w.context.model.stateChanged.connect(preview.sendText, preview); // the dirty flag
+    w.content.model.sharedModel.changed.connect(this.onText);
+    w.context.model.stateChanged.connect(this.onText); // the dirty flag
     cm(w).editor.scrollDOM.addEventListener('scroll', this.onScroll);
     preview.sendFile();
   }
@@ -373,8 +373,8 @@ class MystPreview extends Widget {
   private unfollow() {
     const w = this.editor;
     if (!w) return;
-    w.content.model.sharedModel.changed.disconnect(this.preview!.sendText, this.preview);
-    w.context.model.stateChanged.disconnect(this.preview!.sendText, this.preview);
+    w.content.model.sharedModel.changed.disconnect(this.onText);
+    w.context.model.stateChanged.disconnect(this.onText);
     cm(w).editor.scrollDOM.removeEventListener('scroll', this.onScroll);
     this.editor = null;
   }
@@ -399,6 +399,8 @@ class MystPreview extends Widget {
     }, Promise.resolve(content));
   }
 
+  // Lab emits these inside CodeMirror's update, where `current` can't read the editor's layout, so defer.
+  private onText = () => void setTimeout(() => this.preview?.sendText());
   private onScroll = () => this.editor && this.preview?.scroll(topLine(cm(this.editor).editor));
 }
 

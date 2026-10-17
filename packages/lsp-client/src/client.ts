@@ -91,7 +91,8 @@ export function connectLsp(server: string | Transport, root: string) {
   return {
     client,
     uri: (path: string) => `${root}/${encodePath(path)}`,
-    path: (uri: string) => (uri.startsWith(root + '/') ? decodeURIComponent(uri.slice(root.length + 1)) : null),
+    // The root itself is '': a project's folder can be the host's root.
+    path: (uri: string) => (uri === root ? '' : uri.startsWith(root + '/') ? decodeURIComponent(uri.slice(root.length + 1)) : null),
   };
 }
 
