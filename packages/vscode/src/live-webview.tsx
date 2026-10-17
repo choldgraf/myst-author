@@ -6,7 +6,7 @@ import { keymap } from '@codemirror/view';
 import { basicSetup, EditorView } from 'codemirror';
 import { myst, mystCode } from 'myst-syntax/codemirror';
 import { connectLsp, messageTransport } from '@myst-author/lsp-client/client';
-import { bodyStart, livePreview, offerBuilt, pageLook } from '@myst-author/preview/live';
+import { bodyStart, followLinks, livePreview, offerBuilt, pageLook } from '@myst-author/preview/live';
 import type { Change, FromLive, Pos, ToLive } from './live.ts';
 
 declare function acquireVsCodeApi(): { postMessage(message: FromLive): void };
@@ -50,7 +50,8 @@ function create(text: string) {
       yamlFrontmatter({ content: markdown({ codeLanguages: languages, extensions: [mystCode(languages)] }) }), // frontmatter as YAML, not a `---` heading
       myst(),
       EditorView.lineWrapping,
-      livePreview({ onFollowLink: (href, line) => vscode.postMessage({ type: 'follow', href, line }) }),
+      livePreview(),
+      followLinks((href, line) => vscode.postMessage({ type: 'follow', href, line })),
       pageLook,
       EditorView.theme({ '&.cm-focused': { outline: 'none' } }),
       lsp.of([]),

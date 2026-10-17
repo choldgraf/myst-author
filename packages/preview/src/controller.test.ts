@@ -1,6 +1,5 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mystmdMissing } from 'mystmd-client/content-server';
 import { findLabel, PreviewController, type PreviewHost } from './controller.ts';
 
 const tick = () => new Promise((resolve) => setTimeout(resolve));
@@ -24,7 +23,7 @@ test('sends the build on start, on rebuilds, and on file changes until disposed'
     built: async (path: string) => ({ path, page: { location: '/' + path } }),
     watch: (onReload: () => void) => { reload = onReload; return () => { stopped = true; }; },
   };
-  const preview = new PreviewController(host(calls), Promise.resolve(server as any));
+  const preview = new PreviewController(host(calls), server as any);
   await tick();
   reload();
   await tick();
@@ -34,17 +33,6 @@ test('sends the build on start, on rebuilds, and on file changes until disposed'
   assert.deepEqual(calls, [built, built, ['post', { type: 'text', path: 'guide/a.md', text: 'hi', dirty: false }], built]);
   preview.dispose();
   assert.ok(stopped);
-
-  // A failed mystmd is reported and its error posted. A missing one is only posted.
-  calls.length = 0;
-  new PreviewController(host(calls), Promise.reject(new Error('exited')));
-  new PreviewController(host(calls), Promise.reject(new Error(mystmdMissing)));
-  await tick();
-  assert.deepEqual(calls, [
-    ['warn', "mystmd didn't start: exited"],
-    ['post', { type: 'built', path: 'guide/a.md', page: null, error: 'exited' }],
-    ['post', { type: 'built', path: 'guide/a.md', page: null, error: mystmdMissing }],
-  ]);
 });
 
 test("drops a build that arrives after the host has moved to another file", async () => {
@@ -55,7 +43,7 @@ test("drops a build that arrives after the host has moved to another file", asyn
     built: (path: string) => new Promise((resolve) => (path === 'a.md' ? (finishA = () => resolve({ path, page: { location: '/a' } })) : resolve({ path, page: { location: '/b' } }))),
     watch: () => () => {},
   };
-  const preview = new PreviewController({ ...host(calls), current: () => ({ path, text: '', dirty: false }) }, Promise.resolve(server as any));
+  const preview = new PreviewController({ ...host(calls), current: () => ({ path, text: '', dirty: false }) }, server as any);
   await tick();
   path = 'b.md';
   preview.sendFile();
@@ -68,7 +56,7 @@ test("drops a build that arrives after the host has moved to another file", asyn
 test('follows preview links to files, labels, and slugs', async () => {
   const calls: unknown[][] = [];
   const server = { fileForSlug: (slug: string) => ({ '': 'index.md', c: 'guide/c.md' })[slug], built: async (path: string) => ({ path, page: null }), watch: () => () => {} };
-  const preview = new PreviewController(host(calls), Promise.resolve(server as any));
+  const preview = new PreviewController(host(calls), server as any);
   await tick();
   calls.length = 0;
 
@@ -86,12 +74,13 @@ test('follows preview links to files, labels, and slugs', async () => {
   ]);
 });
 
-test('findLabel picks the symbol named by the lowercased label', async () => {
-  const at = (name: string, line: number) => ({ name, location: { uri: `file:///p/${name}.md`, range: { start: { line } } } });
+test('findLabel picks the symbol named by the lowercased label that is in the project', async () => {
+  const at = (name: string, dir: string, line: number) => ({ name, location: { uri: `file:///${dir}/${name}.md`, range: { start: { line } } } });
   const request = async (method: string, params: unknown) => {
     assert.deepEqual([method, params], ['workspace/symbol', { query: 'My-Fig' }]);
-    return [at('my-fig-2', 1), at('my-fig', 4)];
+    return [at('my-fig-2', 'p', 1), at('my-fig', 'other', 2), at('my-fig', 'p', 4)];
   };
-  assert.deepEqual(await findLabel(request, 'My-Fig'), { uri: 'file:///p/my-fig.md', line: 4 });
-  assert.equal(await findLabel(async () => null, 'x'), undefined);
+  const pathOf = (uri: string) => (uri.startsWith('file:///p/') ? uri.slice('file:///p/'.length) : null);
+  assert.deepEqual(await findLabel(request, 'My-Fig', pathOf), { path: 'my-fig.md', line: 4 });
+  assert.equal(await findLabel(async () => null, 'x', pathOf), undefined);
 });

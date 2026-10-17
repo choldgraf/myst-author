@@ -6,7 +6,7 @@ import { connectLsp, type Lsp } from '@myst-author/lsp-client/client';
 import { Preview, usePreview } from '@myst-author/preview';
 import { contentServer, sha256, type Built } from 'mystmd-client/content-server';
 import { findLabel, followLink } from '@myst-author/preview/controller';
-import { livePreview, offerBuilt, pageLook } from '@myst-author/preview/live';
+import { followLinks, livePreview, offerBuilt, pageLook } from '@myst-author/preview/live';
 import { listFiles, projectRoot, readFile, writeFile } from './api.ts';
 import { minimalChange } from './change.ts';
 import { Editor } from './Editor.tsx';
@@ -21,7 +21,7 @@ const content = contentServer('myst');
 const liveMode = new Compartment();
 // A click on a rendered link calls App's latest `follow`.
 const followRef: { current?: (href: string, line?: number) => void } = {};
-const liveExtensions = [livePreview({ onFollowLink: (href, line) => followRef.current?.(href, line) }), pageLook];
+const liveExtensions = [livePreview(), followLinks((href, line) => followRef.current?.(href, line)), pageLook];
 
 export function App() {
   const [files, setFiles] = useState<string[]>([]);
@@ -218,12 +218,7 @@ export function App() {
     followLink({
       open: (path, line) => (files.includes(path) ? openAt(path, line + 1) : setStatus(`can't open ${path}: only .md files open here`)),
       openExternal: (url) => void window.open(url, '_blank', 'noopener'),
-      findLabel: async (id) => {
-        if (!lsp) return undefined;
-        const s = await findLabel((method, params) => lsp.client.request(method, params), id);
-        const path = s && lsp.path(s.uri);
-        return path ? { path, line: s.line } : undefined;
-      },
+      findLabel: async (id) => (lsp ? findLabel((method, params) => lsp.client.request(method, params), id, lsp.path) : undefined),
       warn: setStatus,
       fileForSlug: content.fileForSlug,
     }, doc.path, href, line);

@@ -19,9 +19,8 @@ const mounted = new WeakMap<HTMLElement, { root: Root; resize: ResizeObserver }>
 const shadowStyles = Facet.define<CSSStyleSheet, CSSStyleSheet | undefined>({ combine: (sheets) => sheets[0] });
 
 export type FollowLink = (href: string, line?: number) => void;
-// What a click on a rendered link does, when the host passes `onFollowLink` (see `livePreview`).
 const linkFollower = Facet.define<FollowLink, FollowLink | undefined>({ combine: (fs) => fs[0] });
-/** The same, attached per editor by a host that shares one `livePreview` between editors (JupyterLab). */
+/** What a click on a rendered link does, like `Preview`'s `onFollowLink`. Without it, links do nothing. Cmd/Ctrl-click shows the source. */
 export const followLinks = (f: FollowLink): Extension => linkFollower.of(f);
 
 // Node positions and keys change on every parse, so leave them out, and unchanged blocks keep their DOM.
@@ -184,10 +183,10 @@ const theme = EditorView.baseTheme({
  * Like `Preview`, blocks need myst-theme's and KaTeX's CSS. By default that's the page's CSS.
  * A host whose own CSS clashes with it (JupyterLab) passes the CSS as `css`: blocks then render in shadow roots that share it.
  * KaTeX's fonts still need its CSS on the page, because shadow roots ignore `@font-face`. The host sets the editor's font.
- * `onFollowLink` handles a click on a rendered link, like `Preview`'s. Cmd/Ctrl-click shows the source.
+ * Add `followLinks` for clicks on rendered links.
  */
-export function livePreview({ css, onFollowLink }: { css?: string; onFollowLink?: FollowLink } = {}): Extension {
-  const base = [liveField, arrows, theme, onFollowLink ? linkFollower.of(onFollowLink) : []];
+export function livePreview({ css }: { css?: string } = {}): Extension {
+  const base = [liveField, arrows, theme];
   if (!css) return base;
   const sheet = shadowSheet(`${css}\n[data-line-start] > * { margin-top: 0; margin-bottom: 0 }`); // as the theme does outside shadow roots
   return [base, shadowStyles.of(sheet)];

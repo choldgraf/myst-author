@@ -102,10 +102,9 @@ const linkHost = (docs: IDocumentManager, lsp: Promise<Lsp>, { root }: Project) 
   openExternal,
   findLabel: async (id: string) => {
     const l = await lsp;
-    const pathOf = (uri: string) => l.path(uri.split('#')[0]); // a label in a notebook cell has `#<cell id>`
-    const inProject = (uri: string) => { const p = pathOf(uri); return p != null && !PathExt.relative(root, p).startsWith('..'); };
-    const s = await findLabel((method, params) => l.client.request(method, params), id, inProject);
-    return s && { path: PathExt.relative(root, pathOf(s.uri)!), line: s.line };
+    // A label in a notebook cell has `#<cell id>`.
+    const pathOf = (uri: string) => { const p = l.path(uri.split('#')[0]); const rel = p == null ? '..' : PathExt.relative(root, p); return rel.startsWith('..') ? null : rel; };
+    return findLabel((method, params) => l.client.request(method, params), id, pathOf);
   },
   warn: (message: string) => console.warn(`MyST Author: ${message}`),
 });
@@ -409,7 +408,7 @@ class MystPreview extends Widget {
         return w ? { path: PathExt.relative(root, w.context.path), text: w.content.model.sharedModel.getSource(), dirty: w.context.model.dirty, line: topLine(cm(w).editor) } : undefined;
       },
       post: (m) => this.receive(m),
-    }, Promise.resolve(content));
+    }, content);
   }
 
   // Lab emits these inside CodeMirror's update, where `current` can't read the editor's layout, so defer.

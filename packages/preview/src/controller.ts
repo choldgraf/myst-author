@@ -1,4 +1,4 @@
-import { mystmdMissing, type Built, type ContentServer } from 'mystmd-client/content-server';
+import type { Built, ContentServer } from 'mystmd-client/content-server';
 
 /** Messages from the host to the preview page (`./page`). */
 export type ToPage =
@@ -21,7 +21,7 @@ type HostFile = { path: string; text: string; dirty: boolean; line?: number };
  * Lines passed to `open` and returned by `findLabel` are 0-based.
  */
 export type PreviewHost = {
-  current(): HostFile | undefined | Promise<HostFile | undefined>;
+  current(): HostFile | undefined;
   post(message: ToPage): void; // to the preview page
   open(path: string, line: number): void;
   openExternal(url: string): void;
@@ -29,30 +29,17 @@ export type PreviewHost = {
   warn(message: string): void;
 };
 
-/** The host side of the preview page (`./page`): sends it the current file and its build, and answers its messages. */
+/** The host side of the preview page (`./page`): sends it the current file and its build from the project's mystmd, and answers its messages. */
 export class PreviewController {
   private host: PreviewHost;
-  private server?: ContentServer | Error; // undefined while mystmd starts, the error if it didn't
-  private stop?: () => void;
-  private disposed = false;
+  private server: ContentServer;
+  private stop: () => void;
 
-  /**
-   * `server` resolves to mystmd's content server once it's up, or rejects if mystmd can't start.
-   * Reject with the message `mystmdMissing` when mystmd isn't installed: the preview then shows `no mystmd` instead of a warning.
-   */
-  constructor(host: PreviewHost, server: Promise<ContentServer>) {
+  constructor(host: PreviewHost, server: ContentServer) {
     this.host = host;
-    server
-      .catch((err: Error) => {
-        if (err.message !== mystmdMissing) host.warn(`mystmd didn't start: ${err.message}`);
-        return err;
-      })
-      .then((s) => {
-        if (this.disposed) return;
-        this.server = s;
-        if (!(s instanceof Error)) this.stop = s.watch(() => this.sendBuilt());
-        this.sendBuilt();
-      });
+    this.server = server;
+    this.stop = server.watch(() => this.sendBuilt());
+    this.sendBuilt();
   }
 
   /** Send the current file and its build. Call when the host follows another file. */
@@ -62,8 +49,8 @@ export class PreviewController {
   }
 
   /** Call when the current file's text or dirty flag changes. */
-  async sendText() {
-    const file = await this.host.current();
+  sendText() {
+    const file = this.host.current();
     if (file) this.host.post({ type: 'text', path: file.path, text: file.text, dirty: file.dirty });
   }
 
@@ -74,7 +61,7 @@ export class PreviewController {
 
   /** Answer a message from the preview page. */
   async onMessage(m: FromPage) {
-    const file = await this.host.current();
+    const file = this.host.current();
     if (!file) return;
     if (m.type === 'ready') {
       this.sendFile();
@@ -82,22 +69,20 @@ export class PreviewController {
     } else if (m.type === 'reveal') {
       this.host.open(file.path, m.line - 1);
     } else if (m.type === 'follow') {
-      await followLink({ ...this.host, fileForSlug: (slug) => (this.server instanceof Error ? undefined : this.server?.fileForSlug(slug)) }, file.path, m.href, m.line);
+      await followLink({ ...this.host, fileForSlug: (slug) => this.server.fileForSlug(slug) }, file.path, m.href, m.line);
     }
   }
 
   dispose() {
-    this.disposed = true;
-    this.stop?.();
+    this.stop();
   }
 
   private async sendBuilt() {
-    const path = (await this.host.current())?.path;
-    if (path === undefined || this.server === undefined) return;
-    if (this.server instanceof Error) return this.host.post({ type: 'built', path, page: null, error: this.server.message });
+    const path = this.host.current()?.path;
+    if (path === undefined) return;
     const built = await this.server.built(path);
     // A slow fetch for a file the host has since left must not replace the new file's build.
-    if ((await this.host.current())?.path === path) this.host.post({ type: 'built', ...built });
+    if (this.host.current()?.path === path) this.host.post({ type: 'built', ...built });
   }
 }
 
@@ -131,10 +116,12 @@ type WorkspaceSymbol = { name: string; location: { uri: string; range: { start: 
 
 /**
  * Where label `id` is defined, from the language server's workspace symbols. The server names each symbol by its lowercased label.
- * A server can hold several projects, so `inProject` keeps the lookup to this one's files.
+ * `pathOf` maps a symbol's URI to a path in this project, or null for a file outside it, since a server can hold several projects.
  */
-export async function findLabel(request: Request, id: string, inProject: (uri: string) => boolean = () => true): Promise<{ uri: string; line: number } | undefined> {
+export async function findLabel(request: Request, id: string, pathOf: (uri: string) => string | null | undefined): Promise<{ path: string; line: number } | undefined> {
   const symbols = (await request('workspace/symbol', { query: id })) as WorkspaceSymbol[] | null;
-  const s = symbols?.find((s) => s.name === id.toLowerCase() && inProject(s.location.uri));
-  return s && { uri: s.location.uri, line: s.location.range.start.line };
+  for (const s of symbols ?? []) {
+    const path = s.name === id.toLowerCase() ? pathOf(s.location.uri) : null;
+    if (path != null) return { path, line: s.location.range.start.line };
+  }
 }

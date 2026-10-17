@@ -25,10 +25,7 @@ export const isMarkdown = (d?: vscode.TextDocument): d is vscode.TextDocument =>
 /** What the preview and the live editor both give `followLink`: external links, labels through the language server, and warnings. */
 export const linkHost = ({ root, request }: Project) => ({
   openExternal: (url: string) => vscode.env.openExternal(vscode.Uri.parse(url)),
-  findLabel: async (id: string) => {
-    const s = await findLabel(request, id, (uri) => !projectPath(root, vscode.Uri.parse(uri)).startsWith('..'));
-    return s && { path: projectPath(root, vscode.Uri.parse(s.uri)), line: s.line };
-  },
+  findLabel: (id: string) => findLabel(request, id, (uri) => { const p = projectPath(root, vscode.Uri.parse(uri)); return p.startsWith('..') ? null : p; }),
   warn: (message: string) => vscode.window.showWarningMessage(message),
 });
 

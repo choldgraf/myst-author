@@ -47,6 +47,7 @@ Choose **Trust** when VS Code asks, since it doesn't run the extension in Restri
 - To edit with live preview, click the book button in a Markdown file's toolbar, or run **MyST: Toggle Live Editor**.
   It edits the same file as the text editor, so save and undo work as usual and you can keep both open.
   Rename, find references, and go to definition use VS Code's own commands, so they work across the project.
+  A link or definition in another file opens it in your default editor for Markdown.
   VS Code's own editor features, such as the outline, Copilot, and Vim, don't reach it, and notebooks' Markdown cells don't get it.
 
 ## Notes

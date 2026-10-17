@@ -74,7 +74,7 @@ export class MystPreview {
       },
       post: (m) => this.panel?.webview.postMessage(m),
       open: (path, line) => this.show(vscode.Uri.file(resolve(project.root, path)), line),
-    }, Promise.resolve(project.content));
+    }, project.content);
     // The page is built for one project's assets, so reload it. It asks for the file once ready.
     if (this.panel) this.panel.webview.html = this.html(this.panel.webview);
   }
