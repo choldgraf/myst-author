@@ -15,7 +15,7 @@ export class MystPreview {
   constructor(
     private context: vscode.ExtensionContext,
     private projectFor: ProjectFor,
-    live: LiveEditor,
+    private live: LiveEditor,
   ) {
     context.subscriptions.push(
       new vscode.Disposable(() => this.preview?.dispose()),
@@ -89,8 +89,7 @@ export class MystPreview {
   }
 
   private show(uri: vscode.Uri, line: number) {
-    const pos = new vscode.Position(line, 0);
-    return vscode.window.showTextDocument(uri, { viewColumn: this.textEditor()?.viewColumn, selection: new vscode.Range(pos, pos) });
+    return this.live.open(uri, line, this.textEditor()?.viewColumn);
   }
 
   private retitle() {

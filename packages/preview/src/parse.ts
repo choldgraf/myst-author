@@ -44,9 +44,10 @@ function markUnresolved(tree: GenericParent, built: boolean) {
       return SKIP;
     }
     // A resolved `[](#label)` becomes a crossReference, so a `#` link is one mystmd couldn't find.
+    // An empty link to a page, `[](other.md)`, gets its title from the build, so until then show where it points.
     // `@label` is a citation until mystmd finds the label or the bibliography entry, and has an `error` if it finds neither.
     const ref = n.type === 'crossReference' && !n.resolved ? `#${n.label}`
-      : n.type === 'link' && n.url?.startsWith('#') ? n.url
+      : n.type === 'link' && (n.url?.startsWith('#') || !n.children?.length) ? n.url
       : n.type === 'cite' && (n.error || !built) ? `@${n.label}`
       : undefined;
     // The fast preview only knows this page's labels, so only fill in references that would otherwise be blank.

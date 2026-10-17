@@ -13,8 +13,8 @@ import { Widget } from '@lumino/widgets';
 import { connectLsp, fileUri, type Lsp } from '@myst-author/lsp-client/client';
 import { contentServer, type ContentServer } from 'mystmd-client/content-server';
 import { Preview } from '@myst-author/preview';
-import { findLabel, PreviewController, type ToPage } from '@myst-author/preview/controller';
-import { livePreview, offerBuilt, shadowSheet, showBuilt, topLine } from '@myst-author/preview/live';
+import { findLabel, followLink, PreviewController, type ToPage } from '@myst-author/preview/controller';
+import { followLinks, livePreview, offerBuilt, shadowSheet, showBuilt, topLine, type FollowLink } from '@myst-author/preview/live';
 import { mountPreviewPage } from '@myst-author/preview/page';
 import { cellPages, fromBuiltPage, parseMyst, type ParseResult } from '@myst-author/preview/parse';
 // React comes with @myst-author/preview, which renders with it.
@@ -55,7 +55,7 @@ const cellRoots = new WeakMap<HTMLElement, Root>();
 // Each Markdown cell's build, and the cell's text it was built from: the cell shows it while its text is the same.
 const cellBuilds = new WeakMap<Cell, { result: ParseResult; source: string }>();
 const openExternal = (url: string) => void window.open(url, '_blank', 'noopener');
-function showCell(cell: Cell) {
+function showCell(cell: Cell, onFollowLink: FollowLink) {
   const built = cellBuilds.get(cell);
   const source = cell.model.sharedModel.getSource();
   const result = built?.source === source ? built.result : source.trim() ? parseMyst(source) : undefined;
@@ -67,8 +67,6 @@ function showCell(cell: Cell) {
     shadow.adoptedStyleSheets = [cellSheet];
     cellRoots.set(node, (root = createRoot(shadow.appendChild(document.createElement('div')))));
   }
-  // A click opens external links in a new tab, and other pages' links do nothing.
-  const onFollowLink = (href: string) => /^[a-z][\w+.-]*:/i.test(href) && openExternal(href);
   root.render(result ? createElement(Preview, { result, onFollowLink }) : createElement('slot'));
 }
 
@@ -97,6 +95,20 @@ async function show(docs: IDocumentManager, path: string, line: number) {
   w?.content.editor?.revealPosition({ line, column: 0 });
   w?.content.editor?.focus();
 }
+
+/** What the preview and live blocks both give `followLink` (as the VS Code extension's `linkHost`): files opened in Lab, and labels through the language server. */
+const linkHost = (docs: IDocumentManager, lsp: Promise<Lsp>, { root }: Project) => ({
+  open: (path: string, line: number) => show(docs, PathExt.join(root, path), line),
+  openExternal,
+  findLabel: async (id: string) => {
+    const l = await lsp;
+    const pathOf = (uri: string) => l.path(uri.split('#')[0]); // a label in a notebook cell has `#<cell id>`
+    const inProject = (uri: string) => { const p = pathOf(uri); return p != null && !PathExt.relative(root, p).startsWith('..'); };
+    const s = await findLabel((method, params) => l.client.request(method, params), id, inProject);
+    return s && { path: PathExt.relative(root, pathOf(s.uri)!), line: s.line };
+  },
+  warn: (message: string) => console.warn(`MyST Author: ${message}`),
+});
 
 /**
  * A left sidebar panel with the table of contents of the current Markdown editor's project.
@@ -212,9 +224,18 @@ const plugin: JupyterFrontEndPlugin<void> = {
     tracker.currentChanged.connect((_, w) => isMarkdown(w) && toc.follow(w));
     if (isMarkdown(tracker.currentWidget)) toc.follow(tracker.currentWidget);
 
-    // Live preview, and the language client once it connects. `uri` is the editor's document URI.
-    const attachEditor = (editor: CodeMirrorEditor, uri: (l: Lsp) => string) => {
+    /** A click on a rendered link in the file or notebook at `path`, as in the preview pane. Without a project, only external links go anywhere. */
+    const follow = async (path: string, href: string, line?: number) => {
+      const p = await projectFor(path);
+      if (p) followLink({ ...linkHost(docs, lsp, p), fileForSlug: (slug) => p.content.fileForSlug(slug) }, PathExt.relative(p.root, path), href, line);
+      else if (/^[a-z][\w+.-]*:/i.test(href)) openExternal(href);
+    };
+    const linksIn = (path: string): FollowLink => (href, line) => follow(path, href, line);
+
+    // Live preview, and the language client once it connects. `path` is the file or notebook in Lab, and `uri` the editor's document URI.
+    const attachEditor = (editor: CodeMirrorEditor, path: string, uri: (l: Lsp) => string) => {
       editor.injectExtension(liveMode.of(liveOn ? live : []));
+      editor.injectExtension(followLinks(linksIn(path)));
       lsp.then((l) => editor.injectExtension(l.client.plugin(uri(l), 'markdown')), () => {});
     };
 
@@ -226,7 +247,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
     const attach = async (w: Editor) => {
       if (!isMarkdown(w)) return;
-      attachEditor(cm(w), (l) => l.uri(w.context.path));
+      attachEditor(cm(w), w.context.path, (l) => l.uri(w.context.path));
       await w.context.ready;
       sendBuilt(w);
     };
@@ -242,9 +263,9 @@ const plugin: JupyterFrontEndPlugin<void> = {
         if (cell.model.type !== 'markdown' || attached.has(cell)) return false;
         attached.add(cell);
         await cell.ready;
-        attachEditor(cell.editor as CodeMirrorEditor, (l) => `${l.uri(nb.context.path)}#${cell.model.id}`);
+        attachEditor(cell.editor as CodeMirrorEditor, nb.context.path, (l) => `${l.uri(nb.context.path)}#${cell.model.id}`);
         // Lab adds the cell's rendered widget each time the cell renders, such as when you stop editing it, so check again then whether the build matches.
-        new MutationObserver(() => showCell(cell)).observe(cell.inputArea!.node, { childList: true });
+        new MutationObserver(() => showCell(cell, linksIn(nb.context.path))).observe(cell.inputArea!.node, { childList: true });
         return true;
       })).then((added) => { if (added.includes(true)) sendBuiltCells(nb); });
 
@@ -263,7 +284,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
           const result = built && fromBuiltPage(built);
           if (result) cellBuilds.set(cell, { result, source });
           else cellBuilds.delete(cell);
-          showCell(cell);
+          showCell(cell, linksIn(nb.context.path));
         }
         if (!built || !attached.has(cell) || !cell.editor) return;
         (cell.editor as CodeMirrorEditor).editor.dispatch({ effects: showBuilt.of({ page: built, text: source }) });
@@ -379,23 +400,15 @@ class MystPreview extends Widget {
     this.editor = null;
   }
 
-  private controller({ root, content }: Project) {
+  private controller(project: Project) {
+    const { root, content } = project;
     return new PreviewController({
+      ...linkHost(this.docs, this.lsp, project),
       current: () => {
         const w = this.editor;
         return w ? { path: PathExt.relative(root, w.context.path), text: w.content.model.sharedModel.getSource(), dirty: w.context.model.dirty, line: topLine(cm(w).editor) } : undefined;
       },
       post: (m) => this.receive(m),
-      open: (path, line) => show(this.docs, PathExt.join(root, path), line),
-      openExternal,
-      findLabel: async (id) => {
-        const l = await this.lsp;
-        const pathOf = (uri: string) => l.path(uri.split('#')[0]); // a label in a notebook cell has `#<cell id>`
-        const inProject = (uri: string) => { const p = pathOf(uri); return p != null && !PathExt.relative(root, p).startsWith('..'); };
-        const s = await findLabel((method, params) => l.client.request(method, params), id, inProject);
-        return s && { path: PathExt.relative(root, pathOf(s.uri)!), line: s.line };
-      },
-      warn: (message) => console.warn(`MyST Author: ${message}`),
     }, Promise.resolve(content));
   }
 

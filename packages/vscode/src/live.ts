@@ -45,8 +45,23 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     context.subscriptions.push(this.active);
   }
 
+  private ready = new Map<string, (m: ToLive) => void>(); // live editors whose webview is ready, by document URI
+  private pending = new Map<string, Pos>(); // where `open` wants a live editor that is opening right now to go
+
+  /** Open `uri` at `line` in its default editor, which the user may have made the live editor, as a text editor shows a selection. */
+  async open(uri: vscode.Uri, line: number, viewColumn?: vscode.ViewColumn) {
+    const key = uri.toString();
+    const at = { line, character: 0 };
+    this.pending.set(key, at); // a live editor opening now takes it in `resolveCustomTextEditor`
+    await vscode.commands.executeCommand('vscode.open', uri, { viewColumn, selection: new vscode.Range(line, 0, line, 0) });
+    this.pending.delete(key);
+    this.ready.get(key)?.({ type: 'select', at }); // a live editor that was already open
+  }
+
   async resolveCustomTextEditor(document: vscode.TextDocument, panel: vscode.WebviewPanel) {
     const { webview } = panel;
+    const key = document.uri.toString();
+    const select = this.pending.get(key); // from `open`, for once the webview is ready
     const post = (m: ToLive) => webview.postMessage(m);
     const at = (p: Pos) => new vscode.Position(p.line, p.character);
     const project = await this.projectFor(document.uri);
@@ -86,6 +101,8 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
         if (m.type === 'ready') {
           post({ type: 'init', text: document.getText() });
           if (project) connect(project);
+          this.ready.set(key, post);
+          if (select) post({ type: 'select', at: select });
         } else if (m.type === 'edit') apply(m.changes);
         else if (m.type === 'lsp') server?.send(m.message);
         // lsp-client only acts on files open in an editor, which here is just this one.
@@ -104,6 +121,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     ];
     if (panel.active) this.active.fire(document);
     panel.onDidDispose(() => {
+      if (this.ready.get(key) === post) this.ready.delete(key); // not another live editor on the same file
       server?.child.kill();
       stopWatch?.();
       subscriptions.forEach((s) => s.dispose());
@@ -115,17 +133,17 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     const [loc] = (await vscode.commands.executeCommand<(vscode.Location | vscode.LocationLink)[]>('vscode.executeDefinitionProvider', document.uri, position)) ?? [];
     if (!loc) return;
     const [uri, selection] = 'targetUri' in loc ? [loc.targetUri, loc.targetSelectionRange ?? loc.targetRange] : [loc.uri, loc.range];
-    vscode.window.showTextDocument(uri, { selection });
+    this.open(uri, selection.start.line);
   }
 
-  /** Follow a rendered link as the preview does. A target in this file is selected in the webview. Others open in a text editor, like `definition`. */
+  /** Follow a rendered link as the preview does. A target in this file is selected in the webview. Others open in their default editor, like `definition`. */
   private follow(document: vscode.TextDocument, p: Project, { href, line }: { href: string; line?: number }, post: (m: ToLive) => void) {
     return followLink({
       ...linkHost(p),
       open: (path, line) => {
         const uri = vscode.Uri.file(resolve(p.root, path));
         if (uri.fsPath === document.uri.fsPath) post({ type: 'select', at: { line, character: 0 } });
-        else vscode.window.showTextDocument(uri, { selection: new vscode.Range(line, 0, line, 0) });
+        else this.open(uri, line);
       },
       fileForSlug: (slug) => p.content.fileForSlug(slug),
     }, projectPath(p.root, document.uri), href, line);
@@ -139,7 +157,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     if (!pick) return;
     const { uri, range } = pick.location;
     if (uri.toString() === document.uri.toString()) post({ type: 'select', at: toPos(range.start) });
-    else vscode.window.showTextDocument(uri, { selection: range });
+    else this.open(uri, range.start.line);
   }
 
   /** Rename across the project. The edit to this file comes back to the webview like any other change. */

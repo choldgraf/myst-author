@@ -93,7 +93,9 @@ export function Preview({ result, topLine, onLineClick, onFollowLink }: Props) {
     const href = target.closest('a')?.getAttribute('href');
     if (href != null) {
       // A click follows the link, as in Obsidian. Cmd/Ctrl-click jumps to its source like any other block.
+      // VS Code's webview host opens any link whose click reaches the window, so stop it here.
       e.preventDefault();
+      e.stopPropagation();
       if (!(e.metaKey || e.ctrlKey)) {
         const id = href.startsWith('#') ? decodeURIComponent(href.slice(1)) : '';
         const block = id ? article.current!.querySelector(`[id="${CSS.escape(id)}"]`)?.closest<HTMLElement>('[data-line-start]') : null;

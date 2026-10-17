@@ -18,9 +18,11 @@ const mounted = new WeakMap<HTMLElement, { root: Root; resize: ResizeObserver }>
 // The stylesheet for rendering blocks in shadow roots, when the host passes `css` (see `livePreview`).
 const shadowStyles = Facet.define<CSSStyleSheet, CSSStyleSheet | undefined>({ combine: (sheets) => sheets[0] });
 
-type FollowLink = (href: string, line?: number) => void;
+export type FollowLink = (href: string, line?: number) => void;
 // What a click on a rendered link does, when the host passes `onFollowLink` (see `livePreview`).
 const linkFollower = Facet.define<FollowLink, FollowLink | undefined>({ combine: (fs) => fs[0] });
+/** The same, attached per editor by a host that shares one `livePreview` between editors (JupyterLab). */
+export const followLinks = (f: FollowLink): Extension => linkFollower.of(f);
 
 // Node positions and keys change on every parse, so leave them out, and unchanged blocks keep their DOM.
 const identity = (blocks: Block[]) => JSON.stringify(blocks.map((b) => b.node), (k, v) => (k === 'position' || k === 'key' ? undefined : v));
