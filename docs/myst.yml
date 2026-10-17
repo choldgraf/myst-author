@@ -23,6 +23,7 @@ project:
         - file: guide/directives.md
         - file: guide/vscode.md
         - file: guide/jupyterlab.md
+        - file: guide/github.md
     - file: develop/index.md
       children:
         - file: develop/repositories.md

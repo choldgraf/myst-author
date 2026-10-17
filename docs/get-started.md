@@ -48,6 +48,7 @@ To point it at another folder, stop it with {kbd}`Ctrl+C` in the terminal and ru
 [![Launch on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/choldgraf/myst-author/main?urlpath=lab/tree/docs/examples/tour/index.md)
 
 Binder builds the repository and opens the tour in JupyterLab, with the [JupyterLab extension](guide/jupyterlab.md).
+The extension follows the file you edit, so it works in any MyST project under Lab's root folder, such as one you [pull from GitHub](guide/github.md).
 The Launcher also has **VS Code**, with the [VS Code extension](guide/vscode.md), and **MyST Author**, the web editor.
 The first launch can take a few minutes.
 Changes are lost when the Binder session ends.

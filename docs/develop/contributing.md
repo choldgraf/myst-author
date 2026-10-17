@@ -47,7 +47,7 @@ It runs on a temporary copy of the tour, because the editor saves as you type an
 `npm start -- path/to/project` runs it on any project.
 It uses Vite, so changes to the app reload in the browser as you save them.
 
-The production build, which is what Binder and the JupyterLab extension run through [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py):
+The production build, which is what the **MyST Author** entry in the Launcher on Binder runs through [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py):
 
 ```bash
 npm run build

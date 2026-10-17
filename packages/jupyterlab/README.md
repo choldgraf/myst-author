@@ -7,10 +7,11 @@ Install it from source, as below, or try it on [Binder](https://chrisholdgraf.co
 ## How it works
 
 The extension is a frontend only.
-It talks to the web editor's host server (`packages/app/server`), which runs mystmd and the language server for one project.
-[jupyter-server-proxy](https://jupyter-server-proxy.readthedocs.io) runs that server at `/myst-author/` under the Jupyter server's URL.
+It talks to [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) through jupyter-lsp, which comes with JupyterLab and runs the language server over a websocket.
+The language server finds each file's project, the nearest `myst.yml` under Jupyter's root folder, and runs mystmd for it.
+So Lab can open at your home folder, and completions, the preview and the table of contents follow whichever project you're editing.
+The extension reaches each project's mystmd through [jupyter-server-proxy](https://jupyter-server-proxy.readthedocs.io).
 See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) for the setup.
-`MYST_AUTHOR_PROJECT` sets the project folder.
 
 ## Try it
 
@@ -42,7 +43,8 @@ ln -sfn "$PWD/packages/jupyterlab/dist/labextension" "$(jupyter --data-dir)/labe
 ```
 
 `jupyter labextension list` should show `@myst-author/jupyterlab`.
-Then add [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) to your Jupyter config, and set `MYST_AUTHOR_PROJECT` to your project folder.
+Then add [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) to your Jupyter config, with jupyter-server-proxy installed.
+The **MyST Author** entry it adds to the Launcher opens the web editor on `MYST_AUTHOR_PROJECT`, or the tour.
 Rebuild and reload the page after changes.
 
 ## What works

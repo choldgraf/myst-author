@@ -65,6 +65,10 @@ const completionIcons = EditorView.theme({
   '.cm-completionIcon-property': icon(':'), // directive options
 });
 
+const encodePath = (path: string) => path.split('/').map(encodeURIComponent).join('/');
+/** An absolute file or folder path as a file URI, encoded like the document URIs `uri()` below makes, so `path()` can map it back. */
+export const fileUri = (path: string) => `file://${encodePath(path)}`;
+
 /**
  * Connect to the language server at `server`: a websocket URL relative to the page (http(s) means ws(s)),
  * or a transport when the host relays messages itself (see `messageTransport`).
@@ -86,7 +90,7 @@ export function connectLsp(server: string | Transport, root: string) {
   else client.connect(server);
   return {
     client,
-    uri: (path: string) => `${root}/${path.split('/').map(encodeURIComponent).join('/')}`,
+    uri: (path: string) => `${root}/${encodePath(path)}`,
     path: (uri: string) => (uri.startsWith(root + '/') ? decodeURIComponent(uri.slice(root.length + 1)) : null),
   };
 }

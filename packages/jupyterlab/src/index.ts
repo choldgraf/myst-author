@@ -10,8 +10,8 @@ import { IEditorTracker, type FileEditor } from '@jupyterlab/fileeditor';
 import { INotebookTracker, type NotebookPanel } from '@jupyterlab/notebook';
 import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
-import { connectLsp, type Lsp } from '@myst-author/lsp-client/client';
-import { contentServer } from 'mystmd-client/content-server';
+import { connectLsp, fileUri, type Lsp } from '@myst-author/lsp-client/client';
+import { contentServer, type ContentServer } from 'mystmd-client/content-server';
 import { Preview } from '@myst-author/preview';
 import { findLabel, PreviewController, type ToPage } from '@myst-author/preview/controller';
 import { livePreview, offerBuilt, shadowSheet, showBuilt, topLine } from '@myst-author/preview/live';
@@ -24,13 +24,16 @@ import liveCss from '../dist/live.css'; // the preview's CSS, for the extension'
 
 type Editor = IDocumentWidget<FileEditor>;
 
-// The host server, which jupyter-server-proxy runs at <base>/myst-author/ (see binder/jupyter_server_config.py).
-const server = URLExt.join(PageConfig.getBaseUrl(), 'myst-author/');
-// Jupyter's root folder as a file:// URI (set by jupyter-lsp, which ships with JupyterLab), to map Lab paths to document URIs.
-// The server's `/lsp` bridge starts the language server with the project folder, which overrides this root.
+// The language server, which jupyter-lsp (it comes with JupyterLab) runs over a websocket (see binder/jupyter_server_config.py).
+const lspServer = URLExt.join(PageConfig.getBaseUrl(), 'lsp/ws/mystmd-lsp');
+// Jupyter's root folder as a file:// URI (set by jupyter-lsp), to map Lab paths to document URIs.
+// It is the language server's workspace: a document's project is the nearest myst.yml between it and this folder.
 const jupyterRoot = PageConfig.getOption('rootUri').replace(/\/$/, '');
 
-const content = contentServer(server + 'myst');
+/** A MyST project the language server found: its folder as a Lab path, and a client for the mystmd it runs there. */
+type Project = { root: string; content: ContentServer };
+/** The project a document is a page of, or undefined when it isn't one (see `projectFor` in the plugin). */
+type ProjectFor = (path: string) => Promise<Project | undefined>;
 // Live preview in Markdown editors and notebook Markdown cells. Blocks render in shadow roots, so the preview's CSS can't restyle Lab.
 // Blocks read at Lab's content size, like its rendered Markdown, rather than the preview's 16px.
 const cellCss = `${liveCss}\n.article { font-size: var(--jp-content-font-size1); line-height: var(--jp-content-line-height) }`;
@@ -94,11 +97,17 @@ async function show(docs: IDocumentManager, path: string, line: number) {
   w?.content.editor?.focus();
 }
 
-/** A left sidebar panel with the project's table of contents. Clicking a page opens it. The plugin's `watch` callback calls `refresh()`. */
+/**
+ * A left sidebar panel with the table of contents of the current Markdown editor's project.
+ * Clicking a page opens it.
+ */
 class MystToc extends Widget {
+  private project?: Project;
+  private following?: Editor; // the editor whose project is being looked up, so a slow answer can't overtake a newer one
+
   constructor(
     private docs: IDocumentManager,
-    private project: Promise<string>,
+    private projectFor: ProjectFor,
   ) {
     super();
     this.id = 'myst-author-toc';
@@ -107,8 +116,28 @@ class MystToc extends Widget {
     this.addClass('myst-author-toc');
   }
 
-  async refresh() {
-    const [entries, root] = await Promise.all([content.toc().catch((err) => { console.warn(`MyST Author: no table of contents (${err})`); return []; }), this.project]);
+  /**
+   * Follow `editor`'s project.
+   * A file with no project leaves the view on the last one.
+   */
+  async follow(editor: Editor) {
+    this.following = editor;
+    const project = await this.projectFor(editor.context.path);
+    if (!project || this.following !== editor || project === this.project) return;
+    this.project = project;
+    this.refresh();
+  }
+
+  /** The plugin calls this when a project rebuilds. */
+  rebuilt(project: Project) {
+    if (project === this.project) this.refresh();
+  }
+
+  // Until mystmd is up there is no table of contents, and the project's next build calls `rebuilt`, so a failure leaves the view as it is.
+  private async refresh() {
+    const { root, content } = this.project!;
+    const entries = await content.toc().catch(() => undefined);
+    if (!entries || this.project?.root !== root) return; // nothing yet, or the view moved to another project meanwhile
     this.node.replaceChildren(
       ...entries.map(({ title, level, file }) => {
         const item = document.createElement(file ? 'button' : 'div');
@@ -131,7 +160,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     // Radix puts myst-theme's hover cards in <body>, outside the shadow roots, so they get the preview's CSS scoped to the card (`:root` becomes `:scope`).
     document.head.appendChild(document.createElement('style')).textContent = `@scope (.hover-card-content) { ${cellCss.replaceAll(':root', ':scope')} }`;
     // Without rootUri, document URIs would be wrong, so skip the language features. The preview still works.
-    const lsp = jupyterRoot ? Promise.resolve(connectLsp(server + 'lsp', jupyterRoot)) : Promise.reject(new Error("jupyter-lsp didn't set rootUri"));
+    const lsp = jupyterRoot ? Promise.resolve(connectLsp(lspServer, jupyterRoot)) : Promise.reject(new Error("jupyter-lsp didn't set rootUri"));
     lsp.then((l) => {
       // Go to definition in another file or notebook cell: open it in Lab, then hand lsp-client its editor.
       l.client.workspace.displayFile = async (uri) => {
@@ -143,11 +172,44 @@ const plugin: JupyterFrontEndPlugin<void> = {
         await w?.context.ready;
         return w ? cm(w).editor : null;
       };
-    }, (err) => console.warn(`MyST Author: no language features from ${server} (${err})`));
-    // The project folder, relative to Jupyter's root.
-    const project = Promise.all([lsp, fetch(server + 'api/root').then((r) => r.json())]).then(([l, { uri }]) => l.path(uri) ?? '', () => '');
+    }, (err) => console.warn(`MyST Author: no language features from ${lspServer} (${err})`));
 
-    const toc = new MystToc(docs, project);
+    // The project a document is a page of, from the language server, which runs mystmd for each project it finds (as the VS Code extension does).
+    // Undefined for a file outside every project, one mystmd doesn't build, or a server that isn't answering, which leaves the built preview off.
+    // The fast preview still works.
+    const projects = new Map<string, Project>();
+    const projectFor: ProjectFor = async (path) => {
+      const l = await lsp.catch(() => undefined);
+      const found = await l?.client.request<{ uri: string }, { root?: string; contentServer?: string; page?: boolean }>('myst/project', { uri: l.uri(path) }).catch(() => undefined);
+      if (!found?.root || !found.contentServer || !found.page) return;
+      const { root, contentServer: url } = found;
+      let project = projects.get(root);
+      if (!project) {
+        const labRoot = l!.path(fileUri(root));
+        if (labRoot == null) return; // outside Jupyter's root, so Lab can't open its files
+        // mystmd listens on the Jupyter server, so the browser reaches it through jupyter-server-proxy's /proxy/<port>/.
+        const p: Project = { root: labRoot, content: contentServer(URLExt.join(PageConfig.getBaseUrl(), 'proxy', new URL(url).port)) };
+        p.content.watch(() => rebuilt(p));
+        projects.set(root, (project = p));
+      }
+      return project;
+    };
+    /** The built page for a document, from its project's mystmd. Undefined without a project or a build. */
+    const builtPage = async (path: string) => {
+      const p = await projectFor(path);
+      return p && (await p.content.built(PathExt.relative(p.root, path))).page;
+    };
+    // A rebuild refreshes every open document, not just the project's.
+    // Each one asks for its project again, which is cheap.
+    const rebuilt = (project: Project) => {
+      tracker.forEach((w) => isMarkdown(w) && sendBuilt(w));
+      notebooks.forEach(sendBuiltCells);
+      toc.rebuilt(project);
+    };
+
+    const toc = new MystToc(docs, projectFor);
+    tracker.currentChanged.connect((_, w) => isMarkdown(w) && toc.follow(w));
+    if (isMarkdown(tracker.currentWidget)) toc.follow(tracker.currentWidget);
 
     // Live preview, and the language client once it connects. `uri` is the editor's document URI.
     const attachEditor = (editor: CodeMirrorEditor, uri: (l: Lsp) => string) => {
@@ -157,7 +219,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
 
     // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.
     const sendBuilt = async (w: Editor) => {
-      const { page } = await content.built(PathExt.relative(await project, w.context.path));
+      const page = await builtPage(w.context.path);
       if (page) offerBuilt(cm(w).editor, page);
     };
 
@@ -190,7 +252,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     // Just after a save, a cell's saved text can be ahead of the build, and the cell shows its old block until mystmd rebuilds.
     const savedSources = new WeakMap<NotebookPanel, string[]>();
     const sendBuiltCells = async (nb: NotebookPanel) => {
-      const { page } = await content.built(PathExt.relative(await project, nb.context.path));
+      const page = await builtPage(nb.context.path);
       const sources = nb.content.widgets.map((cell) => cell.model.sharedModel.getSource());
       const pages = page ? cellPages(page, sources, savedSources.get(nb) ?? []) : [];
       nb.content.widgets.forEach((cell, i) => {
@@ -206,11 +268,6 @@ const plugin: JupyterFrontEndPlugin<void> = {
         (cell.editor as CodeMirrorEditor).editor.dispatch({ effects: showBuilt.of({ page: built, text: source }) });
       });
     };
-    content.watch(() => {
-      tracker.forEach((w) => isMarkdown(w) && sendBuilt(w));
-      notebooks.forEach(sendBuiltCells);
-      toc.refresh();
-    });
     const watch = (nb: NotebookPanel) =>
       nb.context.ready.then(() => {
         // Each cell's text as last loaded or saved, by position: added or moved cells show Lab's rendering until you save and mystmd rebuilds.
@@ -245,7 +302,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
       label: 'MyST: Open Preview to the Side',
       execute: () => {
         if (preview && !preview.isDisposed) return app.shell.activateById(preview.id);
-        preview = new MainAreaWidget({ content: new MystPreview(tracker, docs, lsp, project) });
+        preview = new MainAreaWidget({ content: new MystPreview(tracker, docs, lsp, projectFor) });
         preview.id = 'myst-author-preview';
         app.shell.add(preview, 'main', { mode: 'split-right', ref: tracker.currentWidget?.id });
       },
@@ -257,36 +314,23 @@ const plugin: JupyterFrontEndPlugin<void> = {
   },
 };
 
-/** The preview page (`@myst-author/preview/page`, as in VS Code) in a shadow root, following the current Markdown editor. */
+/** The preview page (`@myst-author/preview/page`, as in VS Code) in a shadow root, following the current Markdown editor and its project. */
 class MystPreview extends Widget {
   private editor: Editor | null = null;
+  private project?: Project;
+  private preview?: PreviewController; // one per project: each has its own content server
+  private following?: Editor; // the editor whose project is being looked up, so a slow answer can't overtake a newer one
   private receive: (m: ToPage) => void = () => {};
   private root: ReturnType<typeof mountPreviewPage>;
-  private preview = new PreviewController({
-    current: async () => {
-      const w = this.editor;
-      return w ? { path: PathExt.relative(await this.project, w.context.path), text: w.content.model.sharedModel.getSource(), dirty: w.context.model.dirty, line: topLine(cm(w).editor) } : undefined;
-    },
-    post: (m) => this.receive(m),
-    open: async (path, line) => show(this.docs, PathExt.join(await this.project, path), line),
-    openExternal,
-    findLabel: async (id) => {
-      const l = await this.lsp;
-      const s = await findLabel((method, params) => l.client.request(method, params), id);
-      const path = s && l.path(s.uri.split('#')[0]); // a label in a notebook cell has `#<cell id>`
-      return path != null ? { path: PathExt.relative(await this.project, path), line: s!.line } : undefined;
-    },
-    warn: (message) => console.warn(`MyST Author: ${message}`),
-  }, Promise.resolve(content));
 
-  constructor(tracker: IEditorTracker, private docs: IDocumentManager, private lsp: Promise<Lsp>, private project: Promise<string>) {
+  constructor(tracker: IEditorTracker, private docs: IDocumentManager, private lsp: Promise<Lsp>, private projectFor: ProjectFor) {
     super();
     this.title.label = 'MyST Preview';
     this.title.closable = true;
     const shadow = this.node.attachShadow({ mode: 'open' });
     shadow.adoptedStyleSheets = [previewCss];
     this.root = mountPreviewPage(shadow.appendChild(document.createElement('div')), {
-      postMessage: (m) => this.preview.onMessage(m),
+      postMessage: (m) => this.preview?.onMessage(m),
       listen: (receive) => (this.receive = receive),
     });
     tracker.currentChanged.connect((_, w) => this.follow(w), this);
@@ -295,30 +339,66 @@ class MystPreview extends Widget {
 
   dispose() {
     this.root.unmount();
-    this.editor && cm(this.editor).editor.scrollDOM.removeEventListener('scroll', this.onScroll);
-    this.preview.dispose();
+    this.unfollow();
+    this.following = undefined; // a lookup still pending must not revive the panel
+    this.preview?.dispose();
     Signal.clearData(this);
-    Signal.clearData(this.preview); // disconnects the editor's signals, which call the controller directly
     super.dispose();
   }
 
   // Focusing the preview leaves the tracker's current widget alone, so this only follows other Markdown editors.
-  private follow(w: Editor | null) {
-    if (!isMarkdown(w) || w === this.editor) return;
-    if (this.editor) {
-      this.editor.content.model.sharedModel.changed.disconnect(this.preview.sendText, this.preview);
-      this.editor.context.model.stateChanged.disconnect(this.preview.sendText, this.preview);
-      cm(this.editor).editor.scrollDOM.removeEventListener('scroll', this.onScroll);
+  // A file with no project leaves the preview on the last one.
+  private async follow(w: Editor | null) {
+    if (!isMarkdown(w)) return;
+    this.following = w; // also drops a pending lookup when the user returns to the editor already followed
+    if (w === this.editor) return;
+    const project = await this.projectFor(w.context.path);
+    if (!project || this.following !== w) return;
+    this.unfollow();
+    if (project !== this.project) {
+      this.preview?.dispose();
+      this.project = project;
+      this.preview = this.controller(project);
     }
+    const preview = this.preview!;
     this.editor = w;
     this.title.label = `MyST: ${PathExt.basename(w.context.path)}`;
-    w.content.model.sharedModel.changed.connect(this.preview.sendText, this.preview);
-    w.context.model.stateChanged.connect(this.preview.sendText, this.preview); // the dirty flag
+    w.content.model.sharedModel.changed.connect(preview.sendText, preview);
+    w.context.model.stateChanged.connect(preview.sendText, preview); // the dirty flag
     cm(w).editor.scrollDOM.addEventListener('scroll', this.onScroll);
-    this.preview.sendFile();
+    preview.sendFile();
   }
 
-  private onScroll = () => this.editor && this.preview.scroll(topLine(cm(this.editor).editor));
+  private unfollow() {
+    const w = this.editor;
+    if (!w) return;
+    w.content.model.sharedModel.changed.disconnect(this.preview!.sendText, this.preview);
+    w.context.model.stateChanged.disconnect(this.preview!.sendText, this.preview);
+    cm(w).editor.scrollDOM.removeEventListener('scroll', this.onScroll);
+    this.editor = null;
+  }
+
+  private controller({ root, content }: Project) {
+    return new PreviewController({
+      current: () => {
+        const w = this.editor;
+        return w ? { path: PathExt.relative(root, w.context.path), text: w.content.model.sharedModel.getSource(), dirty: w.context.model.dirty, line: topLine(cm(w).editor) } : undefined;
+      },
+      post: (m) => this.receive(m),
+      open: (path, line) => show(this.docs, PathExt.join(root, path), line),
+      openExternal,
+      findLabel: async (id) => {
+        const l = await this.lsp;
+        const pathOf = (uri: string) => l.path(uri.split('#')[0]); // a label in a notebook cell has `#<cell id>`
+        const inProject = (uri: string) => { const p = pathOf(uri); return p != null && !PathExt.relative(root, p).startsWith('..'); };
+        const s = await findLabel((method, params) => l.client.request(method, params), id, inProject);
+        return s && { path: PathExt.relative(root, pathOf(s.uri)!), line: s.line };
+      },
+      warn: (message) => console.warn(`MyST Author: ${message}`),
+    }, Promise.resolve(content));
+  }
+
+  private onScroll = () => this.editor && this.preview?.scroll(topLine(cm(this.editor).editor));
 }
 
 export default plugin;

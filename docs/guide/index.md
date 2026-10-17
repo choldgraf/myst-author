@@ -12,6 +12,7 @@ These pages explain what each part of the editor does and where its limits are.
 - [Directives and roles](directives.md): completion and highlighting for directives and roles.
 - [VS Code](vscode.md): using MyST Author in VS Code, and what differs.
 - [JupyterLab](jupyterlab.md): using MyST Author in JupyterLab, and what differs.
+- [Work with GitHub](github.md): pull a project from GitHub and push it back, from Codespaces, a JupyterHub, or Binder.
 
 ## The layout
 

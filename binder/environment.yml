@@ -5,3 +5,7 @@ dependencies:
   - jupyterlab
   - jupyter-server-proxy
   - jupyter-vscode-proxy
+  # Pulling a project from GitHub and pushing it back (see docs/guide/github.md).
+  - nbgitpuller
+  - jupyterlab-git
+  - gh
