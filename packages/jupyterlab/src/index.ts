@@ -25,6 +25,7 @@ import liveCss from '../dist/live.css'; // the preview's CSS, for the extension'
 type Editor = IDocumentWidget<FileEditor>;
 
 // The language server, which jupyter-lsp (it comes with JupyterLab) runs over a websocket (see binder/jupyter_server_config.py).
+// jupyter-lsp shares that one server with every browser tab and sends each answer to all of them, so a second Lab tab sees this tab's responses.
 const lspServer = URLExt.join(PageConfig.getBaseUrl(), 'lsp/ws/mystmd-lsp');
 // Jupyter's root folder as a file:// URI (set by jupyter-lsp), to map Lab paths to document URIs.
 // It is the language server's workspace: a document's project is the nearest myst.yml between it and this folder.

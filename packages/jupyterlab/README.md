@@ -50,6 +50,7 @@ Rebuild and reload the page after changes.
 ## What works
 
 - Completion, hints, hover, go to definition, find references, rename, and warnings for references in Markdown files and notebooks' Markdown cells, as in the web editor.
+  Use one browser tab at a time: jupyter-lsp runs one language server and sends its answers to every open tab, so two tabs confuse each other.
 - Live preview in Markdown files, and in notebooks' Markdown cells while you edit them, as in the web editor.
   Turn it on or off with **MyST: Live Preview** in the Command Palette.
 - Notebooks' Markdown cells that you aren't editing render with mystmd's build, so references to other pages resolve.

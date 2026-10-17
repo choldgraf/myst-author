@@ -37,7 +37,7 @@ The packages here read built pages from mystmd's *content server*, the local HTT
 
 `packages/jupyterlab` (`@myst-author/jupyterlab`)
 : The JupyterLab extension.
-  It connects Lab's Markdown editors and notebooks' Markdown cells to the host server's `/lsp` bridge.
+  It connects Lab's Markdown editors and notebooks' Markdown cells to the language server through jupyter-lsp, which comes with JupyterLab.
   It adds live preview to them, and shows the preview page beside them.
   Notebook Markdown cells you aren't editing render with mystmd's build.
 
@@ -80,11 +80,12 @@ The VS Code extension does the same without the host server.
 The MyST Language Server extension owns the language server, which finds each file's project and starts one mystmd per project.
 MyST Author asks it which project a file belongs to, and where that project's mystmd is, through the server's `myst/project` request, and fetches built pages from there directly.
 Each VS Code live editor runs a language server of its own, and live editors in the same project share one mystmd.
-The web editor and JupyterLab hosts start the language server with `--root`, so each of them is one project.
+The web editor starts the language server with `--root`, so it is one project.
 
-The JupyterLab extension uses the host server, which jupyter-server-proxy runs inside Jupyter.
-Lab's editors connect to its `/lsp` bridge, and live preview and the preview panel fetch built pages through its `/myst` proxy.
-Lab reads and saves the files itself, so it doesn't use `/api/files`.
+The JupyterLab extension works like VS Code.
+jupyter-lsp runs the language server, the extension asks it `myst/project` for each file, and fetches that project's built pages from its mystmd through jupyter-server-proxy.
+Lab reads and saves the files itself.
+The host server only serves the web editor from the Launcher.
 
 ## Adding a host
 
@@ -92,7 +93,7 @@ Everything about MyST lives in the packages.
 A host does only what depends on where it runs:
 
 - It owns the document text.
-- It runs a language server, started with `spawnLsp` and connected to the editor through the LSP client with a project root.
+- It runs a language server, with `spawnLsp` or a platform service such as jupyter-lsp, and connects the editor to it through the LSP client.
 - It fetches built pages from mystmd and passes each build of the open file to live preview with `offerBuilt`.
 - It opens files and finds labels for the preview through `PreviewHost`, and adds its own commands and toggles.
 

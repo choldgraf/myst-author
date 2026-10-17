@@ -19,6 +19,7 @@ c.LanguageServerManager.language_servers = {
 }
 
 # The web editor, at <server>/myst-author/ and in the Launcher, edits one project: MYST_AUTHOR_PROJECT (which `npm run lab` sets), else the tour.
+# It runs its own mystmd, so editing that same project in Lab too means two builds of it.
 project = os.environ.get("MYST_AUTHOR_PROJECT", f"{repo}/docs/examples/tour")
 c.ServerProxy.servers = {
     "myst-author": {

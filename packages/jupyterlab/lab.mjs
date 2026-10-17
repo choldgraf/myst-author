@@ -1,4 +1,4 @@
-// `npm run lab -- project [jupyter lab options]`: JupyterLab with this extension and the host server, for a MyST project.
+// `npm run lab -- project [jupyter lab options]`: JupyterLab with this extension and the web editor, for a MyST project.
 // JupyterLab runs in its own environment (uvx), with its config and extensions in a Jupyter folder inside dist/.
 // So it neither uses nor changes your own Jupyter setup, such as other extensions you've installed.
 import { spawn } from 'node:child_process';
