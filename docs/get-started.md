@@ -39,6 +39,8 @@ References to labels in other files aren't completed or checked, and you only ge
 
 Codespaces installs everything, including the [VS Code extension](guide/vscode.md), and opens the tour project's first page.
 To see the preview, run **MyST: Open Preview to the Side** from the Command Palette.
+The extension follows the file you edit, so clone any other MyST project in the terminal and open a page in it.
+The tour's last page, [Bring your own project](https://github.com/choldgraf/myst-author/blob/main/docs/examples/tour/github.md), walks through that and through pushing a change back.
 
 The web editor also runs on the tour project, on port 4321 (see the **Ports** tab).
 To point it at another folder, stop it with {kbd}`Ctrl+C` in the terminal and run `npm start -- <path>`.

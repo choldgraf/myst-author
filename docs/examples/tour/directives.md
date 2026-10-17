@@ -46,4 +46,4 @@ That doesn't show the Markdown, but clicking the tab's text does.
 
 ## Next
 
-The last page, [](notebook.ipynb), shows MyST in a notebook.
+The next page, [](notebook.ipynb), shows MyST in a notebook.

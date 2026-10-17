@@ -10,5 +10,6 @@ project:
     - file: references.md
     - file: directives.md
     - file: notebook.ipynb
+    - file: github.md
 site:
   template: book-theme

@@ -18,13 +18,17 @@ It lands inside the MyST Author checkout, which is fine for a session.
 Open a page in it.
 The [VS Code extension](vscode.md) finds the project, so completions, the preview and the MyST TOC follow along.
 
-Commit and push from VS Code's **Source Control** view.
-Codespaces signs you in to GitHub for the repository it was opened from, which is MyST Author's, so pushing to your own repository needs one more sign-in in the terminal:
+Codespaces signs you in to GitHub for the repository it was opened from, which is MyST Author's.
+Pushing to your own repository needs one more sign-in, in the terminal:
 
 ```bash
 unset GITHUB_TOKEN   # otherwise gh keeps using the Codespace's token
 gh auth login
+gh auth setup-git
+git push             # from this terminal, which has the new sign-in
 ```
+
+VS Code's **Source Control** view can commit as usual, but it may keep pushing with the Codespace's token, so push from that terminal.
 
 To edit the project in the web editor instead, stop the one running in the terminal with {kbd}`Ctrl+C` and run `npm start -- your-book`.
 
