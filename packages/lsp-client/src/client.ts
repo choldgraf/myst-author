@@ -1,7 +1,7 @@
-import { jumpToDefinition, languageServerExtensions, LSPClient, type Transport } from '@codemirror/lsp-client';
+import { jumpToDefinition, languageServerExtensions, LSPClient, type LSPClientExtension, type Transport } from '@codemirror/lsp-client';
 import type { Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
-import { inlayHints } from './inlayHints.ts';
+import { inlayHints, refreshInlayHints } from 'codemirror-lsp-inlay-hints';
 
 /**
  * A transport over any message channel, such as a webview's postMessage.
@@ -40,6 +40,18 @@ function keepConnected(client: LSPClient, url: string, delay = 1000) {
     setTimeout(() => keepConnected(client, url, Math.min(delay * 2, 30000)), delay);
   });
 }
+
+// mystmd-lsp publishes diagnostics when a file opens or changes, and when another file or the project index changes.
+// Any of these can change a file's hints, so they're what requests hints (`delay: null`).
+const refreshHintsOnDiagnostics: LSPClientExtension = {
+  notificationHandlers: {
+    'textDocument/publishDiagnostics': (client, params) => {
+      const view = client.workspace.getFile(params.uri)?.getView();
+      if (view) refreshInlayHints(view);
+      return false; // let serverDiagnostics handle them too
+    },
+  },
+};
 
 // Cmd/Ctrl-click a reference to jump to its target (F12 comes with languageServerExtensions).
 const definitionClick = EditorView.domEventHandlers({
@@ -89,7 +101,8 @@ export function connectLsp(server: string | Transport, root: string) {
     rootUri: root,
     timeout: 20000, // the host starts a language server process per connection, which can take seconds on a busy host (e.g. Binder)
     extensions: [
-      inlayHints(), // first: serverDiagnostics consumes the notification
+      inlayHints({ delay: null }),
+      refreshHintsOnDiagnostics, // before languageServerExtensions, whose serverDiagnostics consumes the notification
       // LSPClient drops extensions with no `.extension`, which keymap.of() lacks before @codemirror/state 6.7.1 (JupyterLab 4.5 has 6.5).
       // Wrapping them in arrays keeps F2, F12, and Shift+F12 in JupyterLab.
       ...languageServerExtensions().map((e) => ('editorExtension' in e ? e : [e as Extension])),
