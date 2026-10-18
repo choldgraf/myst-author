@@ -88,7 +88,7 @@
     "codemirror": "^6.0.2",
     "esbuild": "^0.28.2",
     "katex": "^0.15.6",
-    "myst-syntax": "^0.0.1",
+    "myst-syntax": "^0.0.2",
     "mystmd-client": "github:choldgraf/mystmd-client",
     "punycode": "^2.3.1",
     "react": "^19.3.0",

@@ -22,7 +22,7 @@
     "codemirror": "^6.0.2",
     "http-proxy-3": "^2.0.1",
     "katex": "^0.15.6",
-    "myst-syntax": "^0.0.1",
+    "myst-syntax": "^0.0.2",
     "mystmd-client": "github:choldgraf/mystmd-client",
     "mystmd-lsp": "^0.0.9",
     "react": "^19.0.0",
