@@ -1,4 +1,4 @@
-# JupyterLab with MyST Author: the language server for the JupyterLab extension, and the web editor in the Launcher.
+# JupyterLab config for MyST Author. It runs the language server for the JupyterLab extension and adds the web editor to the Launcher.
 # postBuild symlinks this file into ~/.jupyter/, so resolve the link to find the repo.
 import os
 
@@ -7,7 +7,8 @@ repo = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 execute = [] if os.environ.get("MYST_AUTHOR_EXECUTE") == "0" else ["--execute"]
 
 # jupyter-lsp (it comes with JupyterLab) runs the language server at <server>/lsp/ws/mystmd-lsp for the JupyterLab extension.
-# The server finds each file's project under Jupyter's root folder and runs mystmd for it, which the extension reaches through jupyter-server-proxy's /proxy/<port>/.
+# The server finds each file's project under Jupyter's root folder and runs mystmd for it.
+# The extension reaches mystmd through jupyter-server-proxy's /proxy/<port>/.
 c.LanguageServerManager.language_servers = {
     "mystmd-lsp": {
         "version": 2,
@@ -18,7 +19,8 @@ c.LanguageServerManager.language_servers = {
     }
 }
 
-# The web editor, at <server>/myst-author/ and in the Launcher, edits one project: MYST_AUTHOR_PROJECT (which `npm run lab` sets), else the tour.
+# The web editor runs at <server>/myst-author/ and in the Launcher, and edits one project.
+# That's MYST_AUTHOR_PROJECT if set (`npm run lab` sets it), else the tour.
 # It runs its own mystmd, so editing that same project in Lab too means two builds of it.
 project = os.environ.get("MYST_AUTHOR_PROJECT", f"{repo}/docs/examples/tour")
 c.ServerProxy.servers = {

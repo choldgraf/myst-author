@@ -21,9 +21,10 @@ npm run demo
 
 The editor opens at <http://127.0.0.1:4321>.
 Set `PORT` to use another port, for example `PORT=8000 npm run demo`.
-On macOS it also opens a browser tab, which `NO_OPEN=1` stops.
+On macOS it also opens a browser tab.
+Set `NO_OPEN=1` to stop that.
 If `myst` isn't on your `PATH`, set `MYST_BIN` to its location.
-Code cells and inline `{eval}` expressions run as mystmd builds.
+mystmd runs code cells and inline `{eval}` expressions when it builds a page.
 [Code cells and `{eval}`](guide/preview.md#code-cells-and-eval) says how to turn that off.
 
 To run it from any folder as `myst-author`, run `npm link -w packages/app` once in the clone.
@@ -39,7 +40,8 @@ References to labels in other files aren't completed or checked, and you only ge
 
 Codespaces installs everything, including the [VS Code extension](guide/vscode.md), and opens the tour project's first page.
 To see the preview, run **MyST: Open Preview to the Side** from the Command Palette.
-The extension follows the file you edit, so clone any other MyST project in the terminal and open a page in it.
+The extension works with the project the open file is in.
+To use another MyST project, clone it in the terminal and open a page in it.
 The tour's last page, [Bring your own project](https://github.com/choldgraf/myst-author/blob/main/docs/examples/tour/github.md), walks through that and through pushing a change back.
 
 The web editor also runs on the tour project, on port 4321 (see the **Ports** tab).
@@ -50,8 +52,10 @@ To point it at another folder, stop it with {kbd}`Ctrl+C` in the terminal and ru
 [![Launch on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/choldgraf/myst-author/main?urlpath=lab/tree/docs/examples/tour/index.md)
 
 Binder builds the repository and opens the tour in JupyterLab, with the [JupyterLab extension](guide/jupyterlab.md).
-The extension follows the file you edit, so it works in any MyST project under Lab's root folder, such as one you [pull from GitHub](guide/github.md).
-The Launcher also has **VS Code**, with the [VS Code extension](guide/vscode.md), and **MyST Author**, the web editor.
+The extension works with the project the open file is in.
+That can be any MyST project under Lab's root folder, such as one you [pull from GitHub](guide/github.md).
+The Launcher's **VS Code** entry opens VS Code with the [VS Code extension](guide/vscode.md).
+Its **MyST Author** entry opens the web editor.
 The first launch can take a few minutes.
 Changes are lost when the Binder session ends.
 

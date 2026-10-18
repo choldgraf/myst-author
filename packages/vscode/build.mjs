@@ -5,7 +5,7 @@ import { cpSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
-// markdown-it requires `punycode`; use the npm package, not Node's deprecated builtin.
+// markdown-it requires `punycode`. Use the npm package, not Node's deprecated builtin.
 const alias = { punycode: 'punycode/punycode.js' };
 const node = { alias, bundle: true, platform: 'node', format: 'cjs', target: 'node20', sourcemap: true, logLevel: 'warning' };
 const webview = { alias, bundle: true, platform: 'browser', format: 'iife', jsx: 'automatic', minify: true, define: { 'process.env.NODE_ENV': '"production"' }, logLevel: 'warning' };

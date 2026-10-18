@@ -7,13 +7,14 @@ import { MystToc } from './toc.ts';
 import { webviewUrl, type Project } from './project.ts';
 
 export function activate(context: vscode.ExtensionContext) {
-  // Activated once. If that fails, say so once, and no document has a project.
+  // Activate the language server extension once. If that fails, show the error once, and no document has a project.
   const lsp = Promise.resolve(vscode.extensions.getExtension<{ client: LanguageClient; server: string }>('myst-author.mystmd-lsp-vscode')!.activate())
     .catch((e: Error) => void vscode.window.showErrorMessage(`MyST Author: ${e.message}`));
   const projects = new Map<string, PromiseLike<Project>>();
 
   /**
-   * The project `uri` is a page of, from the MyST Language Server extension: its server finds the folder and runs mystmd, and we ask it where they are.
+   * The project `uri` is a page of, from the MyST Language Server extension.
+   * Its server finds the project folder and runs mystmd there, and tells us the folder and mystmd's URL.
    * Undefined for a file outside every project or one mystmd doesn't build, which leaves the preview and the live editor's language features off.
    * One `Project` per folder: a window can hold several, each with its own content server.
    */
@@ -30,7 +31,7 @@ export function activate(context: vscode.ExtensionContext) {
       }
       return await projects.get(root);
     } catch {
-      // A server that died, or a URL that can't be forwarded: the file just has no project, and the editor still opens.
+      // If the server died or the URL can't be forwarded, the file just has no project, and the editor still opens.
       // The language server extension reports its own failures, so no message here (this runs on every editor switch).
     }
   }

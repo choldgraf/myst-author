@@ -1,6 +1,6 @@
 ---
 title: MyST Author
-description: An editor for MyST projects with a live preview and cross-reference completion and checks.
+description: An editor for MyST projects that previews pages as you type, and completes and checks cross-references.
 ---
 
 ```{include} ../README.md

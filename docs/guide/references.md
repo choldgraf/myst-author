@@ -4,7 +4,7 @@ description: Completion, hints, hover, go to definition, and warnings for cross-
 ---
 
 The editor helps you write cross-references: it completes them, shows what they point to, and warns about broken ones.
-This help comes from [mystmd-lsp](https://chrisholdgraf.com/mystmd-lsp/), a language server that indexes the labels in your project.
+This help comes from [mystmd-lsp](https://chrisholdgraf.com/mystmd-lsp/), a language server that keeps track of the labels in your project.
 Its [features page](https://chrisholdgraf.com/mystmd-lsp/features) lists everything it does and its limits, including citations and external references (`xref:`).
 
 ## Completion
@@ -16,7 +16,8 @@ Each item shows the label, what it is (for example `Figure 1`), and the file it'
 
 ## Hints and hover
 
-A hint is faint text after a reference that shows what it will render as, such as `Figure 1` or `(1)`.
+A hint is faint text after a reference.
+It shows what readers will see in its place, such as `Figure 1` or `(1)`.
 Hover a reference to see what it points to and which file it's in.
 
 ![Hovering a reference](../images/hover.png)
@@ -36,4 +37,4 @@ Hover it to read the warning.
 
 ![A warning on a broken reference](../images/diagnostic.png)
 
-Warnings for unknown labels start once mystmd's first build has loaded, so you don't get them [without mystmd](../get-started.md#run-it-locally).
+Warnings for unknown labels appear only after mystmd's first build has loaded, so you don't get them [without mystmd](../get-started.md#run-it-locally).

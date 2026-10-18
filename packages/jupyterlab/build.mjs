@@ -5,7 +5,8 @@ import { build } from 'esbuild';
 import { execFileSync } from 'node:child_process';
 import { buildCss } from '@myst-author/preview/build';
 
-// The preview's CSS, as for the VS Code webviews. index.ts imports it as text, for the extension's shadow roots.
+// Build the preview's CSS, as the VS Code extension does for its webviews.
+// index.ts imports it as text for the extension's shadow roots.
 buildCss('dist/live.css');
 
 await build({

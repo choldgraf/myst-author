@@ -20,7 +20,7 @@ try { unlinkSync(link); } catch {} // the link from a previous run (unlink remov
 symlinkSync(join(import.meta.dirname, 'dist/labextension'), link);
 
 // binder/jupyter_server_config.py registers the language server with jupyter-lsp and runs the web editor on MYST_AUTHOR_PROJECT under jupyter-server-proxy.
-// `jupyter` comes from jupyter-core; jupyterlab and jupyter-server-proxy go in the same environment.
+// `jupyter` comes from jupyter-core. jupyterlab and jupyter-server-proxy go in the same environment.
 spawn('uvx', ['--from', 'jupyter-core', '--with', 'jupyterlab', '--with', 'jupyter-server-proxy', 'jupyter', 'lab', `--config=${join(repo, 'binder/jupyter_server_config.py')}`, `--ServerApp.root_dir=${project}`, '--ServerApp.answer_yes=True', ...options], {
   stdio: 'inherit',
   env: { ...process.env, JUPYTER_CONFIG_DIR: join(data, 'config'), JUPYTER_DATA_DIR: data, MYST_AUTHOR_PROJECT: project },

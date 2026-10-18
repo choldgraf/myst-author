@@ -33,7 +33,8 @@ That warning goes away.
 
 ## External references
 
-An `xref:` link points to a label in another project listed under `project.references` in `myst.yml`.
+An `xref:` link points to a label in another project.
+That project is listed under `project.references` in `myst.yml`.
 This project lists the Python docs under the key `python`.
 The part after `#` is either a page, like `library/abc`, or an object, like `abc.ABC`.
 This links to the `abc` module page: <xref:python#library/abc>.
@@ -41,7 +42,7 @@ The editor downloads the Python docs index for this step, so it needs an interne
 
 :::{tip} Try this: complete an external reference
 Type `[](xref:python#abc.` below this box and pick a target from the list.
-Hover the finished link to see the URL it resolves to.
+Hover the finished link to see the URL it points to.
 :::
 
 ## Next

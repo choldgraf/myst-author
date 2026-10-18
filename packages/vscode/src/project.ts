@@ -5,8 +5,9 @@ import type { ContentServer } from 'mystmd-client/content-server';
 import { findLabel, type Request } from '@myst-author/preview/controller';
 
 /**
- * A MyST project the language server found: its folder, requests to it, and `server`, the server bundle the live editor spawns for its webviews.
- * `url` is mystmd's content server, `assets` the same URL as webviews reach it, and `content` a client for it.
+ * A MyST project the language server found.
+ * `root` is its folder, `request` sends requests to the language server, and `server` is the server bundle the live editor spawns for its webviews.
+ * `url` is mystmd's content server, `assets` is the same URL as webviews reach it, and `content` is a client for it.
  */
 export type Project = { root: string; request: Request; server: string; url: string; assets: string; content: ContentServer };
 
@@ -22,7 +23,7 @@ export const webviewUrl = (url: string) => vscode.env.asExternalUri(vscode.Uri.p
 // Markdown files, not notebook cells (which are Markdown documents too).
 export const isMarkdown = (d?: vscode.TextDocument): d is vscode.TextDocument => d?.languageId === 'markdown' && d.uri.scheme === 'file';
 
-/** What the preview and the live editor both give `followLink`: external links, labels through the language server, and warnings. */
+/** The `followLink` callbacks shared by the preview and the live editor, for external links, labels through the language server, and warnings. */
 export const linkHost = ({ root, request }: Project) => ({
   openExternal: (url: string) => vscode.env.openExternal(vscode.Uri.parse(url)),
   findLabel: (id: string) => findLabel(request, id, (uri) => { const p = projectPath(root, vscode.Uri.parse(uri)); return p.startsWith('..') ? null : p; }),

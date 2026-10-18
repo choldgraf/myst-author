@@ -25,8 +25,9 @@ export function parseMyst(md: string): ParseResult {
 }
 
 /**
- * Make embeds (`![](#label)`, `{embed}`) and references (`[](#label)`, `@label`, `{ref}`…) that mystmd left unresolved visible, instead of blank:
- * grey while the fast preview waits for a build, red in a built page, where they're broken.
+ * Show embeds and references that mystmd left unresolved, instead of leaving them blank.
+ * Embeds are `![](#label)` and `{embed}`. References are `[](#label)`, `@label`, `{ref}`, and the like.
+ * They're grey while the fast preview waits for a build, and red in a built page, where they're broken.
  */
 function markUnresolved(tree: GenericParent, built: boolean) {
   const color = built ? '#dc2626' : '#888';
@@ -93,11 +94,12 @@ export function builtWithLines(page: BuiltPage, text: string) {
 
 /**
  * Whether the page renders its title above the content.
- * The title is the frontmatter's, or else the first heading, which stays in the content (`content_includes_title`) unless it's a leading `# Title`.
+ * The title is the frontmatter's, or else the first heading.
+ * That heading stays in the content, and `content_includes_title` is set, unless it's a leading `# Title`.
  */
 export const hasTitle = (frontmatter: Record<string, any>) => !!frontmatter.title && !frontmatter.content_includes_title;
 
-/** Source lines (1-based, inclusive) that the live editor (`./live`) renders and reveals as one unit, and the blocks from them. */
+/** A range of source lines (1-based, inclusive) that the live editor in `./live` renders and reveals as one unit, and the blocks in it. */
 export type Span = { start: number; end: number; blocks: Block[] };
 
 // Label characters follow mystmd's TARGET_PATTERN (markdown-it-myst).
@@ -106,7 +108,8 @@ const LABEL = /^\s*\([a-zA-Z0-9|@<>*./_\-+:]+\)=\s*$/;
 /**
  * Group a page's blocks into spans for the live editor, given the page's source lines.
  * Blocks that share lines merge, and label lines (`(x)=`) join the block below them.
- * When the page has a title (`hasTitle`), the lines above the first block (frontmatter, and a `# Title` mystmd lifted out) are a span with no blocks: it renders as the title.
+ * When the page has a title (`hasTitle`), the lines above the first block become a span with no blocks.
+ * Those lines hold the frontmatter and any `# Title` that mystmd lifted out, and the live editor shows the page title in their place.
  */
 export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Span[] {
   const out: Span[] = [];
@@ -128,7 +131,8 @@ export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Sp
 }
 
 /**
- * `fast`, the fast parse of `text`, with the nodes of `built` wherever a span's source is the same as in `builtText`, the text `built` was built from.
+ * Return `fast` (the fast parse of `text`) with the nodes of `built` for each span whose source is the same as in `builtText`.
+ * `builtText` is the text that `built` was built from.
  * `built` needs the fast parse's lines (see `withSourceLines`). Editing a span then only renders that span from the fast parse until the next build.
  * Unchanged spans keep the build's numbering and references, even when an edit elsewhere changes them, until the next build.
  * Edited spans keep the build's result for each inline expression it ran, and an edited code cell keeps the build's outputs, dimmed.
@@ -173,7 +177,7 @@ function firstPosition(node: GenericNode) {
 
 /**
  * A notebook's build split into one page per cell: mystmd builds each cell as one block.
- * A notebook has no hash to compare with, so a cell gets its page while its text (`sources`) is as `saved`, which is what mystmd built.
+ * A notebook has no hash to compare with, so a cell gets its page only while its text in `sources` matches `saved`, which is what mystmd built.
  * Otherwise the cell gets null, as do all cells if the build has a different number of cells.
  * Only the first cell keeps the page title, which mystmd takes from the notebook's first heading.
  */

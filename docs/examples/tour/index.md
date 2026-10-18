@@ -4,16 +4,19 @@ title: Welcome to the tour
 
 This project is a playground for MyST Author.
 Each page has a few **Try this** boxes.
-Edit anything you like: the file on disk is what you change, and you can always get the original back from the repository.
+Edit anything you like.
+You're changing the file on disk, and you can always get the original back from the repository.
 
 The tour uses a little MyST syntax for [cross-references](https://mystmd.org/guide/cross-references).
-A line like `(tour-basics)=` sets a label on the heading below it, and a figure's `:label:` option sets one on the figure.
+A line like `(tour-basics)=` sets a label on the heading below it.
+A figure's `:label:` option sets one on the figure.
 Roles like `{ref}`, `{numref}`, and `{eq}` link to a label.
 
 (tour-basics)=
 ## The basics
 
-The editor shows each block rendered, and the block with your cursor shows its Markdown.
+The editor renders each block.
+The block with your cursor shows its Markdown instead.
 The web editor saves about half a second after you stop typing.
 In JupyterLab and VS Code, save as usual.
 
@@ -42,7 +45,7 @@ The MyST logo.
 $$e^{i\pi}+1=0$$ (euler)
 
 {numref}`fig-logo` shows the logo and {eq}`euler` is Euler's identity.
-The faint text after each reference in the editor shows what it will render as.
+The faint text after each reference in the editor shows what readers will see in its place.
 
 :::{tip} Try this: complete a reference
 Put your cursor at the end of this sentence, type `` {numref}` ``, and pick `fig-logo` from the list.

@@ -1,7 +1,8 @@
 # MyST Author for VS Code
 
 MyST in VS Code: a live preview and a live editor on top of the [MyST Language Server](https://github.com/choldgraf/mystmd-lsp/tree/main/packages/vscode) extension.
-It depends on that extension, which depends on [MyST Syntax](https://github.com/choldgraf/myst-syntax) for highlighting, so once they are published one install gives all three.
+It depends on that extension, which in turn depends on [MyST Syntax](https://github.com/choldgraf/myst-syntax) for highlighting.
+Once they are published, one install gives all three.
 Until then, you build and load it from this repository.
 
 ## Build and run
@@ -31,7 +32,8 @@ Reload open VS Code windows afterwards.
 
 Until MyST Language Server and MyST Syntax are published, install them first, as [Develop](https://github.com/choldgraf/myst-author/tree/main/packages/vscode#develop) says.
 
-`npm run demo:vscode` instead opens a fresh copy of the tour in a separate VS Code, with its own settings and the extensions this one depends on.
+`npm run demo:vscode` instead opens a fresh copy of the tour in a separate VS Code.
+That VS Code has its own settings and the extensions this one depends on.
 Choose **Trust** when VS Code asks, since it doesn't run the extension in Restricted Mode.
 
 ## What works
@@ -48,11 +50,12 @@ Choose **Trust** when VS Code asks, since it doesn't run the extension in Restri
   It edits the same file as the text editor, so save and undo work as usual and you can keep both open.
   Rename, find references, and go to definition use VS Code's own commands, so they work across the project.
   A link or definition in another file opens it in your default editor for Markdown.
-  VS Code's own editor features, such as the outline, Copilot, and Vim, don't reach it, and notebooks' Markdown cells don't get it.
+  VS Code's own editor features, such as the outline, Copilot, and Vim, don't work in the live editor.
+  Notebooks' Markdown cells don't get the live editor.
 
 ## Notes
 
-- mystmd's and the language server's output go to the MyST Language Server extension's output channel.
+- Output from mystmd and the language server goes to the MyST Language Server extension's output channel.
 - To use your own build of the language server, set its `mystmdLsp.serverPath` setting.
 
 ## Develop

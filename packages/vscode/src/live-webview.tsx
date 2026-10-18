@@ -78,7 +78,7 @@ window.addEventListener('message', ({ data: m }: MessageEvent<ToLive>) => {
   } else if (!view) {
     return;
   } else if (m.type === 'changes') {
-    // One transaction each: VS Code's changes apply one after another, where a CodeMirror transaction's all refer to the text before it.
+    // One transaction per change. VS Code's changes apply one after another, but all of a CodeMirror transaction's changes refer to the text before it.
     for (const c of m.changes) {
       const doc = view.state.doc;
       view.dispatch({

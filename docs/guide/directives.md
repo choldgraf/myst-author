@@ -1,6 +1,6 @@
 ---
 title: Directives and roles
-description: Completing directive names, roles, and directive options, and syntax highlighting.
+description: Completion for directive names, roles, and directive options, plus syntax highlighting.
 ---
 
 The editor completes directive names, role names, and directive options, and shows mystmd's description of each on hover.

@@ -10,8 +10,9 @@ import { Output, Outputs } from './outputs.tsx';
 import { builtWithLines, fromBuiltPage, hasTitle, parseMyst, withBuiltBlocks, type ParseResult } from './parse.ts';
 
 /**
- * What to preview for a file's live text: mystmd's build when it matches the text exactly, otherwise the fast in-browser parse,
- * in which blocks you haven't changed since the last matching build keep that build.
+ * What to preview for a file's live text.
+ * That's mystmd's build when it matches the text exactly.
+ * Otherwise it's the fast in-browser parse, where blocks you haven't changed since the last matching build keep that build.
  * `badge` says which one it is.
  */
 export function usePreview(path: string | undefined, text: string, dirty: boolean, built: Built | null) {
@@ -26,7 +27,7 @@ export function usePreview(path: string | undefined, text: string, dirty: boolea
 
   const current = built?.path === path ? built : null;
   const page = current?.page && hashed.hashes.includes(current.page.sha256) ? current.page : null;
-  // That build with the fast parse's lines, kept while you edit.
+  // The matching build with the fast parse's lines. `kept` holds on to it while you edit.
   const matched = useMemo(() => page && { path, text: hashed.text, result: builtWithLines(page, hashed.text) }, [page, hashed]);
   const kept = useRef(matched);
   if (matched) kept.current = matched;

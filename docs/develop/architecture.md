@@ -5,7 +5,7 @@ description: The packages that make up MyST Author and how they talk to each oth
 
 MyST Author is a set of small packages in one repository.
 For how it fits with mystmd-lsp, myst-syntax and the other repositories, see [How the repositories fit together](repositories.md).
-The editor features live in reusable packages, and each host (the web editor, VS Code, JupyterLab) wires them together.
+The editor features live in reusable packages, and each host (the web editor, VS Code, JupyterLab) puts them together.
 
 ## Packages
 
@@ -15,9 +15,11 @@ The packages here read built pages from mystmd's *content server*, the local HTT
 `packages/preview` (`@myst-author/preview`)
 : Renders a MyST page with `myst-to-react`, from the [fast in-browser parse or mystmd's built page](../guide/preview.md#fast-and-built-previews).
   Each rendered block keeps its source line range, which is what click-to-source and scroll sync use.
-  `@myst-author/preview/page` is the preview on its own page, which the VS Code and JupyterLab previews show.
-  `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor, and shows the source of the block your cursor is in.
-  Smaller entry points parse a page into blocks, drive the preview page from an extension, and compile the preview's CSS.
+  `@myst-author/preview/page` is a standalone preview page.
+  The VS Code and JupyterLab previews show it.
+  `@myst-author/preview/live` is a CodeMirror extension that renders each block in place in the editor.
+  It shows the source of the block your cursor is in.
+  Smaller entry points parse a page into blocks, control the preview page from an extension, and compile the preview's CSS.
 
 `packages/lsp-client` (`@myst-author/lsp-client`)
 : Connects the hosts to the language server.
@@ -77,13 +79,18 @@ flowchart TB
    mystmd-lsp's [How it works](https://chrisholdgraf.com/mystmd-lsp/how-it-works) explains how the server uses mystmd.
 
 The VS Code extension does the same without the host server.
-The MyST Language Server extension owns the language server, which finds each file's project and starts one mystmd per project.
-MyST Author asks it which project a file belongs to, and where that project's mystmd is, through the server's `myst/project` request, and fetches built pages from there directly.
+The MyST Language Server extension owns the language server.
+The server finds each file's project and starts one mystmd per project.
+For each file, MyST Author sends the server a `myst/project` request.
+The answer says which project the file belongs to and where that project's mystmd is.
+MyST Author then fetches built pages from that mystmd directly.
 Each VS Code live editor runs a language server of its own, and live editors in the same project share one mystmd.
-The web editor starts the language server with `--root`, so it is one project.
+The web editor starts the language server with `--root`, so the server uses that one project for every file instead of finding each file's project.
 
 The JupyterLab extension works like VS Code.
-jupyter-lsp runs the language server, the extension asks it `myst/project` for each file, and fetches that project's built pages from its mystmd through jupyter-server-proxy.
+jupyter-lsp runs the language server.
+The extension sends the server a `myst/project` request for each file.
+It then fetches that project's built pages from the project's mystmd through jupyter-server-proxy.
 Lab reads and saves the files itself.
 The host server only serves the web editor from the Launcher.
 
@@ -93,9 +100,11 @@ Everything about MyST lives in the packages.
 A host does only what depends on where it runs:
 
 - It owns the document text.
-- It runs a language server, with `spawnLsp` or a platform service such as jupyter-lsp, and connects the editor to it through the LSP client.
+- It runs a language server, with `spawnLsp` or a platform service such as jupyter-lsp.
+  It connects the editor to that server through the LSP client.
 - It fetches built pages from mystmd and passes each build of the open file to live preview with `offerBuilt`.
-- It opens files and finds labels for the preview through `PreviewHost`, and adds its own commands and toggles.
+- It opens files and finds labels for the preview through `PreviewHost`.
+- It adds its own commands and toggles.
 
 ## Design choices
 
@@ -103,7 +112,8 @@ A host does only what depends on where it runs:
   The web editor is the simplest host, not a full IDE.
   Features that VS Code and JupyterLab already have, such as git or file management, are left to them.
 - The preview uses mystmd's own code.
-  The fast preview uses mystmd's parser and transforms, through mystmd-client, as the language server does, so the running system has no second parser.
+  The fast preview uses mystmd's parser and transforms through mystmd-client, as the language server does.
+  So the running system has no second parser.
   The built preview is mystmd's output.
   [myst-parser-unified](repositories.md#what-each-one-owns) is a separate experiment, not a dependency.
 - Markdown is the source of truth.

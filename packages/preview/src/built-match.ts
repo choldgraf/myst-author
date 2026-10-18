@@ -2,7 +2,8 @@ import { StateEffect, type EditorState, type TransactionSpec } from '@codemirror
 import { savedHashes, type BuiltPage } from 'mystmd-client/content-server';
 
 /**
- * Render from mystmd's build of `text`, which resolves embeds and references to other pages, if the editor still has that text.
+ * Render from mystmd's build of `text` if the editor still has that text.
+ * The build resolves embeds and references to other pages.
  * Until the next build, a block you edit renders from the fast parse, like the preview pane, and the others keep the build.
  * Hosts usually call `offerBuilt` instead. This is for content without a hash to check, such as a notebook cell.
  */

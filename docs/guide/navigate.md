@@ -1,6 +1,6 @@
 ---
 title: Find your way around
-description: The project's table of contents, a MyST-aware page outline, and a search for labels by name or title.
+description: The project's table of contents, a page outline that includes figures and equations, and a search for labels by name or title.
 ---
 
 MyST Author knows your project's table of contents and its labels, not just its files and headings.
@@ -10,7 +10,8 @@ So it can list the project's pages, outline a page by its sections and figures, 
 
 This lists the pages of your project in the order the built site shows them.
 It comes from the `toc` in `myst.yml`, or from the files and folders when `myst.yml` has no `toc`.
-A part is a title-only entry in the `toc` that groups pages, and pages nest under their parent page.
+A part is a title-only entry in the `toc` that groups pages.
+Pages nest under their parent page.
 Click a page to open it.
 The list updates when mystmd rebuilds.
 
@@ -21,7 +22,8 @@ The list updates when mystmd rebuilds.
 ## The page outline
 
 The outline lists a page's headings, nested by level.
-Under each section it lists that section's figures, tables, equations, and other labeled blocks, with their numbers, such as `Figure 1 · The MyST logo.`
+Under each section it lists that section's figures, tables, equations, and other labeled blocks.
+Each one shows its number, such as `Figure 1 · The MyST logo.`
 
 VS Code's built-in Markdown outline only shows headings.
 It also misses headings inside directives that use backtick fences, such as a `{tab-item}`, because it reads those as code.
@@ -33,7 +35,8 @@ To open the outline:
 - In VS Code, open the **Outline** view in the Explorer sidebar.
   VS Code may also show its own Markdown outline there.
   The MyST one is the one with figures and equations.
-  The breadcrumbs above the editor show the section you're in, and {kbd}`Cmd+Shift+O` searches the outline.
+  The breadcrumbs above the editor show the section you're in.
+  {kbd}`Cmd+Shift+O` searches the outline.
 
 ## Find a label anywhere
 

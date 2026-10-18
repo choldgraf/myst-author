@@ -8,9 +8,13 @@ import { showBuilt } from './built-match.ts';
 import { builtWithLines, parseMyst, spans, withBuiltBlocks, type Block, type ParseResult, type Span } from './parse.ts';
 import { INTERACTIVE, Preview } from './Preview.tsx';
 
-/** A span's character offsets in the editor, and an `id` for what it renders. (`start`/`end` are as of the last parse.) */
+/** A span's character offsets in the editor, and an `id` for what it renders. Its `start` and `end` lines are from the last parse. */
 type Located = Span & { from: number; to: number; id: string };
-/** The last parse, its spans moved through the edits since, and whether those edits left it `stale`. `built` is the last build that matched the editor's text, and that text. */
+/**
+ * The last parse, and its spans moved through the edits since.
+ * `stale` is true once those edits changed the text.
+ * `built` is the last build that matched the editor's text, and that text.
+ */
 type Live = { result: ParseResult; spans: Located[]; stale: boolean; decorations: DecorationSet; built?: { result: ParseResult; text: string } };
 
 const mounted = new WeakMap<HTMLElement, { root: Root; resize: ResizeObserver }>();
@@ -23,7 +27,7 @@ const linkFollower = Facet.define<FollowLink, FollowLink | undefined>({ combine:
 /** What a click on a rendered link does, like `Preview`'s `onFollowLink`. Without it, links do nothing. Cmd/Ctrl-click shows the source. */
 export const followLinks = (f: FollowLink): Extension => linkFollower.of(f);
 
-// Node positions and keys change on every parse, so leave them out, and unchanged blocks keep their DOM.
+// Leave out node positions and keys, which change on every parse, so unchanged blocks keep their DOM.
 const identity = (blocks: Block[]) => JSON.stringify(blocks.map((b) => b.node), (k, v) => (k === 'position' || k === 'key' ? undefined : v));
 
 /** A span rendered with the same component as the preview pane. */
@@ -39,7 +43,7 @@ class Rendered extends WidgetType {
   toDOM(view: EditorView) {
     const dom = document.createElement('div');
     dom.className = this.warn ? 'cm-live cm-live-warn' : 'cm-live';
-    // The frontmatter span has no blocks, and renders as the page title. Other spans leave the title out.
+    // The frontmatter span has no blocks, so it shows the page title. Other spans leave the title out.
     const { title, ...rest } = this.result.frontmatter;
     const page = { ...this.result, blocks: this.span.blocks, frontmatter: this.span.blocks.length ? rest : this.result.frontmatter };
     const sheet = view.state.facet(shadowStyles);
@@ -124,7 +128,8 @@ function build(state: EditorState, result?: ParseResult, built?: Live['built']):
 
 /**
  * Typing in the revealed span keeps the last parse and only moves the other spans, which haven't changed.
- * Anything else reparses: an edit outside it (undo, rename, replace all), or leaving it after editing, so an edited span renders its current text.
+ * Anything else reparses. That includes edits outside the span, such as undo, rename, or replace all.
+ * It also includes leaving the span after editing it, so the edited span renders its current text.
  * A long page takes a noticeable pause to parse when you leave an edited block.
  */
 function update(value: Live, tr: Transaction): Live {
@@ -171,7 +176,8 @@ const arrows = Prec.high(keymap.of([{ key: 'ArrowDown', run: enter(true) }, { ke
 
 const theme = EditorView.baseTheme({
   // `flow-root` keeps the content's margins inside the widget, where CodeMirror measures its height.
-  // The padding lines it up with the source lines, which keep the blank lines between blocks as the spacing.
+  // The padding lines the rendered text up with the source text.
+  // The blank source lines between blocks give the spacing between them.
   '.cm-live': { display: 'flow-root', whiteSpace: 'normal', fontFamily: 'system-ui, sans-serif', cursor: 'text', padding: '0 2px 0 6px' },
   '.cm-live [data-line-start] > *': { marginTop: '0', marginBottom: '0' },
   '.cm-live:hover': { outline: '1px dashed #ccd' },
@@ -202,7 +208,11 @@ export function shadowSheet(css: string) {
 /** The (1-based) line at the top of the editor's viewport. */
 export const topLine = (view: EditorView) => view.state.doc.lineAt(view.lineBlockAtHeight(view.scrollDOM.scrollTop).from).number;
 
-/** Where the body starts, after the page title's span or any frontmatter, as a CodeMirror offset (CodeMirror counts a CRLF as one character). Editors start the cursor there, so live preview shows the title rendered. */
+/**
+ * The CodeMirror offset where the body starts, after the page title's span or any frontmatter.
+ * CodeMirror counts a CRLF as one character, so this counts offsets after turning CRLFs into LFs.
+ * Editors start the cursor there, so live preview shows the title rendered.
+ */
 export function bodyStart(text: string) {
   const lf = text.replaceAll('\r\n', '\n');
   const lines = lf.split('\n');

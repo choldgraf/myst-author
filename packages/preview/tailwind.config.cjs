@@ -1,4 +1,4 @@
-// Tailwind setup for page.css: hosts that bundle the preview build their CSS with this config.
+// Tailwind config for page.css. Hosts that bundle the preview build their CSS with it.
 const path = require('node:path');
 const myst = require('@myst-theme/styles');
 

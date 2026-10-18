@@ -2,7 +2,7 @@
 title: Live preview
 ---
 
-With **Live** on, which is the default, each block on this page shows rendered.
+**Live** is on by default, so each block on this page is rendered.
 The block with your cursor shows its Markdown, so you always edit the source.
 
 (live-editing)=
@@ -50,7 +50,7 @@ This embeds the figure from the first page:
 ![](#fig-logo)
 
 :::{tip} Try this: wait for the build
-While you type, the embed is a grey placeholder, because the in-browser render only knows this page.
+While you type, the embed is a grey placeholder, because the fast in-browser preview only knows this page.
 Once mystmd has built the page, the embed shows the figure.
 In JupyterLab and VS Code, save the file first, since mystmd only builds saved files.
 :::

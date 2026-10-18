@@ -38,7 +38,7 @@ export function App() {
   const [topLine, setTopLine] = useState(1);
   const [built, setBuilt] = useState<Built | null>(null); // mystmd's latest build of the open file
   const [lsp, setLsp] = useState<Lsp | null>(null);
-  const viewOpened = useRef<((view: EditorView | null) => void) | null>(null); // resolves a cross-file jump
+  const viewOpened = useRef<((view: EditorView | null) => void) | null>(null); // resolves `openView`'s promise once the new editor mounts, for a cross-file jump
   const saved = useRef(''); // last text known to be on disk
   const viewRef = useRef<EditorView | null>(null);
   const latest = useRef({ doc, text });
@@ -70,7 +70,8 @@ export function App() {
     let loaded: string;
     try {
       loaded = await readFile(path);
-      // Flush after loading, reading the ref, so keystrokes typed while the switch was in flight aren't lost.
+      // Save unsaved edits to the previous file once the new one has loaded.
+      // Read them from the ref at that point, so keystrokes typed while the switch was in flight aren't lost.
       const cur = latest.current;
       if (cur.doc && cur.text !== saved.current) await save(cur.doc.path, cur.text);
     } catch (err) {
@@ -187,7 +188,8 @@ export function App() {
     openView(path).then((view) => view && gotoLine(line));
   }
 
-  // The switcher: `@label` searches the project's labels (as in MyST's `@label` references), `#` this page's outline, anything else file names.
+  // Quick switcher search. `@label` searches the project's labels, as in MyST's `@label` references.
+  // `#` searches this page's outline, and anything else searches file names.
   async function search(q: string): Promise<Item[]> {
     if (!q.startsWith('@') && !q.startsWith('#')) return files.filter((f) => f.toLowerCase().includes(q.toLowerCase())).map((f) => ({ label: f, path: f }));
     if (!lsp) return [];

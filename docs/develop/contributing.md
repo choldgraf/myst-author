@@ -16,7 +16,7 @@ The other top-level folders are:
 
 The packages are [npm workspaces](https://docs.npmjs.com/cli/using-npm/workspaces) written in TypeScript.
 Node 24 strips the types and runs them directly.
-Only the bundles have a build step: the web editor, and the VS Code and JupyterLab extensions.
+Only the web editor and the VS Code and JupyterLab extensions have a build step, because they're bundled.
 
 ## Set up
 
@@ -47,7 +47,7 @@ It runs on a temporary copy of the tour, because the editor saves as you type an
 `npm start -- path/to/project` runs it on any project.
 It uses Vite, so changes to the app reload in the browser as you save them.
 
-The production build, which is what the **MyST Author** entry in the Launcher on Binder runs through [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py):
+The production build, which Binder's **MyST Author** Launcher entry runs through [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py):
 
 ```bash
 npm run build
@@ -78,4 +78,5 @@ The tour project in `docs/examples/tour/` is a separate MyST project, not part o
 ## Publish the VS Code extension
 
 Publish it to both the Marketplace and Open VSX, which code-server uses.
-Publish the extensions it depends on first, myst-syntax and then mystmd-lsp, since extension dependencies have no version pin and each gallery must already have them.
+Publish the extensions it depends on first: myst-syntax, then mystmd-lsp.
+Extension dependencies have no version pin, so the Marketplace and Open VSX must already have them.

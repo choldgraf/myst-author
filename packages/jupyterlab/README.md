@@ -8,7 +8,8 @@ Install it from source, as below, or try it on [Binder](https://chrisholdgraf.co
 
 The extension is a frontend only.
 It talks to [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) through jupyter-lsp, which comes with JupyterLab and runs the language server over a websocket.
-The language server finds each file's project, the nearest `myst.yml` under Jupyter's root folder, and runs mystmd for it.
+The language server finds each file's project, which is the nearest `myst.yml` under Jupyter's root folder.
+It runs mystmd for that project.
 So Lab can open at your home folder, and completions, the preview and the table of contents follow whichever project you're editing.
 The extension reaches each project's mystmd through [jupyter-server-proxy](https://jupyter-server-proxy.readthedocs.io).
 See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) for the setup.
@@ -27,7 +28,8 @@ npm run lab -- path/to/project     # or your own MyST project
 ```
 
 `npm run lab` builds the web editor and the extension, then starts JupyterLab in the project folder with both.
-JupyterLab and jupyter-server-proxy run in a throwaway `uvx` environment, with Jupyter's config and extensions in `packages/jupyterlab/dist/jupyter/`.
+JupyterLab and jupyter-server-proxy run in a throwaway `uvx` environment.
+Its Jupyter config and extensions are in `packages/jupyterlab/dist/jupyter/`.
 Your own Jupyter setup doesn't change, and extensions you've installed, such as jupyterlab-myst, don't load.
 Options after the project go to `jupyter lab`, for example `npm run lab -- . --port 9000`.
 Run it again after changes.
@@ -44,25 +46,31 @@ ln -sfn "$PWD/packages/jupyterlab/dist/labextension" "$(jupyter --data-dir)/labe
 
 `jupyter labextension list` should show `@myst-author/jupyterlab`.
 Then add [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) to your Jupyter config, with jupyter-server-proxy installed.
-The **MyST Author** entry it adds to the Launcher opens the web editor on `MYST_AUTHOR_PROJECT`, or the tour.
+It adds a **MyST Author** entry to the Launcher.
+That entry opens the web editor on `MYST_AUTHOR_PROJECT`, or on the tour.
 Rebuild and reload the page after changes.
 
 ## What works
 
-- Completion, hints, hover, go to definition, find references, rename, and warnings for references in Markdown files and notebooks' Markdown cells, as in the web editor.
-  Use one browser tab at a time: jupyter-lsp runs one language server and sends its answers to every open tab, so two tabs confuse each other.
+- Reference help works in Markdown files and notebooks' Markdown cells, as in the web editor.
+  That covers completion, hints, hover, go to definition, find references, rename, and warnings.
+  Use one browser tab at a time.
+  jupyter-lsp runs one language server and sends its answers to every open tab, so two tabs confuse each other.
 - Live preview in Markdown files, and in notebooks' Markdown cells while you edit them, as in the web editor.
   Turn it on or off with **MyST: Live Preview** in the Command Palette.
 - Notebooks' Markdown cells that you aren't editing render with mystmd's build, so references to other pages resolve.
   A cell you've changed since saving shows the fast preview until the next build.
-  If jupyterlab-myst is also installed, Lab renders the cell with it first, so you may see it flash before MyST Author's rendering.
-- For MyST syntax highlighting while editing, install [jupyterlab-myst-syntax](https://github.com/choldgraf/myst-syntax) (until it is published, build it from that repository).
+  If jupyterlab-myst is also installed, Lab renders the cell with it first.
+  You may see that flash before MyST Author's rendering.
+- For MyST syntax highlighting while editing, install [jupyterlab-myst-syntax](https://github.com/choldgraf/myst-syntax).
+  Until it is published, build it from that repository.
   The throwaway environments that `npm run lab` and Binder use don't include it yet.
   MyST Author's Lab extension doesn't highlight, by design, so the two don't overlap.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.
   It follows the current Markdown editor, but not notebooks.
   It works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
-- Files mystmd doesn't build, such as ones with no `myst.yml` above them under Jupyter's root folder, get the fast preview and no reference help.
+- Files mystmd doesn't build get the fast preview and no reference help.
+  That includes files with no `myst.yml` above them under Jupyter's root folder.
 - The language features need jupyter-lsp, which ships with JupyterLab.
   Without it, the extension logs a warning in the browser console, and only the preview works.
 

@@ -13,7 +13,7 @@ export type Change = { from: Pos; to: Pos; insert: string };
 export type ToLive =
   | { type: 'init'; text: string }
   | { type: 'changes'; changes: Change[] } // edits made outside the webview, to apply one after another
-  | { type: 'connect'; root: string; uri: string } // start the language client: the project folder's URI, and this file's
+  | { type: 'connect'; root: string; uri: string } // start the language client. `root` is the project folder's URI, and `uri` is this file's.
   | { type: 'lsp'; message: string }
   | { type: 'built'; page: BuiltPage } // mystmd's latest build of this file, which may not match the text
   | { type: 'select'; at: Pos };
@@ -21,7 +21,7 @@ export type ToLive =
 /** Messages from the webview. */
 export type FromLive =
   | { type: 'ready' }
-  | { type: 'edit'; changes: Change[] } // one CodeMirror transaction: positions in the text before it, as in a WorkspaceEdit
+  | { type: 'edit'; changes: Change[] } // one CodeMirror transaction. Positions are in the text before it, as in a WorkspaceEdit.
   | { type: 'lsp'; message: string }
   | { type: 'definition' | 'references' | 'rename'; at: Pos } // cross-file actions, which VS Code handles
   | { type: 'follow'; href: string; line?: number }; // a click on a rendered link
@@ -30,8 +30,8 @@ const toPos = (p: vscode.Position): Pos => ({ line: p.line, character: p.charact
 
 /**
  * Edits Markdown files in a webview with the same CodeMirror live preview as the web editor and JupyterLab.
- * VS Code doesn't let extensions render HTML inside its text editor, so this is a custom editor on the same TextDocument:
- * saving, the dirty flag, and a text editor open on the same file all stay VS Code's.
+ * VS Code doesn't let extensions render HTML inside its text editor, so this is a custom editor on the same TextDocument.
+ * VS Code still handles saving, the dirty flag, and any text editor open on the same file.
  */
 export class LiveEditor implements vscode.CustomTextEditorProvider {
   private active = new vscode.EventEmitter<vscode.TextDocument>();
@@ -46,9 +46,9 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
   }
 
   private ready = new Map<string, (m: ToLive) => void>(); // live editors whose webview is ready, by document URI
-  private pending = new Map<string, Pos>(); // where `open` wants a live editor that is opening right now to go
+  private pending = new Map<string, Pos>(); // the position `open` wants for a live editor that is still opening
 
-  /** Open `uri` at `line` in its default editor, which the user may have made the live editor, as a text editor shows a selection. */
+  /** Open `uri` in its default editor with the cursor at the start of `line`. The user may have made the live editor the default. */
   async open(uri: vscode.Uri, line: number, viewColumn?: vscode.ViewColumn) {
     const key = uri.toString();
     const at = { line, character: 0 };
@@ -61,7 +61,7 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
   async resolveCustomTextEditor(document: vscode.TextDocument, panel: vscode.WebviewPanel) {
     const { webview } = panel;
     const key = document.uri.toString();
-    const select = this.pending.get(key); // from `open`, for once the webview is ready
+    const select = this.pending.get(key); // set by `open`, applied once the webview is ready
     const post = (m: ToLive) => webview.postMessage(m);
     const at = (p: Pos) => new vscode.Position(p.line, p.character);
     const project = await this.projectFor(document.uri);
@@ -85,7 +85,8 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     let server: ReturnType<typeof spawnLsp> | undefined;
     let stopWatch: (() => void) | undefined;
     const connect = (p: Project) => {
-      // A server of its own, as each web editor tab gets: lsp-client speaks raw LSP, which VS Code's language client can't pass on.
+      // Each live editor gets a server of its own, as each web editor tab does.
+      // lsp-client speaks raw LSP, which VS Code's language client can't pass on.
       server = spawnLsp(p.server, [`--content-server=${p.url}`, `--root=${p.root}`], (message) => post({ type: 'lsp', message }));
       post({ type: 'connect', root: vscode.Uri.file(p.root).toString(), uri: document.uri.toString() });
       // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.

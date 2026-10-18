@@ -43,19 +43,20 @@ flowchart LR
 | [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview, once it's published |
 | [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server where no extension does, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
 
-Each host, the web editor, VS Code or JupyterLab, starts mystmd and the language server its own way, as [Architecture](architecture.md#how-the-web-editor-fits-together) describes.
+The web editor, VS Code and JupyterLab each start mystmd and the language server their own way, as [Architecture](architecture.md#how-the-web-editor-fits-together) describes.
 
 Nothing depends on [myst-parser-unified](https://chrisholdgraf.com/myst-parser-unified/) yet.
 It's a candidate to replace the parser that mystmd-lsp and the preview use.
 mystmd-lsp's design notes list [what a parser must provide to replace its regexes](https://chrisholdgraf.com/mystmd-lsp/design#replacing-the-reference-regexes).
-Its drop-in `mystParse` matches mystmd's tree on nearly every MyST example in myst-spec.
+Its `mystParse` function is a drop-in replacement for mystmd's parser.
+It gives the same tree as mystmd on nearly every MyST example in myst-spec.
 
 ## Where a feature goes
 
 Put each feature in the lowest repository that can hold it:
 
 1. **mystmd**, if it's about what MyST means or what a build contains.
-   Write it up as an [upstream proposal](upstream.md) and work around it until it lands.
+   Write it up as an [upstream proposal](upstream.md) and work around it until mystmd ships it.
 2. **mystmd-lsp**, if an editor needs to know it.
    Every LSP editor then gets it, not just MyST Author's hosts.
 3. **myst-syntax**, if it's about how MyST source looks.
@@ -66,6 +67,7 @@ Put each feature in the lowest repository that can hold it:
 ## Keeping them independent
 
 - Repositories depend on each other only through published packages and extensions, never by path.
-- A rule that one repository relies on is part of the other's documented interface.
+- If one repository relies on a rule in another, that rule is part of the other's documented interface.
   For example, MyST Author follows preview links through mystmd-lsp's workspace symbols, so mystmd-lsp [documents how it names them](https://chrisholdgraf.com/mystmd-lsp/features#symbols).
-- When repositories recognise the same syntax, each one follows mystmd's rule and names where it lives, instead of copying another repository.
+- When repositories recognise the same syntax, each one follows mystmd's rule and says where in mystmd that rule lives.
+  They don't copy it from another repository.

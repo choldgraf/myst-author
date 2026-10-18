@@ -3,8 +3,9 @@ title: Work with GitHub
 description: Pull a MyST project from GitHub into Codespaces, a JupyterHub, or Binder, edit it with MyST Author, and push it back.
 ---
 
-MyST Author edits files on disk and leaves git to the host.
-Each host already has a git client, so you pull a project from GitHub, edit it, and push it back without anything from MyST Author.
+MyST Author edits files on disk.
+It doesn't do git.
+You pull a project from GitHub, edit it, and push it back with VS Code, JupyterLab, or a terminal, as usual.
 
 ## GitHub Codespaces
 
@@ -14,9 +15,10 @@ Open the [MyST Author Codespace](https://codespaces.new/choldgraf/myst-author), 
 gh repo clone you/your-book
 ```
 
-It lands inside the MyST Author checkout, which is fine for a session.
+The clone goes inside the MyST Author checkout.
+That's fine for a session.
 Open a page in it.
-The [VS Code extension](vscode.md) finds the project, so completions, the preview and the MyST TOC follow along.
+The [VS Code extension](vscode.md) finds the project, and completions, the preview and the MyST TOC switch to it.
 
 Codespaces signs you in to GitHub for the repository it was opened from, which is MyST Author's.
 Pushing to your own repository needs one more sign-in, in the terminal:
@@ -28,7 +30,8 @@ gh auth setup-git
 git push             # from this terminal, which has the new sign-in
 ```
 
-VS Code's **Source Control** view can commit as usual, but it may keep pushing with the Codespace's token, so push from that terminal.
+VS Code's **Source Control** view can commit as usual.
+It may keep pushing with the Codespace's token, though, so push from that terminal.
 
 To edit the project in the web editor instead, point it at the clone as [Get started](../get-started.md#open-it-in-github-codespaces) describes.
 
@@ -39,7 +42,8 @@ Your hub needs the [JupyterLab extension](jupyterlab.md) and its setup, plus [nb
 
 Make a link with the [nbgitpuller link generator](https://nbgitpuller.readthedocs.io/en/latest/link.html).
 Fill in your hub's URL, the repository, **JupyterLab** as the application, and the page as the file to open.
-Opening the link clones the project into your home folder, or pulls the latest changes if it's already there, and opens the page.
+Opening the link clones the project into your home folder and opens the page.
+If the project is already there, it pulls the latest changes instead.
 The extension follows the file you open, so Lab can stay at your home folder.
 
 To commit and push, use the **Git** view in the left sidebar, or a terminal.

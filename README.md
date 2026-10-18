@@ -4,7 +4,8 @@
 [![Launch on Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/choldgraf/myst-author/main?urlpath=lab/tree/docs/examples/tour/index.md)
 
 An editor for [MyST](https://mystmd.org) projects.
-You write Markdown and see it rendered in place, with the block you're editing showing its source.
+You write Markdown and see it rendered in place.
+The block you're editing shows its source.
 Cross-references are completed and checked as you type, across the whole project.
 
 ![Clicking a rendered block shows its Markdown, editing it, clicking away to render it again, then opening the side-by-side preview](docs/images/myst-author.gif)
@@ -15,9 +16,9 @@ Cross-references are completed and checked as you type, across the whole project
 
 It comes in three flavours, which share most features:
 
-- **A web editor**, for writing a MyST project in your browser.
-- **A VS Code extension** ([docs](https://chrisholdgraf.com/myst-author/guide/vscode)), if you already write in VS Code.
-- **A JupyterLab extension** ([docs](https://chrisholdgraf.com/myst-author/guide/jupyterlab)), if you write in JupyterLab or JupyterHub.
+- A web editor, for writing a MyST project in your browser.
+- A VS Code extension ([docs](https://chrisholdgraf.com/myst-author/guide/vscode)), if you already write in VS Code.
+- A JupyterLab extension ([docs](https://chrisholdgraf.com/myst-author/guide/jupyterlab)), if you write in JupyterLab or JupyterHub.
 
 None of them are packaged yet, so you run each one from a clone of this repository, or try them on Codespaces or Binder.
 

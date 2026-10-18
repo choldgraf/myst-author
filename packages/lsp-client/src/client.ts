@@ -42,7 +42,7 @@ function keepConnected(client: LSPClient, url: string, delay = 1000) {
 }
 
 // mystmd-lsp publishes diagnostics when a file opens or changes, and when another file or the project index changes.
-// Any of these can change a file's hints, so they're what requests hints (`delay: null`).
+// Any of these can change a file's hints, so they trigger hint requests instead of a timer after each edit (`delay: null`).
 const refreshHintsOnDiagnostics: LSPClientExtension = {
   notificationHandlers: {
     'textDocument/publishDiagnostics': (client, params) => {
@@ -65,7 +65,8 @@ const definitionClick = EditorView.domEventHandlers({
   },
 });
 
-// Completion icons for MyST. lsp-client turns each LSP kind into a coarse CodeMirror type, and drops some (Reference, File, Operator, Snippet).
+// Completion icons for MyST. lsp-client turns each LSP kind into a coarse CodeMirror type.
+// It drops some kinds: Reference, File, Operator, and Snippet.
 // Types are shared, so figures and citations get the same icon. An lsp-client option to map kinds would separate them.
 const icon = (content: string, fontSize = '90%') => ({ '&:after': { content: `'${content}'`, fontSize } });
 const completionIcons = EditorView.theme({
@@ -92,8 +93,9 @@ const encodePath = (path: string) => path.split('/').map(encodeURIComponent).joi
 export const fileUri = (path: string) => `file://${encodePath(path)}`;
 
 /**
- * Connect to the language server at `server`: a websocket URL relative to the page (http(s) means ws(s)),
- * or a transport when the host relays messages itself (see `messageTransport`).
+ * Connect to the language server at `server`.
+ * `server` is either a websocket URL relative to the page, or a transport when the host relays messages itself (see `messageTransport`).
+ * A URL uses ws:// on an http:// page and wss:// on an https:// one.
  * Document URIs are built under `root`, a `file://` URI chosen by the host.
  */
 export function connectLsp(server: string | Transport, root: string) {

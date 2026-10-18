@@ -1,6 +1,6 @@
 ---
 title: Preview
-description: Live preview in the editor, the fast and built previews, the badge, click-to-source, scroll sync, and following links.
+description: Live preview, the fast and built previews, the preview badge, jumping to the source, scroll sync, and following links.
 ---
 
 There are two ways to see the open file as a MyST page:
@@ -12,17 +12,19 @@ Switch between them, or to plain **Source**, with the buttons in the toolbar.
 
 ## Live preview
 
-With **Live** on, each block (a paragraph, heading, directive, or equation) shows rendered, and the block with the cursor shows its Markdown.
+With **Live** on, paragraphs, headings, directives, equations and other blocks are rendered.
+The block with the cursor shows its Markdown.
 To edit a block, click it or move into it with the arrow keys.
 The cursor lands on the text you clicked.
 
 - Tabs, dropdowns, and buttons in a rendered block work without opening its source.
 - A block with a warning, such as a broken reference, has an orange bar on its left. Open it to see the warning.
-- Blocks render like the preview pane, from mystmd's build or the fast preview, as [Fast and built previews](preview.md#fast-and-built-previews) describes.
+- Blocks look the same as in the preview pane.
+  They come from mystmd's build or the fast preview, as [Fast and built previews](preview.md#fast-and-built-previews) describes.
 
 Live preview works in the web editor, JupyterLab, and VS Code.
 In JupyterLab it also covers notebooks' Markdown cells while you edit them.
-[JupyterLab](jupyterlab.md#what-works) says when the cells you aren't editing show the build.
+[JupyterLab](jupyterlab.md#what-works) explains when cells you aren't editing show mystmd's build.
 In JupyterLab, turn it on or off with **MyST: Live Preview** in the Command Palette.
 In VS Code, switch a Markdown file between the text editor and the live editor with **MyST: Toggle Live Editor**.
 
@@ -35,7 +37,8 @@ There are two versions of the preview, shown in the same pane:
   Embeds, and references to other pages, show grey placeholders until the build is ready.
 - The **built preview** is mystmd's own output from `myst start`.
   It is exact.
-  Embeds and references whose label mystmd can't find show in red with a ⚠, where mystmd's own site shows nothing.
+  Embeds and references whose label mystmd can't find show in red with a ⚠.
+  mystmd's own site shows nothing there.
 
 The editor shows the built preview whenever mystmd's latest build matches the text in the editor, and the fast preview otherwise.
 In the fast preview, blocks you haven't touched since the last build keep showing the built version.
@@ -51,8 +54,10 @@ The badge in the toolbar tells you which one you're looking at:
 
 ## Code cells and `{eval}`
 
-The web editor and JupyterLab have mystmd run code cells and inline `{eval}` expressions as it builds, so the built preview shows their results and outputs.
-In VS Code it's off unless you turn on the MyST Language Server extension's `mystmdLsp.execute` setting, since that extension starts mystmd.
+In the web editor and JupyterLab, mystmd runs code cells and inline `{eval}` expressions as it builds.
+The built preview shows their results and outputs.
+In VS Code, running code is off by default.
+The MyST Language Server extension starts mystmd there, so turn on that extension's `mystmdLsp.execute` setting to run code.
 Running code needs Jupyter.
 Without Jupyter, pages still build and notebooks keep their saved outputs.
 mystmd runs a page again each time you save a change to its code.
@@ -85,7 +90,7 @@ It works in one direction only: scrolling the preview doesn't move the editor.
 
 ## Links in the preview
 
-- Hovering a reference to another page shows its target, such as the figure or equation, in the built preview.
+- In the built preview, hovering a reference to another page shows its target, such as the figure or equation.
 - A click on a link follows it.
   Web links open in a new browser tab.
   Links to other pages or labels open that file in the editor, at the target.
