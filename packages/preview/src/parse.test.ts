@@ -47,11 +47,16 @@ test('a leading `# Title` is the page title, as in mystmd, so the fast parse has
   assert.deepEqual(spans(result, src.split('\n')).map((s) => [s.start, s.end, s.blocks.map((b) => b.node.type)]), [[1, 1, []], [3, 3, ['paragraph']]]);
 });
 
-test('a first heading that stays in the content is not a title span, so it renders once', () => {
+test('a first heading that stays in the content is not part of the frontmatter span, so it renders once', () => {
   const src = '---\nkernelspec: {}\n---\n\n## Hi\n\nText';
   const result = parseMyst(src);
   assert.equal(result.frontmatter.title, 'Hi');
-  assert.deepEqual(spans(result, src.split('\n')).map((s) => [s.start, s.end, s.blocks.map((b) => b.node.type)]), [[5, 5, ['heading']], [7, 7, ['paragraph']]]);
+  assert.deepEqual(spans(result, src.split('\n')).map((s) => [s.start, s.end, s.blocks.map((b) => b.node.type)]), [[1, 3, []], [5, 5, ['heading']], [7, 7, ['paragraph']]]);
+});
+
+test('spans: a `---` with no closing `---` is not frontmatter, so its lines stay as source', () => {
+  const src = '---\n\ntext';
+  assert.deepEqual(spans(parseMyst(src), src.split('\n')).filter((s) => !s.blocks.length), []);
 });
 
 test('spans: a list leaves the blank line after it out, so it stays as spacing', () => {

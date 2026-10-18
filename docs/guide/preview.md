@@ -16,6 +16,8 @@ With **Live** on, paragraphs, headings, directives, equations and other blocks a
 To edit a block, click it or move into it with the arrow keys.
 The cursor lands on the text you clicked.
 
+- The page's frontmatter shows as a list of properties under the title, as in Obsidian.
+  Click a value to edit it in the YAML.
 - Tabs, dropdowns, and buttons in a rendered block work without opening its source.
 - A block with a warning, such as a broken reference, has an orange bar on its left.
   Click into the block to see the warning.

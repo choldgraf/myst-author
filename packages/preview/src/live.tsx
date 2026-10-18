@@ -4,6 +4,7 @@ import { forEachDiagnostic } from '@codemirror/lint';
 import { Facet, Prec, StateField, type EditorState, type Extension, type Transaction } from '@codemirror/state';
 import { Decoration, EditorView, keymap, WidgetType, type DecorationSet } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
+import * as mystmd from 'mystmd-client/parse';
 import { showBuilt } from './built-match.ts';
 import { builtWithLines, parseMyst, spans, withBuiltBlocks, type Block, type ParseResult, type Span } from './parse.ts';
 import { INTERACTIVE, Preview } from './Preview.tsx';
@@ -43,14 +44,18 @@ class Rendered extends WidgetType {
   toDOM(view: EditorView) {
     const dom = document.createElement('div');
     dom.className = this.warn ? 'cm-live cm-live-warn' : 'cm-live';
-    // The frontmatter span has no blocks, so it shows the page title. Other spans leave the title out.
+    // The frontmatter span has no blocks, so it shows the page title and properties. Other spans leave the title out.
     const { title, ...rest } = this.result.frontmatter;
-    const page = { ...this.result, blocks: this.span.blocks, frontmatter: this.span.blocks.length ? rest : this.result.frontmatter };
+    const front = !this.span.blocks.length;
+    const page = { ...this.result, blocks: this.span.blocks, frontmatter: front ? this.result.frontmatter : rest };
     const sheet = view.state.facet(shadowStyles);
     const shadow = sheet && dom.attachShadow({ mode: 'open' });
     if (shadow) shadow.adoptedStyleSheets = [sheet];
     const root = createRoot(shadow ? shadow.appendChild(document.createElement('div')) : dom);
-    root.render(<Preview result={page} onFollowLink={view.state.facet(linkFollower)} />);
+    root.render(<>
+      <Preview result={page} onFollowLink={view.state.facet(linkFollower)} />
+      {front && <Properties source={view.state.sliceDoc(this.span.from, this.span.to)} />}
+    </>);
     // React renders after this returns, and images load and dropdowns open later: have CodeMirror measure the new height each time.
     const resize = new ResizeObserver(() => view.requestMeasure());
     resize.observe(dom);
@@ -78,6 +83,31 @@ class Rendered extends WidgetType {
   ignoreEvent() {
     return true; // toDOM handles clicks
   }
+}
+
+/**
+ * The frontmatter's keys other than the title, as Obsidian shows a note's properties.
+ * They come from the YAML as written, not from mystmd's build, which adds the project's settings.
+ * There's no form: a click shows the YAML with the cursor on the clicked value, like any other block.
+ * mystmd-lsp leaves out YAML errors while you type, so this shows them once you leave the YAML.
+ */
+function Properties({ source }: { source: string }) {
+  const { frontmatter, messages } = mystmd.parseMyst(source);
+  const error = messages.find((m) => m.ruleId === 'frontmatter-is-yaml');
+  if (error) return <p className="my-2 text-sm text-red-600">{error.reason}</p>;
+  const { title, ...props } = typeof frontmatter === 'object' && frontmatter ? frontmatter : {};
+  if (!Object.keys(props).length) return null;
+  const show = (v: unknown) => v == null ? '' : v instanceof Date ? v.toISOString().slice(0, 10) : typeof v === 'object' ? JSON.stringify(v) : String(v);
+  return (
+    <dl className="not-prose my-2 text-sm">
+      {Object.entries(props).map(([key, value]) => (
+        <div key={key} className="flex gap-4">
+          <dt className="min-w-32 text-gray-500">{key}</dt>
+          <dd className="m-0">{Array.isArray(value) ? value.map((v, i) => <span key={i} className="mr-1 rounded bg-gray-100 px-1.5">{show(v)}</span>) : show(value)}</dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
 
 /**
@@ -117,12 +147,11 @@ function build(state: EditorState, result?: ParseResult, built?: Live['built']):
   result ??= built ? withBuiltBlocks(parseMyst(text), text, built.result, built.text) : parseMyst(text);
   const located = spans(result, text.split('\n'))
     .filter((s) => s.end <= state.doc.lines)
-    .map((s) => ({
-      ...s,
-      from: state.doc.line(s.start).from,
-      to: state.doc.line(s.end).to,
-      id: s.blocks.length ? identity(s.blocks) : String(result.frontmatter.title),
-    }));
+    .map((s) => {
+      const from = state.doc.line(s.start).from;
+      const to = state.doc.line(s.end).to;
+      return { ...s, from, to, id: s.blocks.length ? identity(s.blocks) : state.sliceDoc(from, to) }; // the frontmatter span changes with its text
+    });
   return { result, spans: located, stale: false, decorations: decorate(state, result, located), built };
 }
 

@@ -108,8 +108,8 @@ const LABEL = /^\s*\([a-zA-Z0-9|@<>*./_\-+:]+\)=\s*$/;
 /**
  * Group a page's blocks into spans for the live editor, given the page's source lines.
  * Blocks that share lines merge, and label lines (`(x)=`) join the block below them.
- * When the page has a title (`hasTitle`), the lines above the first block become a span with no blocks.
- * Those lines hold the frontmatter and any `# Title` that mystmd lifted out, and the live editor shows the page title in their place.
+ * When the page has a title (`hasTitle`) or frontmatter, the lines above the first block become a span with no blocks.
+ * Those lines hold the frontmatter and any `# Title` that mystmd lifted out, and the live editor shows the page title and properties in their place.
  */
 export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Span[] {
   const out: Span[] = [];
@@ -126,7 +126,9 @@ export function spans({ blocks, frontmatter }: ParseResult, lines: string[]): Sp
   }
   let titleEnd = (out[0]?.start ?? lines.length + 1) - 1;
   while (titleEnd > 0 && !lines[titleEnd - 1].trim()) titleEnd--;
-  if (hasTitle(frontmatter) && titleEnd > 0) out.unshift({ start: 1, end: titleEnd, blocks: [] });
+  // Frontmatter opens with a `---` line and closes with another before the first block.
+  const front = lines[0]?.trim() === '---' && lines.slice(1, titleEnd).some((l) => l.trim() === '---');
+  if ((hasTitle(frontmatter) || front) && titleEnd > 0) out.unshift({ start: 1, end: titleEnd, blocks: [] });
   return out;
 }
 
