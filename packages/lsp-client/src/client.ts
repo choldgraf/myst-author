@@ -65,6 +65,16 @@ const completionIcons = EditorView.theme({
   '.cm-completionIcon-property': icon(':'), // directive options
 });
 
+// Markdown docs in completion and hover: spacing, and a width that's comfortable to read.
+const docsTheme = EditorView.theme({
+  // The completion info panel keeps line breaks for plain-text docs, which would add blank lines between the HTML of Markdown docs.
+  '.cm-completionInfo .cm-lsp-documentation': { whiteSpace: 'normal' },
+  '.cm-tooltip .cm-lsp-documentation :is(p, ul, ol, pre)': { margin: '0 0 0.5em' },
+  '.cm-tooltip .cm-lsp-documentation pre': { whiteSpace: 'pre-wrap' },
+  '.cm-tooltip .cm-lsp-documentation > :last-child': { marginBottom: 0 },
+  '.cm-tooltip.cm-tooltip-hover': { maxWidth: '600px' },
+});
+
 const encodePath = (path: string) => path.split('/').map(encodeURIComponent).join('/');
 /** An absolute file or folder path as a file URI, encoded like the document URIs `uri()` below makes, so `path()` can map it back. */
 export const fileUri = (path: string) => `file://${encodePath(path)}`;
@@ -83,7 +93,7 @@ export function connectLsp(server: string | Transport, root: string) {
       // LSPClient drops extensions with no `.extension`, which keymap.of() lacks before @codemirror/state 6.7.1 (JupyterLab 4.5 has 6.5).
       // Wrapping them in arrays keeps F2, F12, and Shift+F12 in JupyterLab.
       ...languageServerExtensions().map((e) => ('editorExtension' in e ? e : [e as Extension])),
-      { editorExtension: [definitionClick, completionIcons] },
+      { editorExtension: [definitionClick, completionIcons, docsTheme] },
     ],
   });
   if (typeof server === 'string') keepConnected(client, new URL(server, location.href).href.replace(/^http/, 'ws'));
