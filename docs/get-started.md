@@ -21,15 +21,14 @@ npm run demo
 
 The editor opens at <http://127.0.0.1:4321>.
 Set `PORT` to use another port, for example `PORT=8000 npm run demo`.
-On macOS it also opens a browser tab.
-Set `NO_OPEN=1` to stop that.
+On macOS it also opens a browser tab, unless you set `NO_OPEN=1`.
 If `myst` isn't on your `PATH`, set `MYST_BIN` to its location.
 mystmd runs code cells and inline `{eval}` expressions when it builds a page.
 [Code cells and `{eval}`](guide/preview.md#code-cells-and-eval) says how to turn that off.
 
 To run it from any folder as `myst-author`, run `npm link -w packages/app` once in the clone.
 Then run `myst-author` in a project folder, or `myst-author path/to/project`.
-It runs your clone, so a `git pull` updates it.
+The command runs your clone, so a `git pull` updates it.
 
 The editor still runs without mystmd, but it only knows about the open file.
 References to labels in other files aren't completed or checked, and you only get the [fast preview](guide/preview.md).
@@ -54,8 +53,7 @@ To point it at another folder, stop it with {kbd}`Ctrl+C` in the terminal and ru
 Binder builds the repository and opens the tour in JupyterLab, with the [JupyterLab extension](guide/jupyterlab.md).
 The extension works with the project the open file is in.
 That can be any MyST project under Lab's root folder, such as one you [pull from GitHub](guide/github.md).
-The Launcher's **VS Code** entry opens VS Code with the [VS Code extension](guide/vscode.md).
-Its **MyST Author** entry opens the web editor.
+In the Launcher, the **VS Code** entry opens VS Code with the [VS Code extension](guide/vscode.md), and the **MyST Author** entry opens the web editor.
 The first launch can take a few minutes.
 Changes are lost when the Binder session ends.
 
@@ -71,5 +69,4 @@ MyST Author edits your files in place and saves as you type.
 If another program, such as git or an LLM, changes the open file, the editor loads the change.
 If you have unsaved edits, it asks which version to keep.
 It runs `myst start --headless` in that folder to build the preview and find the labels in every file.
-It edits `.md` files only.
-Other files, such as notebooks and `.bib` files, are still used by the build.
+It edits `.md` files only, but the build still uses other files, such as notebooks and `.bib` files.

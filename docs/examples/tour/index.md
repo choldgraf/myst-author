@@ -15,8 +15,7 @@ Roles like `{ref}`, `{numref}`, and `{eq}` link to a label.
 (tour-basics)=
 ## The basics
 
-The editor renders each block.
-The block with your cursor shows its Markdown instead.
+The editor renders each block, except the one with your cursor, which shows its Markdown instead.
 The web editor saves about half a second after you stop typing.
 In JupyterLab and VS Code, save as usual.
 
@@ -28,7 +27,7 @@ Click outside the box and it renders again.
 :::{tip} Try this: open the preview
 Click **Preview** in the toolbar to see the whole page beside the editor.
 In JupyterLab or VS Code, run **MyST: Open Preview to the Side** from the Command Palette instead.
-Its badge says `built ✓` once mystmd has built the page.
+The preview's badge says `built ✓` once mystmd has built the page.
 Click any paragraph in the preview: the editor jumps to the line it came from.
 :::
 

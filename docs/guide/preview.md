@@ -5,20 +5,20 @@ description: Live preview, the fast and built previews, the preview badge, jumpi
 
 There are two ways to see the open file as a MyST page:
 
-- **Live** renders it inside the editor. It's the default.
+- **Live**, the default, renders it inside the editor.
 - **Preview** shows it in a pane beside the editor.
 
 Switch between them, or to plain **Source**, with the buttons in the toolbar.
 
 ## Live preview
 
-With **Live** on, paragraphs, headings, directives, equations and other blocks are rendered.
-The block with the cursor shows its Markdown.
+With **Live** on, paragraphs, headings, directives, equations and other blocks are rendered, except the block with the cursor, which shows its Markdown.
 To edit a block, click it or move into it with the arrow keys.
 The cursor lands on the text you clicked.
 
 - Tabs, dropdowns, and buttons in a rendered block work without opening its source.
-- A block with a warning, such as a broken reference, has an orange bar on its left. Open it to see the warning.
+- A block with a warning, such as a broken reference, has an orange bar on its left.
+  Click into the block to see the warning.
 - Blocks look the same as in the preview pane.
   They come from mystmd's build or the fast preview, as [Fast and built previews](preview.md#fast-and-built-previews) describes.
 
@@ -35,10 +35,8 @@ There are two versions of the preview, shown in the same pane:
 - The **fast preview** renders the page in your browser as you type.
   It uses mystmd's parser, but some things only work in a full build, such as `{include}`, embeds, and running code.
   Embeds, and references to other pages, show grey placeholders until the build is ready.
-- The **built preview** is mystmd's own output from `myst start`.
-  It is exact.
-  Embeds and references whose label mystmd can't find show in red with a ⚠.
-  mystmd's own site shows nothing there.
+- The **built preview** is mystmd's own output from `myst start`, so it's exact.
+  Embeds and references whose label mystmd can't find show in red with a ⚠, where mystmd's own site shows nothing.
 
 The editor shows the built preview whenever mystmd's latest build matches the text in the editor, and the fast preview otherwise.
 In the fast preview, blocks you haven't touched since the last build keep showing the built version.
@@ -62,7 +60,7 @@ Running code needs Jupyter.
 Without Jupyter, pages still build and notebooks keep their saved outputs.
 mystmd runs a page again each time you save a change to its code.
 
-To turn it off in the web editor, run `npm start -- --no-execute path/to/project`.
+To turn off running code in the web editor, run `npm start -- --no-execute path/to/project`.
 In JupyterLab, set `MYST_AUTHOR_EXECUTE=0` before you start Jupyter.
 
 Outputs look like they do on a mystmd site.

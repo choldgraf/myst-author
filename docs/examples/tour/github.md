@@ -4,8 +4,7 @@ title: Bring your own project
 
 This page is for JupyterLab and VS Code, on Binder, Codespaces or a JupyterHub.
 MyST Author works with the project the open file is in, so any MyST project in the same workspace gets the same help as the tour.
-JupyterLab or VS Code handles git.
-Clone in a terminal, and push from the **Git** or **Source Control** view.
+JupyterLab or VS Code handles git: clone in a terminal, and push from the **Git** or **Source Control** view.
 
 :::{tip} Try this: clone a project
 Open a terminal from the Launcher or the Terminal menu, and clone the language server's demo project:
@@ -35,5 +34,4 @@ Pick the `mystmd-lsp` one.
 :::
 
 On Codespaces, sign in as [Work with GitHub](https://chrisholdgraf.com/myst-author/guide/github#github-codespaces) describes, since the Codespace's own token only reaches the MyST Author repository.
-That page also has a link that pulls a project into Binder for you.
-It also has the steps for a JupyterHub, and what to know before signing in on a Binder.
+That page also has a link that pulls a project into Binder for you, the steps for a JupyterHub, and what to know before signing in on a Binder.

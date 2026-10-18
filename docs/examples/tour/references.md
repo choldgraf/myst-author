@@ -33,8 +33,7 @@ That warning goes away.
 
 ## External references
 
-An `xref:` link points to a label in another project.
-That project is listed under `project.references` in `myst.yml`.
+An `xref:` link points to a label in another project, one listed under `project.references` in `myst.yml`.
 This project lists the Python docs under the key `python`.
 The part after `#` is either a page, like `library/abc`, or an object, like `abc.ABC`.
 This links to the `abc` module page: <xref:python#library/abc>.

@@ -3,8 +3,7 @@ title: Work with GitHub
 description: Pull a MyST project from GitHub into Codespaces, a JupyterHub, or Binder, edit it with MyST Author, and push it back.
 ---
 
-MyST Author edits files on disk.
-It doesn't do git.
+MyST Author edits files on disk, but it doesn't do git.
 You pull a project from GitHub, edit it, and push it back with VS Code, JupyterLab, or a terminal, as usual.
 
 ## GitHub Codespaces
@@ -15,10 +14,8 @@ Open the [MyST Author Codespace](https://codespaces.new/choldgraf/myst-author), 
 gh repo clone you/your-book
 ```
 
-The clone goes inside the MyST Author checkout.
-That's fine for a session.
-Open a page in it.
-The [VS Code extension](vscode.md) finds the project, and completions, the preview and the MyST TOC switch to it.
+The clone goes inside the MyST Author checkout, which is fine for a session.
+When you open a page in it, the [VS Code extension](vscode.md) finds the project, and completions, the preview and the MyST TOC switch to it.
 
 Codespaces signs you in to GitHub for the repository it was opened from, which is MyST Author's.
 Pushing to your own repository needs one more sign-in, in the terminal:
@@ -61,7 +58,7 @@ A Binder is a throwaway copy, so pulling is easy and pushing takes a sign-in eac
 
 To pull your project into it, make a link with the [nbgitpuller link generator](https://nbgitpuller.readthedocs.io/en/latest/link.html).
 Choose **Binder**, give it `choldgraf/myst-author` as the environment repository, and your project as the content repository.
-This one opens the [mystmd-lsp demo project](https://github.com/choldgraf/mystmd-lsp/tree/main/demo):
+This example link opens the [mystmd-lsp demo project](https://github.com/choldgraf/mystmd-lsp/tree/main/demo):
 
 <https://mybinder.org/v2/gh/choldgraf/myst-author/main?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fcholdgraf%252Fmystmd-lsp%26urlpath%3Dlab%252Ftree%252Fmystmd-lsp%252Fdemo%252Findex.md>
 

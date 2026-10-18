@@ -12,7 +12,7 @@ This paragraph has **bold text**, `inline code`, a [link](https://mystmd.org), a
 
 :::{tip} Try this: edit in place
 Click the words *bold text* in the paragraph above.
-Its Markdown appears, with the cursor where you clicked.
+The paragraph's Markdown appears, with the cursor where you clicked.
 Change a word, then click outside the paragraph: it renders again with your change.
 :::
 

@@ -8,8 +8,7 @@ Install it from source, as below, or try it on [Binder](https://chrisholdgraf.co
 
 The extension is a frontend only.
 It talks to [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) through jupyter-lsp, which comes with JupyterLab and runs the language server over a websocket.
-The language server finds each file's project, which is the nearest `myst.yml` under Jupyter's root folder.
-It runs mystmd for that project.
+The language server finds each file's project, the nearest `myst.yml` under Jupyter's root folder, and runs mystmd for that project.
 So Lab can open at your home folder, and completions, the preview and the table of contents follow whichever project you're editing.
 The extension reaches each project's mystmd through [jupyter-server-proxy](https://jupyter-server-proxy.readthedocs.io).
 See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) for the setup.
@@ -18,7 +17,7 @@ See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author
 
 You need Node 24 and [uv](https://docs.astral.sh/uv/).
 You also need JupyterLab installed in your `python`, so the build can see Lab's shared packages.
-`uvx` runs Lab itself.
+Lab itself runs through `uvx`, not from that install.
 From the repo root:
 
 ```sh
@@ -29,7 +28,7 @@ npm run lab -- path/to/project     # or your own MyST project
 
 `npm run lab` builds the web editor and the extension, then starts JupyterLab in the project folder with both.
 JupyterLab and jupyter-server-proxy run in a throwaway `uvx` environment.
-Its Jupyter config and extensions are in `packages/jupyterlab/dist/jupyter/`.
+That environment's Jupyter config and extensions are in `packages/jupyterlab/dist/jupyter/`.
 Your own Jupyter setup doesn't change, and extensions you've installed, such as jupyterlab-myst, don't load.
 Options after the project go to `jupyter lab`, for example `npm run lab -- . --port 9000`.
 Run it again after changes.
@@ -46,8 +45,8 @@ ln -sfn "$PWD/packages/jupyterlab/dist/labextension" "$(jupyter --data-dir)/labe
 
 `jupyter labextension list` should show `@myst-author/jupyterlab`.
 Then add [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) to your Jupyter config, with jupyter-server-proxy installed.
-It adds a **MyST Author** entry to the Launcher.
-That entry opens the web editor on `MYST_AUTHOR_PROJECT`, or on the tour.
+That config adds a **MyST Author** entry to the Launcher.
+That entry opens the web editor on `MYST_AUTHOR_PROJECT`, or on the tour if that isn't set.
 Rebuild and reload the page after changes.
 
 ## What works
