@@ -89,21 +89,29 @@ class Rendered extends WidgetType {
  * The frontmatter's keys other than the title, as Obsidian shows a note's properties.
  * They come from the YAML as written, not from mystmd's build, which adds the project's settings.
  * There's no form: a click shows the YAML with the cursor on the clicked value, like any other block.
- * mystmd-lsp leaves out YAML errors while you type, so this shows them once you leave the YAML.
+ * Each value's `data-offset` is just after its key's colon, so a click looks for the value from there.
+ * Invalid YAML never gets here: mystmd renders it as a code block.
  */
 function Properties({ source }: { source: string }) {
-  const { frontmatter, messages } = mystmd.parseMyst(source);
-  const error = messages.find((m) => m.ruleId === 'frontmatter-is-yaml');
-  if (error) return <p className="my-2 text-sm text-red-600">{error.reason}</p>;
+  const { frontmatter } = mystmd.parseMyst(source);
   const { title, ...props } = typeof frontmatter === 'object' && frontmatter ? frontmatter : {};
   if (!Object.keys(props).length) return null;
-  const show = (v: unknown) => v == null ? '' : v instanceof Date ? v.toISOString().slice(0, 10) : typeof v === 'object' ? JSON.stringify(v) : String(v);
+  const after = (key: string) => {
+    const at = source.indexOf(`\n${key}:`);
+    return at < 0 ? 0 : at + key.length + 2;
+  };
+  // Each value is its own text node, so a click finds it in the source.
+  const show = (v: unknown): React.ReactNode => v == null ? ''
+    : v instanceof Date ? v.toISOString().slice(0, 10)
+    : Array.isArray(v) ? v.map((x, i) => <span key={i} className="mr-1 rounded bg-gray-100 px-1.5">{show(x)}</span>)
+    : typeof v === 'object' ? Object.entries(v).map(([k, x]) => <span key={k} className="mr-2"><span className="text-gray-500">{k}:</span> {show(x)}</span>)
+    : String(v);
   return (
     <dl className="not-prose my-2 text-sm">
       {Object.entries(props).map(([key, value]) => (
         <div key={key} className="flex gap-4">
           <dt className="min-w-32 text-gray-500">{key}</dt>
-          <dd className="m-0">{Array.isArray(value) ? value.map((v, i) => <span key={i} className="mr-1 rounded bg-gray-100 px-1.5">{show(v)}</span>) : show(value)}</dd>
+          <dd className="m-0" data-offset={after(key)}>{show(value)}</dd>
         </div>
       ))}
     </dl>
@@ -113,16 +121,18 @@ function Properties({ source }: { source: string }) {
 /**
  * The source position of the clicked text: where the clicked text node's text appears in the span's source.
  * The first match wins, so a repeated phrase can land on the wrong copy.
- * Falls back to the span's start.
+ * The search starts at the nearest `data-offset`, if any, or else the span's start.
+ * A miss falls back to that start.
  */
 function sourceAt(state: EditorState, { from, to }: Located, e: MouseEvent, shadow: ShadowRoot | null) {
   const caret = document.caretPositionFromPoint?.(e.clientX, e.clientY, { shadowRoots: shadow ? [shadow] : [] });
   const range = caret ? null : document.caretRangeFromPoint?.(e.clientX, e.clientY); // Safari, which can't see into a shadow root
   const node = caret?.offsetNode ?? range?.startContainer;
   if (node?.nodeType !== Node.TEXT_NODE || !node.textContent) return from;
+  const start = from + Number(node.parentElement?.closest<HTMLElement>('[data-offset]')?.dataset.offset ?? 0);
   // The renderer curls quotes. Straighten them (same length, so offsets hold) to match the source.
-  const i = state.doc.sliceString(from, to).indexOf(node.textContent.replace(/[‘’]/g, "'").replace(/[“”]/g, '"'));
-  return i < 0 ? from : from + i + (caret?.offset ?? range?.startOffset ?? 0);
+  const i = state.doc.sliceString(start, to).indexOf(node.textContent.replace(/[‘’]/g, "'").replace(/[“”]/g, '"'));
+  return i < 0 ? start : start + i + (caret?.offset ?? range?.startOffset ?? 0);
 }
 
 const touches = (state: EditorState, s: Located) => state.selection.ranges.some((r) => r.from <= s.to && r.to >= s.from);
