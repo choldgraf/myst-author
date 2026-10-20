@@ -20,9 +20,10 @@ import { cellPages, fromBuiltPage, parseMyst, type ParseResult } from '@myst-aut
 // React isn't a dependency of this package. It comes with @myst-author/preview, which renders with it.
 import { createElement } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { MystToc } from './toc.ts';
 import liveCss from '../dist/live.css'; // the preview's CSS, for the extension's shadow roots (see build.mjs)
 
-type Editor = IDocumentWidget<FileEditor>;
+export type Editor = IDocumentWidget<FileEditor>;
 
 // The language server's websocket. jupyter-lsp, which comes with JupyterLab, runs the server (see binder/jupyter_server_config.py).
 // jupyter-lsp shares that one server with every browser tab and sends each answer to all of them, so a second Lab tab sees this tab's responses.
@@ -32,9 +33,9 @@ const lspServer = URLExt.join(PageConfig.getBaseUrl(), 'lsp/ws/mystmd-lsp');
 const jupyterRoot = PageConfig.getOption('rootUri').replace(/\/$/, '');
 
 /** A MyST project the language server found: its folder as a Lab path, and a client for the mystmd it runs there. */
-type Project = { root: string; content: ContentServer };
+export type Project = { root: string; content: ContentServer };
 /** The project a document is a page of, or undefined when it isn't one (see `projectFor` in the plugin). */
-type ProjectFor = (path: string) => Promise<Project | undefined>;
+export type ProjectFor = (path: string) => Promise<Project | undefined>;
 // Live preview in Markdown editors and notebook Markdown cells. Blocks render in shadow roots, so the preview's CSS can't restyle Lab.
 // Blocks use Lab's content font size, like its rendered Markdown, rather than the preview's 16px.
 const cellCss = `${liveCss}\n.article { font-size: var(--jp-content-font-size1); line-height: var(--jp-content-line-height) }`;
@@ -112,60 +113,6 @@ const linkHost = (docs: IDocumentManager, lsp: Promise<Lsp>, { root }: Project) 
   },
   warn: (message: string) => console.warn(`MyST Author: ${message}`),
 });
-
-/**
- * A left sidebar panel with the table of contents of the current Markdown editor's project.
- * Clicking a page opens it.
- */
-class MystToc extends Widget {
-  private project?: Project;
-  private following?: Editor; // the editor whose project is being looked up, so a slow answer can't overtake a newer one
-
-  constructor(
-    private docs: IDocumentManager,
-    private projectFor: ProjectFor,
-  ) {
-    super();
-    this.id = 'myst-author-toc';
-    this.title.label = 'MyST';
-    this.title.caption = 'MyST TOC';
-    this.addClass('myst-author-toc');
-  }
-
-  /**
-   * Follow `editor`'s project.
-   * A file with no project leaves the view on the last one.
-   */
-  async follow(editor: Editor) {
-    this.following = editor;
-    const project = await this.projectFor(editor.context.path);
-    if (!project || this.following !== editor || project === this.project) return;
-    this.project = project;
-    this.refresh();
-  }
-
-  /** The plugin calls this when a project rebuilds. */
-  rebuilt(project: Project) {
-    if (project === this.project) this.refresh();
-  }
-
-  // There's no table of contents until mystmd is up.
-  // A failure leaves the view as it is, since the project's next build calls `rebuilt`.
-  private async refresh() {
-    const { root, content } = this.project!;
-    const entries = await content.toc().catch(() => undefined);
-    if (!entries || this.project?.root !== root) return; // nothing yet, or the view moved to another project meanwhile
-    this.node.replaceChildren(
-      ...entries.map(({ title, level, file }) => {
-        const item = document.createElement(file ? 'button' : 'div');
-        item.textContent = title;
-        item.style.paddingLeft = `${level}em`;
-        if (file) item.onclick = () => void this.docs.openOrReveal(PathExt.join(root, file));
-        return item;
-      }),
-    );
-  }
-}
 
 const plugin: JupyterFrontEndPlugin<void> = {
   id: '@myst-author/jupyterlab:plugin',
