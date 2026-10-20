@@ -13,7 +13,7 @@ import { Widget } from '@lumino/widgets';
 import { connectLsp, fileUri, type Lsp } from '@myst-author/lsp-client/client';
 import { contentServer, type ContentServer } from 'mystmd-client/content-server';
 import { Preview } from '@myst-author/preview';
-import { findLabel, followLink, PreviewController, type ToPage } from '@myst-author/preview/controller';
+import { findLabel, followLink, isExternal, PreviewController, type ToPage } from '@myst-author/preview/controller';
 import { followLinks, livePreview, offerBuilt, shadowSheet, showBuilt, topLine, type FollowLink } from '@myst-author/preview/live';
 import { mountPreviewPage } from '@myst-author/preview/page';
 import { cellPages, fromBuiltPage, parseMyst, type ParseResult } from '@myst-author/preview/parse';
@@ -233,7 +233,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
     const follow = async (path: string, href: string, line?: number) => {
       const p = await projectFor(path);
       if (p) followLink({ ...linkHost(docs, lsp, p), fileForSlug: (slug) => p.content.fileForSlug(slug) }, PathExt.relative(p.root, path), href, line);
-      else if (/^[a-z][\w+.-]*:/i.test(href)) openExternal(href);
+      else if (isExternal(href)) openExternal(href);
     };
     const linksIn = (path: string): FollowLink => (href, line) => follow(path, href, line);
 

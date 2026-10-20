@@ -14,7 +14,6 @@ for (const repo of ['myst-syntax', 'mystmd-lsp']) {
   rmSync(clone, { recursive: true, force: true });
   execFileSync('git', ['clone', '--depth', '1', `https://github.com/choldgraf/${repo}`, clone], { stdio: 'inherit' });
   execFileSync('npm', ['ci'], { cwd: clone, stdio: 'inherit' });
-  execFileSync('npm', ['run', 'build'], { cwd: clone, stdio: 'inherit' });
   execFileSync('npm', ['run', 'package', '-w', 'packages/vscode'], { cwd: clone, stdio: 'inherit' });
   cpSync(join(clone, 'packages/vscode', `${repo}.vsix`), join(deps, `${repo}.vsix`));
 }

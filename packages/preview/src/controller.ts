@@ -91,9 +91,12 @@ type LinkHost = Pick<PreviewHost, 'open' | 'openExternal' | 'findLabel' | 'warn'
   fileForSlug(slug: string): string | undefined; // see `ContentServer`
 };
 
+/** Whether `href` has a scheme, like `http:` or `mailto:`. */
+export const isExternal = (href: string) => /^[a-z][\w+.-]*:/i.test(href);
+
 /** A click on a preview link in file `here`. `line` is where an in-page `#id` target renders, if found. */
 export async function followLink(host: LinkHost, here: string, href: string, line?: number) {
-  if (/^[a-z][\w+.-]*:/i.test(href)) return host.openExternal(href); // http:, mailto:, …
+  if (isExternal(href)) return host.openExternal(href);
   const [path, id] = href.split('#');
   if (id) {
     // Labels are project-wide, so ask the LSP where it is.
