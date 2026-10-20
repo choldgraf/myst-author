@@ -8,7 +8,7 @@ Run MyST Author on your computer, or open it in your browser with Codespaces or 
 ## Run it locally
 
 You need Node 24 or newer.
-[mystmd](https://mystmd.org/guide/installing), which provides the `myst` command, is recommended.
+`npm install` also installs [mystmd](https://mystmd.org), which provides the `myst` command.
 
 ```bash
 git clone https://github.com/choldgraf/myst-author
@@ -22,15 +22,17 @@ npm run demo
 The editor opens at <http://127.0.0.1:4321>.
 Set `PORT` to use another port, for example `PORT=8000 npm run demo`.
 On macOS it also opens a browser tab, unless you set `NO_OPEN=1`.
-If `myst` isn't on your `PATH`, set `MYST_BIN` to its location.
 mystmd runs code cells and inline `{eval}` expressions when it builds a page.
 [Code cells and `{eval}`](guide/preview.md#code-cells-and-eval) says how to turn that off.
 
 To run it from any folder as `myst-author`, run `npm link -w packages/app` once in the clone.
 Then run `myst-author` in a project folder, or `myst-author path/to/project`.
 The command runs your clone, so a `git pull` updates it.
+Outside the clone, it can't use the mystmd that `npm install` added.
+It uses the `myst` on your `PATH` instead, so [install mystmd](https://mystmd.org/guide/installing) or set `MYST_BIN` to its location.
 
-The editor still runs without mystmd, but it only knows about the open file.
+The editor still runs without mystmd.
+It only knows about the open file then.
 References to labels in other files aren't completed or checked, and you only get the [fast preview](guide/preview.md).
 
 ## Open it in GitHub Codespaces

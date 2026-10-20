@@ -34,7 +34,6 @@ The building blocks live in separate repositories that are each useful on their 
 Click one of the badges above to open the [tour project](docs/examples/tour/) in your browser.
 
 To run it on your computer, you need Node 24 or newer.
-[mystmd](https://mystmd.org/guide/installing) is recommended.
 
 ```bash
 git clone https://github.com/choldgraf/myst-author && cd myst-author
