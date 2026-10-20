@@ -268,18 +268,22 @@ export function bodyStart(text: string) {
 export const pageLook: Extension = [
   EditorView.theme({
     // myst-theme's body text (Tailwind typography's `prose`).
-    '.cm-content': { maxWidth: '46rem', margin: '0 auto', padding: '2.5rem 1.5rem 30vh', fontFamily: 'system-ui, sans-serif', fontSize: '16px', lineHeight: '1.75' },
+    '.cm-content': { maxWidth: '46rem', margin: '0 auto', padding: '2.5rem 1.5rem 30vh', fontFamily: 'system-ui, sans-serif', fontSize: '16px', lineHeight: '1.75', color: '#44403c' },
     '.cm-gutters': { display: 'none' },
     '.cm-activeLine': { backgroundColor: 'transparent' }, // otherwise the blank line under the title, where the cursor starts, shows as a band
   }),
-  // `prose`'s heading sizes, hard-coded to match myst-theme. Read its CSS if they drift.
+  // `prose`'s sizes, weights, and colours, hard-coded to match myst-theme. Read its CSS if they drift.
+  // Inline styles stay on in source, as in Obsidian, so bold text doesn't turn plain when you click it.
   syntaxHighlighting(HighlightStyle.define([
-    { tag: tags.monospace, fontFamily: 'monospace' },
-    { tag: tags.labelName, fontFamily: 'monospace' }, // a code fence's info string, such as `{figure} path`, like the code below it
-    { tag: tags.heading1, fontSize: '2.25em', lineHeight: '1.11', fontWeight: '800' },
-    { tag: tags.heading2, fontSize: '1.5em', lineHeight: '1.33', fontWeight: '700' },
-    { tag: tags.heading3, fontSize: '1.25em', lineHeight: '1.6', fontWeight: '600' },
-    { tag: [tags.heading4, tags.heading5, tags.heading6], fontWeight: '600' },
-    { tag: tags.processingInstruction, color: '#9ca3af' }, // Markdown marks: `##`, `**`, `-`, `[]()`
+    // `labelName` is a code fence's info string, such as `{figure} path`, styled like the code below it.
+    { tag: [tags.monospace, tags.labelName], fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: '0.875em' },
+    { tag: tags.heading1, fontSize: '2.25em', lineHeight: '1.11', fontWeight: '800', color: '#111827' },
+    { tag: tags.heading2, fontSize: '1.5em', lineHeight: '1.33', fontWeight: '700', color: '#111827' },
+    { tag: tags.heading3, fontSize: '1.25em', lineHeight: '1.6', fontWeight: '600', color: '#111827' },
+    { tag: [tags.heading4, tags.heading5, tags.heading6], fontWeight: '600', color: '#111827' },
+    { tag: tags.strong, fontWeight: '600', color: '#111827' },
+    { tag: tags.emphasis, fontStyle: 'italic' },
+    { tag: tags.link, fontWeight: '500', color: '#1d4ed8' },
+    { tag: [tags.processingInstruction, tags.url], color: '#9ca3af' }, // Markdown marks (`##`, `**`, `-`, `[]()`) and link targets
   ])),
 ];
