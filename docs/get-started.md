@@ -9,6 +9,7 @@ Run MyST Author on your computer, or open it in your browser with Codespaces or 
 
 You need Node 24 or newer.
 `npm install` also installs [mystmd](https://mystmd.org), which provides the `myst` command.
+The `npm run` commands below use that copy, even if you've installed another one.
 
 ```bash
 git clone https://github.com/choldgraf/myst-author
