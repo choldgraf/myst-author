@@ -69,8 +69,10 @@ type Props = {
   onFollowLink?: (href: string, line?: number) => void;
 };
 
-// myst-to-react fetches a cross-reference's hover-card page itself, through SWR, so it misses the URL rebasing in the content server's `built()`.
-// This rebases it the same way, with `rebaseFetched`, so its images load. It relies on myst-to-react fetching through SWR.
+// myst-to-react fetches the page for a cross-reference's hover card itself, through SWR.
+// That fetch skips the URL rebasing that the content server's `built()` does, so the card's images wouldn't load.
+// This SWR middleware rebases each fetched page with `rebaseFetched`.
+// It only works while myst-to-react fetches through SWR.
 const rebaseHoverPages: Middleware = (useSWRNext) => (key, fetcher, config) =>
   useSWRNext(key, fetcher && (async (url: string) => {
     const page: any = await fetcher(url);
@@ -78,7 +80,10 @@ const rebaseHoverPages: Middleware = (useSWRNext) => (key, fetcher, config) =>
     return page;
   }), config);
 
-/** Render a parsed page block by block. Each block carries its source line range for sync. */
+/**
+ * Render a parsed page block by block.
+ * Each block carries its source line range, so the preview can scroll with the editor and a click can jump to the source.
+ */
 export function Preview({ result, topLine, onLineClick, onFollowLink }: Props) {
   const article = useRef<HTMLElement>(null);
 

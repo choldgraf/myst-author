@@ -4,8 +4,9 @@ import type { GenericNode } from 'myst-common';
 import { Details, MyST } from 'myst-to-react';
 
 // Code cell outputs, drawn like @myst-theme/jupyter's `Outputs` and `SafeOutput` on a mystmd site, with the same classes.
-// That package also brings thebe and JupyterLab, so these copy its plain-HTML path.
-// HTML output shows in a sandbox that doesn't run its scripts, which would run with the editor's access to your files.
+// @myst-theme/jupyter also pulls in thebe and JupyterLab, so this file copies only its plain-HTML path.
+// HTML output shows in a sandboxed iframe that can't run scripts.
+// A script there would run with the editor's access to your files.
 // So outputs that need scripts, such as plotly, show their plain text.
 export function Outputs({ node }: { node: GenericNode }) {
   const align = node.align === 'center' ? 'text-center' : node.align === 'right' ? 'text-right' : 'text-left';

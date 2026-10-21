@@ -9,7 +9,7 @@ export class MystPreview {
   private panel?: vscode.WebviewPanel;
   private document?: vscode.TextDocument; // the last Markdown file, in a text or live editor, that is a page of a project
   private project?: Project;
-  private preview?: PreviewController; // one per project: each has its own content server
+  private preview?: PreviewController; // replaced when the project changes, since each project has its own content server
   private following?: vscode.TextDocument; // whose project is being looked up, so a slow answer can't overtake a newer one
 
   constructor(
@@ -75,7 +75,8 @@ export class MystPreview {
       post: (m) => this.panel?.webview.postMessage(m),
       open: (path, line) => this.show(vscode.Uri.file(resolve(project.root, path)), line),
     }, project.content);
-    // The page is built for one project's assets, so reload it. It asks for the file once ready.
+    // The webview's content security policy names one project's mystmd server, so reload the page for the new project.
+    // Once loaded, the page sends `ready` and the controller replies with the file.
     if (this.panel) this.panel.webview.html = this.html(this.panel.webview);
   }
 

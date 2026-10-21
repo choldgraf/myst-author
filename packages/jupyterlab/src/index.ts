@@ -29,7 +29,8 @@ export type Editor = IDocumentWidget<FileEditor>;
 // jupyter-lsp shares that one server with every browser tab and sends each answer to all of them, so a second Lab tab sees this tab's responses.
 const lspServer = URLExt.join(PageConfig.getBaseUrl(), 'lsp/ws/mystmd-lsp');
 // Jupyter's root folder as a file:// URI (set by jupyter-lsp), to map Lab paths to document URIs.
-// It is the language server's workspace: a document's project is the nearest myst.yml between it and this folder.
+// This folder is the language server's workspace.
+// A document's project is the nearest myst.yml between the document and this folder.
 const jupyterRoot = PageConfig.getOption('rootUri').replace(/\/$/, '');
 
 /** A MyST project the language server found: its folder as a Lab path, and a client for the mystmd it runs there. */
@@ -48,10 +49,10 @@ const previewCss = shadowSheet(`${liveCss}
 :host > div { position: relative; box-sizing: border-box; height: 100%; overflow: auto; padding: 0 2rem 1rem; background: white; color: black }`);
 
 // Rendered Markdown cells show mystmd's build, so references to other pages resolve.
-// It renders in a shadow root on the cell's rendered widget, which is Lab's or jupyterlab-myst's.
-// A cell whose text differs from the build shows the fast parse, as the live preview does, until mystmd rebuilds.
-// An empty cell's shadow root holds just a <slot>, which shows that widget's own rendering (Lab's hint text) underneath.
-// Trim the cell's outer margins, as Lab does for rendered Markdown.
+// The build renders in a shadow root attached to the cell's rendered widget, which comes from Lab or jupyterlab-myst.
+// A cell whose text differs from the build shows the fast parse until mystmd rebuilds, as the live preview does.
+// An empty cell's shadow root holds just a <slot>, so the rendered widget's own content (Lab's hint text) shows through.
+// The CSS below trims the cell's outer margins, as Lab does for rendered Markdown.
 const cellSheet = shadowSheet(`${cellCss}\n.article > :first-child > :first-child { margin-top: 0 } .article > :last-child > :last-child { margin-bottom: 0 }`);
 const cellRoots = new WeakMap<HTMLElement, Root>();
 // Each Markdown cell's build and the cell text it was built from. The cell shows the build only while its text still matches.
@@ -107,7 +108,7 @@ const linkHost = (docs: IDocumentManager, lsp: Promise<Lsp>, { root }: Project) 
   openExternal,
   findLabel: async (id: string) => {
     const l = await lsp;
-    // A label in a notebook cell has `#<cell id>`.
+    // A label in a notebook cell has a URI ending in `#<cell id>`.
     const pathOf = (uri: string) => { const p = l.path(uri.split('#')[0]); const rel = p == null ? '..' : PathExt.relative(root, p); return rel.startsWith('..') ? null : rel; };
     return findLabel((method, params) => l.client.request(method, params), id, pathOf);
   },
@@ -192,7 +193,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
       lsp.then((l) => editor.injectExtension(l.client.plugin(uri(l), 'markdown')), () => {});
     };
 
-    // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.
+    // Live blocks render mystmd's build when the build matches the text.
+    // The build resolves embeds and references to other pages.
     const sendBuilt = async (w: Editor) => {
       const page = await builtPage(w.context.path);
       if (page) offerBuilt(cm(w).editor, page);
@@ -293,7 +295,7 @@ const plugin: JupyterFrontEndPlugin<void> = {
 class MystPreview extends Widget {
   private editor: Editor | null = null;
   private project?: Project;
-  private preview?: PreviewController; // one per project: each has its own content server
+  private preview?: PreviewController; // replaced when the project changes, since each project has its own content server
   private following?: Editor; // the editor whose project is being looked up, so a slow answer can't overtake a newer one
   private receive: (m: ToPage) => void = () => {};
   private root: ReturnType<typeof mountPreviewPage>;

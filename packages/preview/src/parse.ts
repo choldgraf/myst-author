@@ -80,7 +80,8 @@ function toBlocks(tree: GenericParent): Block[] {
 /**
  * A built page's blocks, with the source lines of the fast parse's blocks.
  * Built pages lose the lines of directive output, and embedded content keeps the lines of the page it came from.
- * Both parses find the same top-level blocks, so they pair up in order. When the counts differ, returns null.
+ * Both parses usually find the same top-level blocks, so they pair up in order.
+ * When the counts differ, this returns null.
  */
 export function withSourceLines(built: ParseResult, fast: ParseResult): ParseResult | null {
   if (built.blocks.length !== fast.blocks.length) return null;

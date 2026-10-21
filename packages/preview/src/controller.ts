@@ -12,7 +12,7 @@ export type FromPage =
   | { type: 'reveal'; line: number }
   | { type: 'follow'; href: string; line?: number };
 
-/** The file the preview follows. `line` is the (1-based) line at the top of the editor. */
+/** The host's current file, which the preview shows. `line` is the (1-based) line at the top of the editor. */
 type HostFile = { path: string; text: string; dirty: boolean; line?: number };
 
 /**
@@ -29,7 +29,10 @@ export type PreviewHost = {
   warn(message: string): void;
 };
 
-/** The host side of the preview page (`./page`): sends it the current file and its build from the project's mystmd, and answers its messages. */
+/**
+ * The host side of the preview page (`./page`).
+ * It sends the page the current file and the project's mystmd build of that file, and answers the page's messages.
+ */
 export class PreviewController {
   private host: PreviewHost;
   private server: ContentServer;
@@ -42,7 +45,7 @@ export class PreviewController {
     this.sendBuilt();
   }
 
-  /** Send the current file and its build. Call when the host follows another file. */
+  /** Send the current file and its build. Call when the host switches to another file. */
   sendFile() {
     this.sendText();
     this.sendBuilt();
@@ -99,7 +102,7 @@ export async function followLink(host: LinkHost, here: string, href: string, lin
   if (isExternal(href)) return host.openExternal(href);
   const [path, id] = href.split('#');
   if (id) {
-    // Labels are project-wide, so ask the LSP where it is.
+    // Labels are project-wide, so ask the language server where the label is defined.
     const target = await host.findLabel(id).catch(() => undefined);
     if (target) return host.open(target.path, target.line);
     if (line && !path) return host.open(here, line - 1);

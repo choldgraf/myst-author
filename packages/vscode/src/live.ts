@@ -35,7 +35,10 @@ const toPos = (p: vscode.Position): Pos => ({ line: p.line, character: p.charact
  */
 export class LiveEditor implements vscode.CustomTextEditorProvider {
   private active = new vscode.EventEmitter<vscode.TextDocument>();
-  /** The document of a live editor that just became active. A custom editor is never `activeTextEditor`, so the TOC and preview follow this too. */
+  /**
+   * The document of a live editor that just became active.
+   * A custom editor is never `activeTextEditor`, so the TOC and preview listen to this event as well as `onDidChangeActiveTextEditor`.
+   */
   readonly onDidChangeActiveDocument = this.active.event;
 
   constructor(
@@ -46,13 +49,13 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
   }
 
   private ready = new Map<string, (m: ToLive) => void>(); // live editors whose webview is ready, by document URI
-  private pending = new Map<string, Pos>(); // the position `open` wants for a live editor that is still opening
+  private pending = new Map<string, Pos>(); // where `open` should put the cursor once a live editor finishes opening, by document URI
 
   /** Open `uri` in its default editor with the cursor at the start of `line`. The user may have made the live editor the default. */
   async open(uri: vscode.Uri, line: number, viewColumn?: vscode.ViewColumn) {
     const key = uri.toString();
     const at = { line, character: 0 };
-    this.pending.set(key, at); // a live editor opening now takes it in `resolveCustomTextEditor`
+    this.pending.set(key, at); // if `vscode.open` opens a new live editor, `resolveCustomTextEditor` reads this position
     await vscode.commands.executeCommand('vscode.open', uri, { viewColumn, selection: new vscode.Range(line, 0, line, 0) });
     this.pending.delete(key);
     this.ready.get(key)?.({ type: 'select', at }); // a live editor that was already open
@@ -69,8 +72,9 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
     webview.options = { enableScripts: true, localResourceRoots: [dist] };
     webview.html = webviewHtml(webview, dist, 'live', project?.assets);
 
-    // Edits from the webview, one at a time, so each one's positions match the document.
-    // An edit made elsewhere while one of these is in flight can put the two out of sync. Send document versions if that bites.
+    // Apply the webview's edits one at a time, so each edit's positions match the document.
+    // If the file changes elsewhere while a webview edit is in flight, the webview and the document can get out of sync.
+    // Sending document versions with each edit would fix that if it becomes a problem.
     let queue = Promise.resolve();
     let applying = 0;
     const apply = (changes: Change[]) =>
@@ -89,7 +93,8 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
       // lsp-client speaks raw LSP, which VS Code's language client can't pass on.
       server = spawnLsp(p.server, [`--content-server=${p.url}`, `--root=${p.root}`], (message) => post({ type: 'lsp', message }));
       post({ type: 'connect', root: vscode.Uri.file(p.root).toString(), uri: document.uri.toString() });
-      // Live blocks render mystmd's build when it matches the text, which resolves embeds and references to other pages.
+      // Live blocks render mystmd's build when the build matches the text.
+      // The build resolves embeds and references to other pages.
       const path = projectPath(p.root, document.uri);
       stopWatch = p.content.watch(async () => {
         const { page } = await p.content.built(path);

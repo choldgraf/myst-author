@@ -272,7 +272,8 @@ export const pageLook: Extension = [
     '.cm-gutters': { display: 'none' },
     '.cm-activeLine': { backgroundColor: 'transparent' }, // otherwise the blank line under the title, where the cursor starts, shows as a band
   }),
-  // `prose`'s sizes, weights, and colours, hard-coded to match myst-theme. Read its CSS if they drift.
+  // `prose`'s sizes, weights, and colours, hard-coded to match myst-theme.
+  // If myst-theme's `prose` styles change, read its CSS and update these values.
   // Inline styles stay on in source, as in Obsidian, so bold text doesn't turn plain when you click it.
   syntaxHighlighting(HighlightStyle.define([
     // `labelName` is a code fence's info string, such as `{figure} path`, styled like the code below it.

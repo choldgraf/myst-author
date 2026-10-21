@@ -119,7 +119,8 @@ export function App() {
   }, [doc, text, conflict]);
 
   // Last-chance save when the tab closes.
-  // No conflict check, since hashing is async and the tab is closing. It only overwrites a change made in the last half second.
+  // No conflict check, since hashing is async and the tab is closing.
+  // If the file changed on disk and the editor hasn't noticed yet, this save overwrites that change.
   useEffect(() => {
     const flush = () => { if (doc && !conflict && text !== saved.current) writeFile(doc.path, text, { keepalive: true }); };
     window.addEventListener('beforeunload', flush);
@@ -239,7 +240,7 @@ export function App() {
           {conflict
             ? <span className="status conflict">Changed on disk <button onClick={keepMine}>Keep mine</button> <button onClick={loadDisk}>Load from disk</button></span>
             : <span className="status">{status}</span>}
-          <span className="badge" title="Preview source">{badge}</span>
+          <span className="badge" title="Which preview this is">{badge}</span>
           <span className="toggles">
             {(['Source', 'Preview', 'Live'] as const).map((m) => (
               <button key={m} aria-pressed={mode === m} onClick={() => setMode(m)}>{m}</button>

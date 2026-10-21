@@ -5,8 +5,8 @@ import type { FromPage, ToPage } from './controller.ts';
 import { Preview, usePreview } from './Preview.tsx';
 
 /**
- * A page that previews one file for a host editor (a VS Code webview, a JupyterLab panel), driven by a `PreviewController`.
- * `postMessage` sends the host a message, and `listen` registers the one function that receives the host's.
+ * How the preview page talks to its host editor.
+ * `postMessage` sends the host a message, and `listen` registers the one function that receives the host's messages.
  */
 type Host = { postMessage(message: FromPage): void; listen(receive: (message: ToPage) => void): void };
 
@@ -31,7 +31,7 @@ function App({ host }: { host: Host }) {
   if (!doc) return <p>Open a markdown file to preview it.</p>;
   return (
     <>
-      <div className="badge-bar"><span className="badge" title="Preview source">{badge}</span></div>
+      <div className="badge-bar"><span className="badge" title="Which preview this is">{badge}</span></div>
       <Preview
         result={result}
         topLine={topLine}
@@ -42,6 +42,7 @@ function App({ host }: { host: Host }) {
   );
 }
 
+/** A page that previews one file for a host editor (a VS Code webview, a JupyterLab panel), driven by a `PreviewController`. */
 export function mountPreviewPage(element: Element, host: Host) {
   const root = createRoot(element);
   root.render(<App host={host} />);

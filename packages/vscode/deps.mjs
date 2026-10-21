@@ -1,7 +1,8 @@
 // Builds the .vsix of each extension this one depends on, into deps/, so throwaway installs (Binder, Codespaces, `npm run demo:vscode`) can install them.
-// VS Code resolves `extensionDependencies` from its gallery (the Marketplace, or Open VSX for code-server), so this goes away once MyST Syntax and MyST Language Server are published to both.
+// VS Code installs `extensionDependencies` from its gallery: the Marketplace, or Open VSX for code-server.
+// Once MyST Syntax and MyST Language Server are published to both, this script can go.
 // Until then, sentences starting "Until ... published" mark what to update at that point.
-// They're in the READMEs and docs of this repo, myst-syntax, and mystmd-lsp.
+// Those sentences are in the READMEs and docs of this repo, myst-syntax, and mystmd-lsp.
 import { execFileSync } from 'node:child_process';
 import { cpSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';

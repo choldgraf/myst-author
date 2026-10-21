@@ -13,8 +13,8 @@ export function activate(context: vscode.ExtensionContext) {
   const projects = new Map<string, PromiseLike<Project>>();
 
   /**
-   * The project `uri` is a page of, from the MyST Language Server extension.
-   * Its server finds the project folder and runs mystmd there, and tells us the folder and mystmd's URL.
+   * Find the project that `uri` is a page of, by asking the MyST Language Server extension.
+   * That extension's server finds the project folder, runs mystmd there, and returns the folder and mystmd's URL.
    * Undefined for a file outside every project or one mystmd doesn't build, which leaves the preview and the live editor's language features off.
    * One `Project` per folder: a window can hold several, each with its own content server.
    */

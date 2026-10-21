@@ -42,7 +42,8 @@ function keepConnected(client: LSPClient, url: string, delay = 1000) {
 }
 
 // mystmd-lsp publishes diagnostics when a file opens or changes, and when another file or the project index changes.
-// Any of these can change a file's hints, so they trigger hint requests instead of a timer after each edit (`delay: null`).
+// Any of these can change a file's hints, so each diagnostics notification requests new hints.
+// That replaces the usual timer after each edit, which `inlayHints({ delay: null })` below turns off.
 const refreshHintsOnDiagnostics: LSPClientExtension = {
   notificationHandlers: {
     'textDocument/publishDiagnostics': (client, params) => {
@@ -67,7 +68,8 @@ const definitionClick = EditorView.domEventHandlers({
 
 // Completion icons for MyST. lsp-client turns each LSP kind into a coarse CodeMirror type.
 // It drops some kinds: Reference, File, Operator, and Snippet.
-// Types are shared, so figures and citations get the same icon. An lsp-client option to map kinds would separate them.
+// Several LSP kinds map to the same CodeMirror type, so figures and citations get the same icon.
+// An lsp-client option to map kinds to types would let figures and citations have separate icons.
 const icon = (content: string, fontSize = '90%') => ({ '&:after': { content: `'${content}'`, fontSize } });
 const completionIcons = EditorView.theme({
   '.cm-completionIcon:not([class*="cm-completionIcon-"])': icon('#'), // labels, equations, code, files
