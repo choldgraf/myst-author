@@ -15,9 +15,10 @@ MyST Author refreshes them after each `textDocument/publishDiagnostics`.
 
 ## Proposal
 
-- `requestHandlers` on `LSPClientConfig` and `LSPClientExtension`, like `notificationHandlers`, whose return value is the response.
-  `codemirror-lsp-inlay-hints` would then handle `workspace/inlayHint/refresh` and advertise `refreshSupport`, as its [issue #1](https://github.com/choldgraf/codemirror-lsp-inlay-hints/issues/1) describes.
-  Inlay hints themselves [live outside lsp-client](https://code.haverbeke.berlin/codemirror/dev/issues/1772).
+Add `requestHandlers` to `LSPClientConfig` and `LSPClientExtension`, like `notificationHandlers`.
+Each request handler's return value is the response.
+`codemirror-lsp-inlay-hints` would then handle `workspace/inlayHint/refresh` and advertise `refreshSupport`, as its [issue #1](https://github.com/choldgraf/codemirror-lsp-inlay-hints/issues/1) describes.
+Inlay hints themselves [belong in a separate package, not lsp-client](https://code.haverbeke.berlin/codemirror/dev/issues/1772).
 
 ## Where in the code
 

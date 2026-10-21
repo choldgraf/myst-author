@@ -4,8 +4,10 @@ description: The packages that make up MyST Author and how they talk to each oth
 ---
 
 MyST Author is a set of small packages in one repository.
-For how it fits with mystmd-lsp, myst-syntax and the other repositories, see [How the repositories fit together](repositories.md).
-The editor features live in reusable packages, and each host (the web editor, VS Code, JupyterLab) puts them together.
+For how MyST Author fits with mystmd-lsp, myst-syntax and the other repositories, see [How the repositories fit together](repositories.md).
+The editor features are in reusable packages.
+A host is a place MyST Author runs: the web editor, VS Code, or JupyterLab.
+Each host puts the packages together.
 
 ## Packages
 
@@ -70,29 +72,31 @@ flowchart TB
 2. The browser reads and saves `.md` files through `/api/files`.
 3. mystmd notices the change and rebuilds.
    It sends a reload event over its websocket, which the host proxies at `/myst/socket`.
-4. The preview fetches the rebuilt page JSON through `/myst` and shows it if it matches the editor text.
-   Until then it shows the fast in-browser render.
+4. The preview fetches the rebuilt page JSON through `/myst`.
+   It shows the built page once the page matches the editor text.
+   Until then, the preview shows the fast in-browser render.
 5. On each reload event, the editor also re-reads the open file, to show changes made outside it, such as by an LLM or git.
    A save that would overwrite a change on disk is refused, and the editor asks whether to keep your edits or load the file.
-6. Each browser connection to `/lsp` gets its own language server process, started with the project folder and mystmd's address.
+6. Each browser connection to `/lsp` gets its own language server process, started with `--root` set to the project folder and with mystmd's address.
+   `--root` makes the server use that one project for every file, instead of finding each file's project.
    If the connection drops, the browser reconnects and re-opens its files.
    mystmd-lsp's [How it works](https://chrisholdgraf.com/mystmd-lsp/how-it-works) explains how the server uses mystmd.
 
 The VS Code extension does the same without the host server.
-The MyST Language Server extension owns the language server.
+The MyST Language Server extension starts and runs the language server.
 The server finds each file's project and starts one mystmd per project.
 For each file, MyST Author sends the server a `myst/project` request.
 The answer says which project the file belongs to and where that project's mystmd is.
 MyST Author then fetches built pages from that mystmd directly.
-Each VS Code live editor runs a language server of its own, and live editors in the same project share one mystmd.
-The web editor starts the language server with `--root`, so the server uses that one project for every file instead of finding each file's project.
+Each VS Code live editor runs a language server of its own, also started with `--root`.
+Live editors in the same project share one mystmd.
 
 The JupyterLab extension works like VS Code.
 jupyter-lsp runs the language server.
 The extension sends the server a `myst/project` request for each file.
 It then fetches that project's built pages from the project's mystmd through jupyter-server-proxy.
 Lab reads and saves the files itself.
-The host server only serves the web editor from the Launcher.
+In JupyterLab, the host server only serves the web editor, which opens from the **MyST Author** Launcher entry.
 
 ## Adding a host
 
@@ -103,7 +107,7 @@ A host does only what depends on where it runs:
 - It runs a language server, with `spawnLsp` or a platform service such as jupyter-lsp.
   It connects the editor to that server through the LSP client.
 - It fetches built pages from mystmd and passes each build of the open file to live preview with `offerBuilt`.
-- It opens files and finds labels for the preview through `PreviewHost`.
+- It implements `PreviewHost`, which the preview uses to open files and find labels.
 - It adds its own commands and toggles.
 
 ## Design choices

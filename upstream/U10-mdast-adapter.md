@@ -4,7 +4,8 @@
 
 mystmd parses with markdown-it, which isn't [unified](https://unifiedjs.com)'s parser and gives positions by line only (see U7).
 [myst-parser-unified](https://github.com/choldgraf/myst-parser-unified) parses MyST with micromark and emits standard mdast, with columns.
-mystmd's own parser emits a slightly different tree, and mystmd's transforms rely on it, so the micromark parser isn't a drop-in replacement.
+mystmd's own parser emits a slightly different tree.
+mystmd's transforms rely on that tree, so mystmd can't swap in the micromark parser as it is.
 
 ## Proposal
 

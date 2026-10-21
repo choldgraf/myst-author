@@ -44,7 +44,7 @@ flowchart LR
 | [codemirror-lsp-inlay-hints](https://github.com/choldgraf/codemirror-lsp-inlay-hints) | Showing a language server's inlay hints in CodeMirror | Any CodeMirror editor using `@codemirror/lsp-client` |
 | [myst-parser-unified](https://github.com/choldgraf/myst-parser-unified) | Parsing MyST with micromark, with line and column positions on every node | People using the unified Markdown tools (remark), and mystmd as a possible future parser |
 | [myst-author](https://github.com/choldgraf/myst-author) `packages/preview` | Rendering a page, live preview in CodeMirror, and choosing between the fast and built preview | Anyone embedding a MyST preview, once it's published |
-| [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server where no extension does, and anything that depends on the editor, such as documents, opening files and commands | People who want an editor |
+| [myst-author](https://github.com/choldgraf/myst-author) hosts | Running mystmd and the language server when no extension runs them, and anything that depends on the editor, such as the document text, opening files and commands | People who want an editor |
 
 The web editor, VS Code and JupyterLab each start mystmd and the language server their own way, as [Architecture](architecture.md#how-the-web-editor-fits-together) describes.
 
