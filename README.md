@@ -19,7 +19,7 @@ It comes in three flavours, which share most features:
 - A VS Code extension ([docs](https://chrisholdgraf.com/myst-author/guide/vscode)), if you already write in VS Code.
 - A JupyterLab extension ([docs](https://chrisholdgraf.com/myst-author/guide/jupyterlab)), if you write in JupyterLab or JupyterHub.
 
-None of them are packaged yet, so you run each one from a clone of this repository, or try them on Codespaces or Binder.
+None of them are published yet, so you run each one from a clone of this repository, or try them on Codespaces or Binder.
 
 ## Project goals
 

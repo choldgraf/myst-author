@@ -16,6 +16,7 @@ Roles like `{ref}`, `{numref}`, and `{eq}` link to a label.
 ## The basics
 
 The editor renders each block, except the one with your cursor, which shows its Markdown instead.
+In VS Code, click the book button in the editor's toolbar to turn this on.
 The web editor saves about half a second after you stop typing.
 In JupyterLab and VS Code, save as usual.
 

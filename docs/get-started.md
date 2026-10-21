@@ -23,7 +23,7 @@ npm run demo
 The editor opens at <http://127.0.0.1:4321>.
 Set `PORT` to use another port, for example `PORT=8000 npm run demo`.
 On macOS it also opens a browser tab, unless you set `NO_OPEN=1`.
-mystmd doesn't run code cells or inline `{eval}` expressions unless you ask.
+mystmd doesn't run code cells or inline `{eval}` expressions by default.
 [Code cells and `{eval}`](guide/preview.md#code-cells-and-eval) says how to turn that on.
 
 To run it from any folder as `myst-author`, run `npm link -w packages/app` once in the clone.

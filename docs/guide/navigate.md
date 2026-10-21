@@ -8,9 +8,10 @@ So it can list the project's pages, outline a page by its sections and figures, 
 
 ## The table of contents
 
-This lists the pages of your project in the order the built site shows them.
+The table of contents lists the pages of your project in the order the built site shows them.
 It comes from the `toc` in `myst.yml`, or from the files and folders when `myst.yml` has no `toc`.
 A part is a title-only entry in the `toc` that groups pages.
+It shows as a title you can't click, with its pages under it.
 Pages nest under their parent page.
 Click a page to open it.
 The list updates when mystmd rebuilds.

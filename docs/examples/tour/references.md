@@ -37,7 +37,8 @@ An `xref:` link points to a label in another project, one listed under `project.
 This project lists the Python docs under the key `python`.
 The part after `#` is either a page, like `library/abc`, or an object, like `abc.ABC`.
 This links to the `abc` module page: <xref:python#library/abc>.
-The editor downloads the Python docs index for this step, so it needs an internet connection.
+To complete and check these links, the editor downloads the Python docs' index.
+That needs an internet connection.
 
 :::{tip} Try this: complete an external reference
 Type `[](xref:python#abc.` below this box and pick a target from the list.

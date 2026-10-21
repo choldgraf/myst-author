@@ -2,7 +2,8 @@
 title: Live preview
 ---
 
-**Live** is on by default, so each block on this page is rendered.
+**Live** is on by default in the web editor and JupyterLab, so each block on this page is rendered.
+In VS Code, click the book button in the editor's toolbar to turn it on.
 The block with your cursor shows its Markdown, so you always edit the source.
 
 (live-editing)=
@@ -101,6 +102,7 @@ The dropdown above shows its Markdown, with the match selected.
 Click **Source** in the toolbar to see the plain Markdown, and **Live** to come back.
 Click **Preview** to see the whole page beside the editor.
 In JupyterLab, run **MyST: Live Preview** from the Command Palette to turn live preview off and on.
+In VS Code, click the book button, or run **MyST: Toggle Live Editor**, to switch between the text editor and the live editor.
 :::
 
 ## Next

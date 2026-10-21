@@ -40,10 +40,12 @@ Content of the second tab.
 
 :::{tip} Try this: edit a nested directive
 Add a third `{tab-item}` inside the `{tab-set}` above.
-Click a tab to switch to it.
-That doesn't show the Markdown, but clicking the tab's text does.
+Click a tab's title to switch to it, without showing the Markdown.
+Click the text inside the tab to show its Markdown.
 :::
 
 ## Next
 
 The next page, [](notebook.ipynb), shows MyST in a notebook.
+That page and the last one, [](github.md), are for JupyterLab and VS Code.
+In the web editor, this is the end of the tour.

@@ -9,11 +9,15 @@ Until then, you build and load it from this repository.
 
 You need the `code` command on your `PATH`.
 On macOS, run **Shell Command: Install 'code' command in PATH** from the VS Code Command Palette.
+Until MyST Language Server and MyST Syntax are published, VS Code won't activate this extension without them, even with `--extensionDevelopmentPath`.
+The second and third lines below build and install them.
 
 ```sh
-npm install                      # from the repo root
+npm install                                    # from the repo root
+node packages/vscode/deps.mjs                  # writes packages/vscode/deps/*.vsix
+for f in packages/vscode/deps/*.vsix; do code --install-extension "$f"; done
 cd packages/vscode
-node build.mjs                   # writes dist/
+node build.mjs                                 # writes dist/
 code --extensionDevelopmentPath="$PWD" /path/to/a/myst/project
 ```
 
@@ -29,11 +33,10 @@ code --install-extension packages/vscode/myst-author.vsix
 `npm run vscode` from the repo root packages and installs it, replacing any copy you installed before.
 Reload open VS Code windows afterwards.
 
-Until MyST Language Server and MyST Syntax are published, install them first, as [Develop](https://github.com/choldgraf/myst-author/tree/main/packages/vscode#develop) says.
-
-`npm run demo:vscode` instead opens a fresh copy of the tour in a separate VS Code.
-That VS Code has its own settings and the extensions this one depends on.
-Choose **Trust** when VS Code asks, since it doesn't run the extension in Restricted Mode.
+To try the tour without changing your own VS Code, run `npm run demo:vscode` after `npm install`.
+It opens a fresh copy of the tour in a separate VS Code, with its own settings and extensions.
+It installs MyST Author and the extensions MyST Author depends on there.
+Choose **Trust** when VS Code asks, because VS Code doesn't run MyST Author in Restricted Mode.
 
 ## What works
 
@@ -59,10 +62,8 @@ Choose **Trust** when VS Code asks, since it doesn't run the extension in Restri
 
 ## Develop
 
-After changing any package, rebuild (`node build.mjs`) and reload the window (**Developer: Reload Window**).
-
-Until MyST Language Server and MyST Syntax are published, VS Code won't activate this extension without their `.vsix` files installed, even with `--extensionDevelopmentPath`.
-`node packages/vscode/deps.mjs` builds both into `packages/vscode/deps/`, and `code --install-extension` installs each.
+After changing any package, rebuild with `node build.mjs` in `packages/vscode`.
+Then reload the window (**Developer: Reload Window**).
 
 The comments in `build.mjs` explain how the extension and its webviews are built.
 

@@ -9,8 +9,9 @@ Install it from source, as below, or try it on [Binder](https://chrisholdgraf.co
 The extension is a frontend only.
 It talks to [mystmd-lsp](https://github.com/choldgraf/mystmd-lsp) through jupyter-lsp, which comes with JupyterLab and runs the language server over a websocket.
 The language server finds each file's project, the nearest `myst.yml` under Jupyter's root folder, and runs mystmd for that project.
-So Lab can open at your home folder, and completions, the preview and the table of contents follow whichever project you're editing.
-The extension reaches each project's mystmd through [jupyter-server-proxy](https://jupyter-server-proxy.readthedocs.io).
+So you can start Lab in your home folder.
+Completions, the preview and the table of contents switch to the project of the file you're editing.
+The browser talks to each project's mystmd through [jupyter-server-proxy](https://jupyter-server-proxy.readthedocs.io).
 See [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) for the setup.
 
 ## Try it
@@ -47,6 +48,7 @@ ln -sfn "$PWD/packages/jupyterlab/dist/labextension" "$(jupyter --data-dir)/labe
 Then add [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) to your Jupyter config, with jupyter-server-proxy installed.
 That config adds a **MyST Author** entry to the Launcher.
 That entry opens the web editor on `MYST_AUTHOR_PROJECT`, or on the tour if that isn't set.
+Jupyter needs `myst` on its `PATH`, so [install mystmd](https://mystmd.org/guide/installing) or set `MYST_BIN`.
 Rebuild and reload the page after changes.
 
 ## What works
@@ -68,8 +70,9 @@ Rebuild and reload the page after changes.
 - To open the preview, right-click in a Markdown editor and pick **MyST: Open Preview to the Side**, or find it in the Command Palette.
   It follows the current Markdown editor, but not notebooks.
   It works as [Preview](https://chrisholdgraf.com/myst-author/guide/preview) describes.
-- Files mystmd doesn't build get the fast preview and no reference help.
+- Files mystmd doesn't build get live preview in the editor, but no side preview and no reference help.
   That includes files with no `myst.yml` above them under Jupyter's root folder.
+  When you switch to one of those files, the side preview keeps showing the last page it showed.
 - The language features need jupyter-lsp, which ships with JupyterLab.
   Without it, the extension logs a warning in the browser console, and only the preview works.
 

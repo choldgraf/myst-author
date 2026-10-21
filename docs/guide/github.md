@@ -15,7 +15,8 @@ gh repo clone you/your-book
 ```
 
 The clone goes inside the MyST Author checkout, which is fine for a session.
-When you open a page in it, the [VS Code extension](vscode.md) finds the project, and completions, the preview and the MyST TOC switch to it.
+When you open a page in the clone, the [VS Code extension](vscode.md) finds its project.
+Completions, the preview and the MyST TOC switch to that project.
 
 Codespaces signs you in to GitHub for the repository it was opened from, which is MyST Author's.
 Pushing to your own repository needs one more sign-in, in the terminal:
@@ -35,13 +36,13 @@ To edit the project in the web editor instead, point it at the clone as [Get sta
 ## JupyterHub
 
 Your hub needs the [JupyterLab extension](jupyterlab.md) and its setup, plus [nbgitpuller](https://nbgitpuller.readthedocs.io), [jupyterlab-git](https://github.com/jupyterlab/jupyterlab-git) and [gh](https://cli.github.com).
-[`binder/environment.yml`](https://github.com/choldgraf/myst-author/blob/main/binder/environment.yml) lists them all.
+[`binder/environment.yml`](https://github.com/choldgraf/myst-author/blob/main/binder/environment.yml) lists the packages, and [`binder/postBuild`](https://github.com/choldgraf/myst-author/blob/main/binder/postBuild) installs mystmd and the extension.
 
 Make a link with the [nbgitpuller link generator](https://nbgitpuller.readthedocs.io/en/latest/link.html).
 Fill in your hub's URL, the repository, **JupyterLab** as the application, and the page as the file to open.
 Opening the link clones the project into your home folder and opens the page.
 If the project is already there, it pulls the latest changes instead.
-The extension follows the file you open, so Lab can stay at your home folder.
+The extension works with the project the open file is in, so Lab can stay at your home folder.
 
 To commit and push, use the **Git** view in the left sidebar, or a terminal.
 Sign in once, and your home folder keeps the credentials:

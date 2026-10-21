@@ -20,7 +20,8 @@ Switch back to a tour page and the TOC and labels switch back too.
 :::
 
 :::{tip} Try this: push a change
-Pushing needs a repository you can write to, so sign in and make the clone a fork of your own:
+Pushing needs a repository you can write to, so sign in and make the clone a fork of your own.
+On Codespaces, run `unset GITHUB_TOKEN` first, because the Codespace's own token only works for the MyST Author repository.
 
 ```bash
 gh auth login
@@ -31,7 +32,8 @@ cd mystmd-lsp && gh repo fork --remote
 Edit the demo page you opened above, then commit and push it from the **Git** view in JupyterLab's sidebar, or from VS Code's **Source Control** view.
 The clone is a repository of its own, so Source Control lists two repositories.
 Pick the `mystmd-lsp` one.
+On Codespaces, Source Control may keep pushing with the Codespace's token, so run `git push` in that terminal instead.
 :::
 
-On Codespaces, sign in as [Work with GitHub](https://chrisholdgraf.com/myst-author/guide/github#github-codespaces) describes, since the Codespace's own token only reaches the MyST Author repository.
+[Work with GitHub](https://chrisholdgraf.com/myst-author/guide/github#github-codespaces) has more on signing in on Codespaces.
 That page also has a link that pulls a project into Binder for you, the steps for a JupyterHub, and what to know before signing in on a Binder.
