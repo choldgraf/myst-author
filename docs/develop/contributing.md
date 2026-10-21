@@ -82,27 +82,30 @@ The tour project in `docs/examples/tour/` is a separate MyST project, not part o
 ## Record the demo videos
 
 The demo videos in the docs are attachments on [issue #7](https://github.com/choldgraf/myst-author/issues/7), not files in git.
-`npm run docs` and `npm run docs:live` first run `npm run docs:videos`, which downloads them into `docs/videos/`.
+mystmd can't show a remote video in a figure yet ([mystmd#3100](https://github.com/jupyter-book/mystmd/issues/3100)).
+So `npm run docs` and `npm run docs:live` first run `npm run docs:videos`, which downloads them into `docs/videos/`.
 It skips any video that's already there, so delete a video to download the published one again.
-The video URLs are in `docs/videos.mjs`.
+The video URLs are in `docs/videos/download.mjs`.
 
 Record a video again when a feature in it looks different.
 The videos are recorded with [shot-scraper](https://shot-scraper.datasette.io/en/stable/video.html).
-Each video has a storyboard, a YAML file at the repository root that lists the clicks and typing to record.
+Each video has a storyboard next to it in `docs/videos/`, a YAML file that lists the clicks and typing to record.
 Each storyboard starts its editor on a fresh copy of the tour.
 Run the storyboards from the repository root:
 
 ```bash
-uvx shot-scraper video demo-storyboard.yml --mp4 --timeout 120000             # the web editor
-uvx shot-scraper video demo-storyboard-jupyterlab.yml --mp4 --timeout 120000  # JupyterLab
-uvx shot-scraper video demo-storyboard-vscode.yml --mp4 --timeout 120000      # VS Code, in code-server
+uvx shot-scraper video docs/videos/web-editor.yml --mp4 --timeout 120000  # the web editor
+uvx shot-scraper video docs/videos/jupyterlab.yml --mp4 --timeout 120000  # JupyterLab
+uvx shot-scraper video docs/videos/vscode.yml --mp4 --timeout 120000      # VS Code, in code-server
 ```
 
 The JupyterLab storyboard needs the built extension, so run `npm run demo:lab` once before it.
+The storyboards use ports 4400, 9100 and 9200, and put their copies of the tour under `/tmp/myst-author-video-*`.
+If a recording stops partway, its editor may keep running, so stop it with `pkill -f /tmp/myst-author-` before you try again.
 Each storyboard writes a WebM and an MP4 into `docs/videos/`, such as `vscode.webm` and `vscode.mp4`.
 The docs build shows the new MP4 right away, because `npm run docs:videos` doesn't replace it.
 To publish it, drag the new MP4 into a comment on issue #7.
-Then replace that video's old URL in `docs/videos.mjs` with the new attachment's URL.
+Then replace that video's old URL in `docs/videos/download.mjs` with the new attachment's URL.
 The comments in each storyboard explain its workarounds, such as moving the cursor to the caret after a click.
 
 ## Publish the VS Code extension

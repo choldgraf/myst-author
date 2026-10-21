@@ -31,7 +31,7 @@ sh: |
 server: exec /tmp/myst-author-code-server/bin/code-server --auth none --bind-addr 127.0.0.1:9200 --extensions-dir /tmp/myst-author-code-server/extensions --user-data-dir /tmp/myst-author-code-server/user --disable-telemetry --disable-workspace-trust /tmp/myst-author-video-vscode
 url: http://127.0.0.1:9200/?folder=/tmp/myst-author-video-vscode
 wait_for: ".explorer-folders-view"
-# Glide the cursor to each click, as in demo-storyboard.yml.
+# Glide the cursor to each click, as in web-editor.yml.
 # The live editor is a webview, which is an iframe inside another iframe.
 # VS Code rewrites the inner iframe's document, which drops shot-scraper's cursor from it.
 # Both iframes share the VS Code page's origin, so the script below follows the mouse inside them and draws the cursor and click ring on the page.

@@ -8,6 +8,10 @@ This comes from [mystmd-lsp](https://chrisholdgraf.com/mystmd-lsp/features), who
 
 ![Completing a directive option](../images/option-completion.png)
 
+Type `/` to insert a whole directive or role.
+At the start of a line, `/tip` inserts a `:::{tip}` directive with its closing fence.
+After a space in a sentence, `/kbd` inserts a `{kbd}` role.
+
 ## Syntax highlighting
 
 The web editor and VS Code highlight MyST syntax with [myst-syntax](https://github.com/choldgraf/myst-syntax), which lists what it covers.

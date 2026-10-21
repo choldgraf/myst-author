@@ -10,7 +10,7 @@ server: exec node packages/jupyterlab/lab.mjs /tmp/myst-author-video-lab --port 
 url: http://127.0.0.1:9100/lab/tree/index.md?reset&token=demo
 # The figure's image shows once mystmd has built the page.
 wait_for: ".jp-FileEditor img[data-canonical-url]"
-# Glide the cursor to each click, as in demo-storyboard.yml.
+# Glide the cursor to each click, as in web-editor.yml.
 javascript: |
   document.head.insertAdjacentHTML("beforeend", `<style>
     #shot-scraper-cursor { transition: left 450ms ease-in-out, top 450ms ease-in-out, opacity 120ms !important; }

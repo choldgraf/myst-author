@@ -20,7 +20,7 @@
     "vscode": "npm run package -w packages/vscode && code --install-extension packages/vscode/myst-author.vsix --force",
     "test": "npm test --workspaces --if-present",
     "typecheck": "tsc",
-    "docs:videos": "node docs/videos.mjs",
+    "docs:videos": "node docs/videos/download.mjs",
     "docs:live": "npm run docs:videos && cd docs && myst start",
     "docs": "npm run docs:videos && cd docs && myst build --html"
   },

@@ -1,19 +1,18 @@
 // `npm run docs:videos`: download the demo videos into docs/videos/, skipping any that are already there.
 // They're attachments on https://github.com/choldgraf/myst-author/issues/7, so they stay out of git.
+// mystmd can't show a remote video in a figure yet: https://github.com/jupyter-book/mystmd/issues/3100
 // Delete a video to download it again.
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const videos = {
-  'web-editor.mp4': 'https://github.com/user-attachments/assets/8d4ffe16-00a5-44d9-8914-c3bc4ebab7bc',
-  'jupyterlab.mp4': 'https://github.com/user-attachments/assets/d3f229f0-66e0-4fad-9622-46063b70aaf9',
-  'vscode.mp4': 'https://github.com/user-attachments/assets/a67030c8-8445-496b-8f6c-ff8cc808eed8',
+  'web-editor.mp4': 'https://github.com/user-attachments/assets/3154528c-bd78-4687-9e75-0d7e3066c060',
+  'jupyterlab.mp4': 'https://github.com/user-attachments/assets/4c51f822-06a0-4330-b7f6-1a48efe1a8bd',
+  'vscode.mp4': 'https://github.com/user-attachments/assets/845c3d82-7ed7-4bc2-806e-4aed6bdc38bd',
 };
 
-const dir = join(import.meta.dirname, 'videos');
-mkdirSync(dir, { recursive: true });
 for (const [name, url] of Object.entries(videos)) {
-  const file = join(dir, name);
+  const file = join(import.meta.dirname, name);
   if (existsSync(file)) continue;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`couldn't download ${name}: ${res.status} from ${url}`);
