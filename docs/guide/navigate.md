@@ -42,7 +42,7 @@ To open the outline:
 ## Find a label anywhere
 
 You can search every label in the project by its name or by its text.
-In VS Code, that's every project open in the window.
+In VS Code, the search covers every project open in the window.
 For example, `sea` finds a figure labeled `fig-slr` if its caption mentions sea level.
 
 - In the web editor, press {kbd}`Cmd+P` and type `@` followed by your search.

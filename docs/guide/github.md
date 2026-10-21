@@ -35,7 +35,8 @@ To edit the project in the web editor instead, point it at the clone as [Get sta
 
 ## JupyterHub
 
-Your hub needs the [JupyterLab extension](jupyterlab.md) and its setup, plus [nbgitpuller](https://nbgitpuller.readthedocs.io), [jupyterlab-git](https://github.com/jupyterlab/jupyterlab-git) and [gh](https://cli.github.com).
+Your hub needs the [JupyterLab extension](jupyterlab.md#install-it-in-your-own-jupyterlab), installed and configured as that section says.
+It also needs [nbgitpuller](https://nbgitpuller.readthedocs.io), [jupyterlab-git](https://github.com/jupyterlab/jupyterlab-git) and [gh](https://cli.github.com).
 [`binder/environment.yml`](https://github.com/choldgraf/myst-author/blob/main/binder/environment.yml) lists the packages, and [`binder/postBuild`](https://github.com/choldgraf/myst-author/blob/main/binder/postBuild) installs mystmd and the extension.
 
 Make a link with the [nbgitpuller link generator](https://nbgitpuller.readthedocs.io/en/latest/link.html).
@@ -55,7 +56,8 @@ gh auth setup-git
 ## Binder
 
 The [MyST Author Binder](get-started.md#open-it-on-binder) has nbgitpuller, jupyterlab-git and `gh`.
-A Binder is a throwaway copy, so pulling is easy and pushing takes a sign-in each session.
+A Binder is a throwaway copy.
+Pulling a project into it takes one link, and pushing takes a sign-in each session.
 
 To pull your project into it, make a link with the [nbgitpuller link generator](https://nbgitpuller.readthedocs.io/en/latest/link.html).
 Choose **Binder**, give it `choldgraf/myst-author` as the environment repository, and your project as the content repository.

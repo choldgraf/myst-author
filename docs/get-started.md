@@ -29,7 +29,7 @@ mystmd doesn't run code cells or inline `{eval}` expressions by default.
 To run it from any folder as `myst-author`, run `npm link -w packages/app` once in the clone.
 Then run `myst-author` in a project folder, or `myst-author path/to/project`.
 The command runs your clone, so a `git pull` updates it.
-Outside the clone, it can't use the mystmd that `npm install` added.
+Unlike the `npm run` commands, `myst-author` doesn't use the mystmd that `npm install` added.
 It uses the `myst` on your `PATH` instead, so [install mystmd](https://mystmd.org/guide/installing) or set `MYST_BIN` to its location.
 
 The editor still runs without mystmd.

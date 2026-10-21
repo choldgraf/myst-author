@@ -38,8 +38,10 @@ To run it on your computer, you need Node 24 or newer.
 ```bash
 git clone https://github.com/choldgraf/myst-author && cd myst-author
 npm install
-npm run demo                     # a copy of the tour, or `npm start -- path/to/your/project`
+npm run demo                     # opens a copy of the tour project
 ```
+
+To open your own project instead, run `npm start -- path/to/your/project`.
 
 See [Get started](https://chrisholdgraf.com/myst-author/get-started) for more options, and for what works without mystmd.
 
