@@ -5,7 +5,7 @@ description: Live preview, the fast and built previews, the preview badge, jumpi
 
 There are two ways to see the open file as a MyST page:
 
-- **Live**, the default, renders it inside the editor.
+- **Live**, the default in the web editor and JupyterLab, renders it inside the editor.
 - **Preview** shows it in a pane beside the editor.
 
 Switch between them, or to plain **Source**, with the buttons in the toolbar.
@@ -42,7 +42,8 @@ There are two versions of the preview, shown in the same pane:
 
 The editor shows the built preview whenever mystmd's latest build matches the text in the editor, and the fast preview otherwise.
 In the fast preview, blocks you haven't touched since the last build keep showing the built version.
-The badge in the toolbar tells you which one you're looking at:
+A badge tells you which one you're looking at.
+It's in the toolbar of the web editor, and at the top of the preview pane in VS Code and JupyterLab.
 
 | Badge | Meaning |
 |---|---|
@@ -54,20 +55,23 @@ The badge in the toolbar tells you which one you're looking at:
 
 ## Code cells and `{eval}`
 
-In the web editor and JupyterLab, mystmd runs code cells and inline `{eval}` expressions as it builds.
-The built preview shows their results and outputs.
-In VS Code, running code is off by default.
-The MyST Language Server extension starts mystmd there, so turn on that extension's `mystmdLsp.execute` setting to run code.
-Running code needs Jupyter.
-Without Jupyter, pages still build and notebooks keep their saved outputs.
-mystmd runs a page again each time you save a change to its code.
+mystmd doesn't run code cells or inline `{eval}` expressions unless you turn it on.
+Pages still build, and notebooks keep their saved outputs.
 
-To turn off running code in the web editor, run `npm start -- --no-execute path/to/project`.
-In JupyterLab, set `MYST_AUTHOR_EXECUTE=0` before you start Jupyter.
+To run code:
+
+- In the web editor, run `npm start -- --execute path/to/project`.
+- In JupyterLab, set `MYST_AUTHOR_EXECUTE=1` before you start Jupyter.
+- In VS Code, the MyST Language Server extension starts mystmd.
+  Turn on that extension's `mystmdLsp.execute` setting, then reload the window.
+
+Running code needs Jupyter.
+When code runs, the built preview shows its results and outputs.
+mystmd runs a page again each time you save a change to its code.
 
 Outputs look like they do on a mystmd site.
 HTML output, such as a pandas table, shows too.
-HTML with scripts, such as a plotly plot, shows its plain text instead, because scripts there could read your files.
+HTML with scripts, such as a plotly plot, shows its plain text instead, because its scripts would run with the editor's access to your files.
 
 ## mystmd's logs
 

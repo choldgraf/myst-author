@@ -18,7 +18,7 @@ These pages explain what each part of MyST Author does and where its limits are.
 The web editor on the tour project.
 ```
 
-## The layout
+## The web editor
 
 The web editor's toolbar has these buttons:
 
