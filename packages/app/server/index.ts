@@ -13,9 +13,9 @@ import { startMyst } from 'mystmd-client/start';
 import { listMarkdown, resolveInside, writeUnlessChanged } from './files.ts';
 import { lspBridge } from './lsp.ts';
 
-const { values, positionals } = parseArgs({ allowPositionals: true, allowNegative: true, options: { help: { type: 'boolean', short: 'h' }, execute: { type: 'boolean', default: true } } });
+const { values, positionals } = parseArgs({ allowPositionals: true, options: { help: { type: 'boolean', short: 'h' }, execute: { type: 'boolean', default: false } } });
 if (values.help || positionals.length > 1) {
-  console.log('Usage: myst-author [--no-execute] [folder]\n\nEdit the MyST project in folder (default: the current folder).\n--no-execute stops mystmd from running code cells and inline expressions as it builds.\nEnvironment: PORT, MYST_BIN, NO_OPEN=1');
+  console.log('Usage: myst-author [--execute] [folder]\n\nEdit the MyST project in folder (default: the current folder).\n--execute makes mystmd run code cells and inline expressions as it builds.\nEnvironment: PORT, MYST_BIN, NO_OPEN=1');
   process.exit(values.help ? 0 : 1);
 }
 // Use real path (what Jupyter reports), so document URIs match in JupyterLab when the folder is reached through a symlink.

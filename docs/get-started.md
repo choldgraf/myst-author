@@ -23,8 +23,8 @@ npm run demo
 The editor opens at <http://127.0.0.1:4321>.
 Set `PORT` to use another port, for example `PORT=8000 npm run demo`.
 On macOS it also opens a browser tab, unless you set `NO_OPEN=1`.
-mystmd runs code cells and inline `{eval}` expressions when it builds a page.
-[Code cells and `{eval}`](guide/preview.md#code-cells-and-eval) says how to turn that off.
+mystmd doesn't run code cells or inline `{eval}` expressions unless you ask.
+[Code cells and `{eval}`](guide/preview.md#code-cells-and-eval) says how to turn that on.
 
 To run it from any folder as `myst-author`, run `npm link -w packages/app` once in the clone.
 Then run `myst-author` in a project folder, or `myst-author path/to/project`.
@@ -42,6 +42,7 @@ References to labels in other files aren't completed or checked, and you only ge
 
 Codespaces installs everything, including the [VS Code extension](guide/vscode.md), and opens the tour project's first page.
 To see the preview, run **MyST: Open Preview to the Side** from the Command Palette.
+To see live preview in the editor, click the book button in the editor's toolbar.
 The extension works with the project the open file is in.
 To use another MyST project, clone it in the terminal and open a page in it.
 The tour's last page, [Bring your own project](https://github.com/choldgraf/myst-author/blob/main/docs/examples/tour/github.md), walks through that and through pushing a change back.

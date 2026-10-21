@@ -3,8 +3,8 @@
 import os
 
 repo = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-# Code cells run as mystmd builds. MYST_AUTHOR_EXECUTE=0 turns that off.
-execute = [] if os.environ.get("MYST_AUTHOR_EXECUTE") == "0" else ["--execute"]
+# mystmd only runs code cells and {eval} expressions when MYST_AUTHOR_EXECUTE=1.
+execute = ["--execute"] if os.environ.get("MYST_AUTHOR_EXECUTE") == "1" else []
 
 # jupyter-lsp (it comes with JupyterLab) runs the language server at <server>/lsp/ws/mystmd-lsp for the JupyterLab extension.
 # The server finds each file's project under Jupyter's root folder and runs mystmd for it.
@@ -21,7 +21,8 @@ c.LanguageServerManager.language_servers = {
 
 # The web editor runs at <server>/myst-author/ and in the Launcher, and edits one project.
 # That's MYST_AUTHOR_PROJECT if set (`npm run lab` sets it), else the tour.
-# It runs its own mystmd, so editing that same project in Lab too means two builds of it.
+# The web editor starts its own mystmd, separate from the language server's.
+# If you also edit the same project in Lab's editors, mystmd builds it twice.
 project = os.environ.get("MYST_AUTHOR_PROJECT", f"{repo}/docs/examples/tour")
 c.ServerProxy.servers = {
     "myst-author": {
