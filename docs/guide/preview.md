@@ -26,7 +26,7 @@ The cursor lands on the text you clicked.
 
 Live preview works in the web editor, JupyterLab, and VS Code.
 In JupyterLab it also covers notebooks' Markdown cells while you edit them.
-[JupyterLab](jupyterlab.md#what-works) explains when cells you aren't editing show mystmd's build.
+[JupyterLab](jupyterlab.md) explains when cells you aren't editing show mystmd's build.
 In JupyterLab, turn it on or off with **MyST: Live Preview** in the Command Palette.
 In VS Code, switch a Markdown file between the text editor and the live editor with **MyST: Toggle Live Editor**.
 

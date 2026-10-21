@@ -1,6 +1,6 @@
 ---
 title: Contributing
-description: The repository layout, running the tests and docs, and running each host.
+description: The repository layout, running the tests and docs, running each host, recording the demo videos, and publishing the VS Code extension.
 ---
 
 ## Repository layout
@@ -43,18 +43,22 @@ The web editor, with the development server:
 npm run demo
 ```
 
-It runs on a temporary copy of the tour, because the editor saves as you type and would otherwise edit the repo.
-`npm start -- path/to/project` runs it on any project.
-It uses Vite, so changes to the app reload in the browser as you save them.
+`npm run demo` runs on a temporary copy of the tour, because the editor saves as you type and would otherwise edit the repo.
+`npm start -- path/to/project` runs the web editor on any project.
+The development server uses Vite, so changes to the app reload in the browser as you save them.
 
-The production build, which Binder's **MyST Author** Launcher entry runs through [`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py):
+The production build:
 
 ```bash
 npm run build
 npm run serve -- path/to/project
 ```
 
-The VS Code extension: see [VS Code](../guide/vscode.md) to run it, and the [Develop section of its README](https://github.com/choldgraf/myst-author/tree/main/packages/vscode#develop) for rebuilding after changes.
+On Binder, the **MyST Author** Launcher entry runs the production build.
+[`binder/jupyter_server_config.py`](https://github.com/choldgraf/myst-author/blob/main/binder/jupyter_server_config.py) adds that entry.
+
+To run the VS Code extension, see [VS Code](../guide/vscode.md).
+To rebuild it after changes, see the [Develop section of its README](https://github.com/choldgraf/myst-author/tree/main/packages/vscode#develop).
 
 The JupyterLab extension, built and running in JupyterLab (see [JupyterLab](../guide/jupyterlab.md)):
 
@@ -74,6 +78,32 @@ npm run docs
 
 Pages use `{include}` to pull in the package READMEs where they can, so update the README rather than copying text into a docs page.
 The tour project in `docs/examples/tour/` is a separate MyST project, not part of the docs site.
+
+## Record the demo videos
+
+The demo videos in the docs are attachments on [issue #7](https://github.com/choldgraf/myst-author/issues/7), not files in git.
+`npm run docs` and `npm run docs:live` first run `npm run docs:videos`, which downloads them into `docs/videos/`.
+It skips any video that's already there, so delete a video to download the published one again.
+The video URLs are in `docs/videos.mjs`.
+
+Record a video again when a feature in it looks different.
+The videos are recorded with [shot-scraper](https://shot-scraper.datasette.io/en/stable/video.html).
+Each video has a storyboard, a YAML file at the repository root that lists the clicks and typing to record.
+Each storyboard starts its editor on a fresh copy of the tour.
+Run the storyboards from the repository root:
+
+```bash
+uvx shot-scraper video demo-storyboard.yml --mp4 --timeout 120000             # the web editor
+uvx shot-scraper video demo-storyboard-jupyterlab.yml --mp4 --timeout 120000  # JupyterLab
+uvx shot-scraper video demo-storyboard-vscode.yml --mp4 --timeout 120000      # VS Code, in code-server
+```
+
+The JupyterLab storyboard needs the built extension, so run `npm run demo:lab` once before it.
+Each storyboard writes a WebM and an MP4 into `docs/videos/`, such as `vscode.webm` and `vscode.mp4`.
+The docs build shows the new MP4 right away, because `npm run docs:videos` doesn't replace it.
+To publish it, drag the new MP4 into a comment on issue #7.
+Then replace that video's old URL in `docs/videos.mjs` with the new attachment's URL.
+The comments in each storyboard explain its workarounds, such as moving the cursor to the caret after a click.
 
 ## Publish the VS Code extension
 

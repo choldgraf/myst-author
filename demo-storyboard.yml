@@ -1,0 +1,117 @@
+# Records the web editor demo video.
+# See "Record the demo videos" in docs/develop/contributing.md for how to run it.
+output: docs/videos/web-editor.webm
+cursor: true
+
+# A fresh copy of the tour, as `npm run demo` makes, but at a path we know.
+sh: rm -rf /tmp/myst-author-video-demo && cp -R docs/examples/tour /tmp/myst-author-video-demo
+# This is `npm start` run with node directly.
+# npm doesn't pass shot-scraper's stop signal on, so the server would keep running after the recording.
+server: NO_OPEN=1 PORT=4400 exec node packages/app/server/index.ts /tmp/myst-author-video-demo
+url: http://127.0.0.1:4400/
+# The badge says `built ✓` once mystmd has built the page.
+# By then the language server also knows the project's labels.
+wait_for: ".badge >> text=built ✓"
+# Playwright jumps the mouse straight to each click, so this CSS makes shot-scraper's cursor glide there.
+# The click ring waits until the cursor arrives.
+javascript: |
+  document.head.insertAdjacentHTML("beforeend", `<style>
+    #shot-scraper-cursor { transition: left 450ms ease-in-out, top 450ms ease-in-out, opacity 120ms !important; }
+    .shot-scraper-click-ring { opacity: 0; animation-duration: 250ms !important; animation-delay: 450ms !important; }
+  </style>`);
+  // Clicking a block shows its Markdown and moves the text, so scenes call toCaret() to glide the cursor to the caret.
+  // toCaret() waits for CodeMirror to draw the caret in its new place.
+  window.toCaret = () => setTimeout(() => {
+    const caret = document.querySelector(".cm-focused .cm-cursor-primary").getBoundingClientRect();
+    document.dispatchEvent(new MouseEvent("mousemove", { clientX: caret.left, clientY: caret.top + caret.height / 2 }));
+  }, 300);
+
+scenes:
+- name: A MyST page, rendered in the editor
+  do:
+  - pause: 1.5
+  - scroll: {y: 420, duration: 2}
+  - pause: 1
+
+- name: Click a block to edit its Markdown
+  do:
+  - click: "text=Click a word in this sentence"
+  - js: toCaret()
+  - pause: 1.5
+  # Twice: the first End stops where the line wraps.
+  - press: End
+  - press: End
+  - type: {into: .cm-content, text: " It saves as you type.", delay_ms: 80}
+  - pause: 1.5
+
+- name: Complete a cross-reference
+  do:
+  # Playwright clicks the middle of what the selector matches, so click one-line targets like a tip's title.
+  - click: "text=Try this: complete a reference"
+  - js: toCaret()
+  - pause: 1
+  - press: ArrowDown
+  - press: End
+  - press: End
+  - type: {into: .cm-content, text: " {numref}`", delay_ms: 90}
+  - wait_for: .cm-tooltip-autocomplete
+  - pause: 2
+  - type: {into: .cm-content, text: "fig-lo", delay_ms: 150}
+  - pause: 0.8
+  - press: Enter
+  # The faint text after the reference shows what readers will see.
+  - pause: 2.5
+
+- name: Jump to any label in the project with Cmd+P
+  do:
+  - press: ControlOrMeta+p
+  - type: {into: .switcher input, text: "@", delay_ms: 100}
+  - pause: 2
+  - type: {into: .switcher input, text: "tour-ref", delay_ms: 120}
+  - pause: 1
+  - press: Enter
+  - wait_for: "text=A broken reference"
+  - pause: 1.5
+
+- name: Fix a broken reference
+  do:
+  - scroll: {to: 'h2:has-text("A broken reference")', duration: 1}
+  - click: '.cm-live li:has-text("⚠ #foo")'
+  - js: toCaret()
+  - pause: 2.5
+  - press: End
+  - press: End
+  - press: ArrowLeft
+  - press: Backspace
+  - press: Backspace
+  - press: Backspace
+  - type: {into: .cm-content, text: "tour-ref", delay_ms: 120}
+  - pause: 1.5
+  - press: Enter
+  - pause: 2.5
+
+- name: Insert a directive with /
+  do:
+  - click: '.files button:has-text("directives.md")'
+  - wait_for: "text=Nested directives"
+  - pause: 1
+  - press: ControlOrMeta+End
+  - press: Enter
+  - press: Enter
+  - type: {into: .cm-content, text: "/tip", delay_ms: 150}
+  - wait_for: .cm-tooltip-autocomplete
+  - pause: 2
+  - press: Enter
+  - type: {into: .cm-content, text: "Every directive is one keystroke away.", delay_ms: 70}
+  - pause: 1
+  - click: 'h2:has-text("Next")'
+  - scroll: {to: '.cm-live >> nth=-1', duration: 1}
+  - pause: 2.5
+
+- name: Side-by-side preview
+  do:
+  - click: '.toggles button:has-text("Preview")'
+  - wait_for: .preview
+  - pause: 2.5
+  - click: '.preview >> text=Content of the first tab.'
+  - pause: 3

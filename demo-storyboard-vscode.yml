@@ -1,0 +1,121 @@
+# Records the VS Code extension demo video, in VS Code in the browser with code-server.
+# See "Record the demo videos" in docs/develop/contributing.md for how to run it.
+# The first run downloads code-server to /tmp/myst-author-code-server.
+output: docs/videos/vscode.webm
+cursor: true
+
+# Install the extensions as `npm run demo:vscode` does, with settings that open Markdown in the live editor and keep the window plain.
+# `files.autoSave` saves edits to disk, so mystmd rebuilds and the preview shows `built ✓`.
+sh: |
+  set -e
+  CS=/tmp/myst-author-code-server
+  test -x $CS/bin/code-server || curl -fsSL https://code-server.dev/install.sh | sh -s -- --method=standalone --prefix=$CS
+  npm run package -w packages/vscode
+  test -d packages/vscode/deps || (cd packages/vscode && node deps.mjs)
+  for vsix in packages/vscode/deps/*.vsix packages/vscode/myst-author.vsix; do
+    $CS/bin/code-server --extensions-dir $CS/extensions --install-extension $vsix --force
+  done
+  mkdir -p $CS/user/User
+  cat > $CS/user/User/settings.json <<'EOF'
+  {
+    "workbench.editorAssociations": { "*.md": "mystAuthor.live" },
+    "workbench.colorTheme": "Default Light Modern",
+    "workbench.startupEditor": "none",
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
+    "chat.disableAIFeatures": true,
+    "files.autoSave": "afterDelay",
+    "files.exclude": { "_build": true, ".ipynb_checkpoints": true, ".vscode": true }
+  }
+  EOF
+  rm -rf /tmp/myst-author-video-vscode && cp -R docs/examples/tour /tmp/myst-author-video-vscode
+server: exec /tmp/myst-author-code-server/bin/code-server --auth none --bind-addr 127.0.0.1:9200 --extensions-dir /tmp/myst-author-code-server/extensions --user-data-dir /tmp/myst-author-code-server/user --disable-telemetry --disable-workspace-trust /tmp/myst-author-video-vscode
+url: http://127.0.0.1:9200/?folder=/tmp/myst-author-video-vscode
+wait_for: ".explorer-folders-view"
+# Glide the cursor to each click, as in demo-storyboard.yml.
+# The live editor is a webview, which is an iframe inside another iframe.
+# VS Code rewrites the inner iframe's document, which drops shot-scraper's cursor from it.
+# Both iframes share the VS Code page's origin, so the script below follows the mouse inside them and draws the cursor and click ring on the page.
+javascript: |
+  document.head.insertAdjacentHTML("beforeend", `<style>
+    #shot-scraper-cursor { transition: left 450ms ease-in-out, top 450ms ease-in-out, opacity 120ms !important; }
+    .shot-scraper-click-ring { opacity: 0; animation-duration: 250ms !important; animation-delay: 450ms !important; }
+  </style>`);
+  const cursor = document.getElementById("shot-scraper-cursor");
+  setInterval(() => {
+    for (const outer of document.querySelectorAll("iframe.webview")) {
+      const inner = outer.contentDocument?.querySelector("iframe");
+      const doc = inner?.contentDocument;
+      if (!doc || doc.followed) continue;
+      doc.followed = true;
+      const onPage = (e) => {
+        const a = outer.getBoundingClientRect(), b = inner.getBoundingClientRect();
+        return { left: `${e.clientX + a.left + b.left}px`, top: `${e.clientY + a.top + b.top}px` };
+      };
+      doc.addEventListener("mousemove", (e) => Object.assign(cursor.style, onPage(e)), true);
+      doc.addEventListener("mousedown", (e) => {
+        const ring = document.createElement("div");
+        ring.className = "shot-scraper-click-ring";
+        Object.assign(ring.style, onPage(e));
+        document.body.append(ring);
+        setTimeout(() => ring.remove(), 700);
+      }, true);
+    }
+  }, 250);
+  // Clicking a block shows its Markdown and moves the text, so scenes call toCaret() to glide the cursor to the caret.
+  // toCaret() waits for CodeMirror to redraw the caret, then sends a mousemove inside the webview for the listener above.
+  window.toCaret = () => setTimeout(() => {
+    const doc = document.querySelector("iframe.webview").contentDocument.querySelector("iframe").contentDocument;
+    const caret = doc.querySelector(".cm-focused .cm-cursor-primary").getBoundingClientRect();
+    doc.dispatchEvent(new MouseEvent("mousemove", { clientX: caret.left, clientY: caret.top + caret.height / 2 }));
+  }, 300);
+
+# Selectors that start with `iframe.webview >> internal:control=enter-frame >> iframe >> internal:control=enter-frame` find elements inside the live editor's two nested iframes.
+# `internal:control=enter-frame` is how Playwright writes a frame locator as a selector.
+# YAML anchors like `&editor` name a selector where it's first used, and aliases like `*editor` reuse it.
+scenes:
+- name: Open a page in the live editor
+  do:
+  - click: '.explorer-folders-view :text("index.md")'
+  - wait_for: "iframe.webview >> internal:control=enter-frame >> iframe >> internal:control=enter-frame >> .cm-live >> nth=0"
+  - pause: 3
+  - scroll: {to: 'iframe.webview >> internal:control=enter-frame >> iframe >> internal:control=enter-frame >> :text("Try this: complete a reference")', duration: 1.5}
+
+- name: Complete a cross-reference
+  do:
+  - click: "iframe.webview >> internal:control=enter-frame >> iframe >> internal:control=enter-frame >> text=Try this: complete a reference"
+  - js: toCaret()
+  - pause: 1
+  - press: ArrowDown
+  # Twice: the first End stops where the line wraps.
+  - press: End
+  - press: End
+  - type: {into: &editor "iframe.webview >> internal:control=enter-frame >> iframe >> internal:control=enter-frame >> .cm-content", text: " {numref}`", delay_ms: 90}
+  - wait_for: &completions "iframe.webview >> internal:control=enter-frame >> iframe >> internal:control=enter-frame >> .cm-tooltip-autocomplete"
+  - pause: 1.5
+  - type: {into: *editor, text: "fig-lo", delay_ms: 150}
+  - pause: 0.8
+  - press: Enter
+  - pause: 2
+
+- name: Insert a directive with /
+  do:
+  - press: ControlOrMeta+End
+  - press: Enter
+  - press: Enter
+  - type: {into: *editor, text: "/tip", delay_ms: 150}
+  - wait_for: *completions
+  - pause: 1.5
+  - press: Enter
+  - type: {into: *editor, text: "The same features as the web editor.", delay_ms: 70}
+  - pause: 1
+  - click: 'iframe.webview >> internal:control=enter-frame >> iframe >> internal:control=enter-frame >> h2:has-text("Next")'
+  - scroll: {to: "iframe.webview >> internal:control=enter-frame >> iframe >> internal:control=enter-frame >> .cm-live >> nth=-1", duration: 1}
+  - pause: 2
+
+- name: Open the preview to the side
+  do:
+  - press: F1
+  - type: {into: .quick-input-box input, text: "MyST: Open Preview", delay_ms: 60}
+  - pause: 0.8
+  - press: Enter
+  - pause: 4
