@@ -64,4 +64,5 @@ JupyterLab doesn't have it.
 ## Next
 
 The next page, [](live.md), shows what live preview does.
-Press {kbd}`Cmd+P` (or {kbd}`Ctrl+P`) to open it by name.
+In the web editor or VS Code, press {kbd}`Cmd+P` (or {kbd}`Ctrl+P`) to open it by name.
+In JupyterLab, open it from the file browser.
