@@ -7,6 +7,7 @@ import { PageConfig, PathExt, URLExt } from '@jupyterlab/coreutils';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import type { IDocumentWidget } from '@jupyterlab/docregistry';
 import { IEditorTracker, type FileEditor } from '@jupyterlab/fileeditor';
+import { IMainMenu } from '@jupyterlab/mainmenu';
 import { INotebookTracker, type NotebookPanel } from '@jupyterlab/notebook';
 import { Signal } from '@lumino/signaling';
 import { Widget } from '@lumino/widgets';
@@ -120,8 +121,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'Cross-reference help and live preview for MyST.',
   autoStart: true,
   requires: [IEditorTracker, IDocumentManager, INotebookTracker],
-  optional: [ICommandPalette],
-  activate: (app: JupyterFrontEnd, tracker: IEditorTracker, docs: IDocumentManager, notebooks: INotebookTracker, palette: ICommandPalette | null) => {
+  optional: [ICommandPalette, IMainMenu],
+  activate: (app: JupyterFrontEnd, tracker: IEditorTracker, docs: IDocumentManager, notebooks: INotebookTracker, palette: ICommandPalette | null, menu: IMainMenu | null) => {
     // Radix puts myst-theme's hover cards in <body>, outside the shadow roots, so they get the preview's CSS scoped to the card (`:root` becomes `:scope`).
     document.head.appendChild(document.createElement('style')).textContent = `@scope (.hover-card-content) { ${cellCss.replaceAll(':root', ':scope')} }`;
     // Without rootUri, document URIs would be wrong, so skip the language features. The preview still works.
@@ -286,6 +287,14 @@ const plugin: JupyterFrontEndPlugin<void> = {
     });
     palette?.addItem({ command, category: 'MyST' });
     app.contextMenu.addItem({ command, selector: '.jp-FileEditor', rank: 0 });
+
+    const help = 'myst-author:open-guide';
+    app.commands.addCommand(help, {
+      label: 'MyST Author Guide',
+      execute: () => void window.open('https://chrisholdgraf.com/myst-author/guide', '_blank', 'noopener'),
+    });
+    palette?.addItem({ command: help, category: 'MyST' });
+    menu?.helpMenu.addGroup([{ command: help }]);
 
     app.shell.add(toc, 'left', { rank: 300 });
   },

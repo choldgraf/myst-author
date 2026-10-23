@@ -55,6 +55,10 @@
         "command": "mystAuthor.toggleLive",
         "title": "MyST: Toggle Live Editor",
         "icon": "$(book)"
+      },
+      {
+        "command": "mystAuthor.openGuide",
+        "title": "MyST: Open Guide"
       }
     ],
     "menus": {
@@ -63,6 +67,10 @@
           "command": "mystAuthor.toggleLive",
           "when": "resourceLangId == markdown || activeCustomEditorId == mystAuthor.live",
           "group": "navigation"
+        },
+        {
+          "command": "mystAuthor.openGuide",
+          "when": "activeCustomEditorId == mystAuthor.live"
         }
       ]
     }

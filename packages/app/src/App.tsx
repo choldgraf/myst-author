@@ -234,6 +234,7 @@ export function App() {
         <span className="side">
           <button aria-pressed={showFiles} onClick={() => setShowFiles(!showFiles)}>Files</button>
           <button onClick={() => setSwitcher(true)}>Open <kbd>⌘P</kbd></button>
+          <a href="https://chrisholdgraf.com/myst-author/guide" target="_blank" rel="noopener">Help</a>
         </span>
         <span className="title">{doc?.path}</span>
         <span className="side end">

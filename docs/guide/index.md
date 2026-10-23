@@ -10,6 +10,7 @@ These pages explain what each part of MyST Author does and where its limits are.
 - [Find your way around](navigate.md): a page outline that includes figures and equations, and searching labels by name or title.
 - [Preview](preview.md): live preview in the editor, the fast and built previews, and how to move between preview and source.
 - [Directives and roles](directives.md): completion and highlighting for directives and roles.
+- [Shortcuts](shortcuts.md): keys for bold, italic, code, and links.
 - [VS Code](vscode.md): using MyST Author in VS Code, and what differs.
 - [JupyterLab](jupyterlab.md): using MyST Author in JupyterLab, and what differs.
 - [Work with GitHub](github.md): pull a project from GitHub and push it back, from Codespaces, a JupyterHub, or Binder.
@@ -26,6 +27,7 @@ The web editor's toolbar has these buttons:
 - **Open ⌘P** opens a file by name.
   {kbd}`Cmd+P` and {kbd}`Ctrl+P` both work, on any system.
   Start with `@` to jump to a label anywhere in the project, or `#` to jump within the open file's [outline](navigate.md).
+- **Help** opens this guide.
 - **Source** shows plain Markdown.
 - **Preview** shows Markdown beside the [preview](preview.md) pane.
 - **Live**, the default, shows the rendered page and lets you [edit it in place](preview.md#live-preview).

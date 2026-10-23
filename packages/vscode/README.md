@@ -54,6 +54,7 @@ Choose **Trust** when VS Code asks, because VS Code doesn't run MyST Author in R
   Following a link or definition into another file opens that file in your default editor for Markdown.
   VS Code's own editor features, such as the outline, Copilot, and Vim, don't work in the live editor.
   Notebooks' Markdown cells don't get the live editor.
+- To open the [MyST Author guide](https://chrisholdgraf.com/myst-author/guide), run **MyST: Open Guide**, or find it in the live editor's **...** menu.
 
 ## Notes
 

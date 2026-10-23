@@ -42,6 +42,7 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('mystAuthor.openPreview', () => preview.open()),
     vscode.commands.registerCommand('mystAuthor.toggleLive', toggleLive),
+    vscode.commands.registerCommand('mystAuthor.openGuide', () => vscode.env.openExternal(vscode.Uri.parse('https://chrisholdgraf.com/myst-author/guide'))),
     vscode.window.registerCustomEditorProvider('mystAuthor.live', live, { webviewOptions: { retainContextWhenHidden: true } }),
   );
 }

@@ -74,6 +74,7 @@ Rebuild and reload the page after changes.
 - Files mystmd doesn't build get live preview in the editor, but no side preview and no reference help.
   That includes files with no `myst.yml` above them under Jupyter's root folder.
   When you switch to one of those files, the side preview keeps showing the last page it showed.
+- To open the [MyST Author guide](https://chrisholdgraf.com/myst-author/guide), pick **Help > MyST Author Guide**.
 - The language features need jupyter-lsp, which ships with JupyterLab.
   Without it, the extension logs a warning in the browser console, and only the preview works.
 

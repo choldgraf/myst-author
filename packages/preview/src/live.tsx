@@ -6,6 +6,7 @@ import { Decoration, EditorView, keymap, WidgetType, type DecorationSet } from '
 import { tags } from '@lezer/highlight';
 import * as mystmd from 'mystmd-client/parse';
 import { showBuilt } from './built-match.ts';
+import { formatKeymap } from './format.ts';
 import { builtWithLines, parseMyst, spans, withBuiltBlocks, type Block, type ParseResult, type Span } from './parse.ts';
 import { INTERACTIVE, Preview } from './Preview.tsx';
 
@@ -229,9 +230,10 @@ const theme = EditorView.baseTheme({
  * A host whose own CSS clashes with it (JupyterLab) passes the CSS as `css`: blocks then render in shadow roots that share it.
  * KaTeX's fonts still need its CSS on the page, because shadow roots ignore `@font-face`. The host sets the editor's font.
  * Add `followLinks` for clicks on rendered links.
+ * It includes the formatting shortcuts in `format.ts`, such as Cmd+B for bold. Mod-i replaces CodeMirror's select-parent shortcut.
  */
 export function livePreview({ css }: { css?: string } = {}): Extension {
-  const base = [liveField, arrows, theme];
+  const base = [liveField, arrows, theme, Prec.high(formatKeymap)];
   if (!css) return base;
   const sheet = shadowSheet(`${css}\n[data-line-start] > * { margin-top: 0; margin-bottom: 0 }`); // as the theme does outside shadow roots
   return [base, shadowStyles.of(sheet)];
