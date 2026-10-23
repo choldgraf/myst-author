@@ -1,7 +1,7 @@
 import { createRoot, type Root } from 'react-dom/client';
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
+import { HighlightStyle, syntaxHighlighting, syntaxTree } from '@codemirror/language';
 import { forEachDiagnostic } from '@codemirror/lint';
-import { Facet, Prec, StateField, type EditorState, type Extension, type Transaction } from '@codemirror/state';
+import { Facet, Prec, StateField, type EditorState, type Extension, type Range, type Transaction } from '@codemirror/state';
 import { Decoration, EditorView, keymap, WidgetType, type DecorationSet } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import * as mystmd from 'mystmd-client/parse';
@@ -262,6 +262,42 @@ export function bodyStart(text: string) {
   return /^---\n[\s\S]*?\n---\n/.exec(lf)?.[0].length ?? 0;
 }
 
+const inlineCode = Decoration.mark({ class: 'cm-page-code' });
+const codeLine = Decoration.line({ class: 'cm-page-code-line' });
+
+/**
+ * Classes for inline code's text and for code blocks' lines, so `pageLook` can style them like the page.
+ * Highlight tags can't do this.
+ * Markdown tags inline code and a directive's body alike, and a fence with a language drops the tag.
+ */
+function codeDecorations(state: EditorState) {
+  const found: Range<Decoration>[] = [];
+  syntaxTree(state).iterate({ enter: (node) => {
+    if (node.name === 'InlineCode') {
+      // Inline code always starts and ends with backtick marks.
+      const from = node.node.firstChild!.to, to = node.node.lastChild!.from;
+      if (from < to) found.push(inlineCode.range(from, to));
+      return false;
+    }
+    if (node.name === 'FencedCode' || node.name === 'CodeBlock') {
+      for (let pos = node.from; pos <= node.to;) {
+        const line = state.doc.lineAt(pos);
+        found.push(codeLine.range(line.from));
+        pos = line.to + 1;
+      }
+      return false;
+    }
+  } });
+  return Decoration.set(found, true);
+}
+
+const codeLook = StateField.define<DecorationSet>({
+  create: codeDecorations,
+  // The tree also changes without an edit, when background parsing finishes.
+  update: (deco, tr) => (syntaxTree(tr.startState) === syntaxTree(tr.state) ? deco.map(tr.changes) : codeDecorations(tr.state)),
+  provide: (f) => EditorView.decorations.from(f),
+});
+
 /**
  * Live preview that reads like the page: a centred column, a proportional font (code stays monospace), and no gutters.
  * Source text and headings use the rendered page's sizes, so showing a block's source doesn't reflow the page.
@@ -273,13 +309,14 @@ export const pageLook: Extension = [
     '.cm-content': { maxWidth: '46rem', margin: '0 auto', padding: '2.5rem 1.5rem 30vh', fontFamily: 'system-ui, sans-serif', fontSize: '16px', lineHeight: '1.75', color: '#44403c' },
     '.cm-gutters': { display: 'none' },
     '.cm-activeLine': { backgroundColor: 'transparent' }, // otherwise the blank line under the title, where the cursor starts, shows as a band
+    '.cm-page-code, .cm-page-code-line': { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: '0.875em' },
+    '.cm-page-code': { color: '#be185d' },
   }),
+  codeLook,
   // `prose`'s sizes, weights, and colours, hard-coded to match myst-theme.
   // If myst-theme's `prose` styles change, read its CSS and update these values.
   // Inline styles stay on in source, as in Obsidian, so bold text doesn't turn plain when you click it.
   syntaxHighlighting(HighlightStyle.define([
-    // `labelName` is a code fence's info string, such as `{figure} path`, styled like the code below it.
-    { tag: [tags.monospace, tags.labelName], fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: '0.875em' },
     { tag: tags.heading1, fontSize: '2.25em', lineHeight: '1.11', fontWeight: '800', color: '#111827' },
     { tag: tags.heading2, fontSize: '1.5em', lineHeight: '1.33', fontWeight: '700', color: '#111827' },
     { tag: tags.heading3, fontSize: '1.25em', lineHeight: '1.6', fontWeight: '600', color: '#111827' },
@@ -288,5 +325,11 @@ export const pageLook: Extension = [
     { tag: tags.emphasis, fontStyle: 'italic' },
     { tag: tags.link, fontWeight: '500', color: '#1d4ed8' },
     { tag: [tags.processingInstruction, tags.url], color: '#9ca3af' }, // Markdown marks (`##`, `**`, `-`, `[]()`) and link targets
+    // Code, in the colours of myst-theme's `code-highlight-light.css`.
+    { tag: [tags.keyword, tags.bool, tags.null], color: '#aa0d91' },
+    { tag: tags.string, color: '#c41a16' },
+    { tag: tags.comment, color: '#007400' },
+    { tag: tags.number, color: '#1c00cf' },
+    { tag: [tags.typeName, tags.className], color: '#5c2699' },
   ])),
 ];
