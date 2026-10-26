@@ -221,6 +221,8 @@ const theme = EditorView.baseTheme({
   '.cm-live': { display: 'flow-root', whiteSpace: 'normal', fontFamily: 'system-ui, sans-serif', cursor: 'text', padding: '0 2px 0 6px' },
   '.cm-live [data-line-start] > *': { marginTop: '0', marginBottom: '0' },
   '.cm-live:hover': { outline: '1px dashed #ccd' },
+  // The preview's CSS outlines hovered blocks too, which would draw a second box inside this one.
+  '.cm-live [data-line-start]:hover': { outline: 'none' },
   '.cm-live-warn': { borderLeft: '3px solid #f59e0b', paddingLeft: '0.5rem' },
 });
 
@@ -235,7 +237,7 @@ const theme = EditorView.baseTheme({
 export function livePreview({ css }: { css?: string } = {}): Extension {
   const base = [liveField, arrows, theme, Prec.high(formatKeymap)];
   if (!css) return base;
-  const sheet = shadowSheet(`${css}\n[data-line-start] > * { margin-top: 0; margin-bottom: 0 }`); // as the theme does outside shadow roots
+  const sheet = shadowSheet(`${css}\n[data-line-start] > * { margin-top: 0; margin-bottom: 0 }\n[data-line-start]:hover { outline: none }`); // as the theme does outside shadow roots
   return [base, shadowStyles.of(sheet)];
 }
 
