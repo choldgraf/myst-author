@@ -1,5 +1,5 @@
 import { createRoot, type Root } from 'react-dom/client';
-import { HighlightStyle, syntaxHighlighting, syntaxTree } from '@codemirror/language';
+import { HighlightStyle, indentUnit, syntaxHighlighting, syntaxTree } from '@codemirror/language';
 import { forEachDiagnostic } from '@codemirror/lint';
 import { Facet, Prec, StateField, type EditorState, type Extension, type Range, type Transaction } from '@codemirror/state';
 import { Decoration, EditorView, keymap, WidgetType, type DecorationSet } from '@codemirror/view';
@@ -235,7 +235,8 @@ const theme = EditorView.baseTheme({
  * It includes the formatting shortcuts in `format.ts`, such as Cmd+B for bold. Mod-i replaces CodeMirror's select-parent shortcut.
  */
 export function livePreview({ css }: { css?: string } = {}): Extension {
-  const base = [liveField, arrows, theme, Prec.high(formatKeymap)];
+  // Four spaces nest a list item under a numbered item, which two don't.
+  const base = [liveField, arrows, theme, Prec.high(formatKeymap), indentUnit.of('    ')];
   if (!css) return base;
   const sheet = shadowSheet(`${css}\n[data-line-start] > * { margin-top: 0; margin-bottom: 0 }\n[data-line-start]:hover { outline: none }`); // as the theme does outside shadow roots
   return [base, shadowStyles.of(sheet)];

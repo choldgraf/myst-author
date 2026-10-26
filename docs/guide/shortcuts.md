@@ -12,6 +12,8 @@ Use {kbd}`Ctrl` instead of {kbd}`Cmd` on Windows and Linux.
 | {kbd}`Cmd+I` | Italic. Press it again to remove the italic. |
 | {kbd}`Cmd+E` | Inline code. |
 | {kbd}`Cmd+K` | Link. If text is selected, it becomes the link text and a list of files appears. Type `#` for the project's labels instead. |
+| {kbd}`Tab` | Indent the line, such as to nest a list item under the one above. |
+| {kbd}`Shift+Tab` | Unindent the line. |
 
 To insert directives, roles, and references, see [Directives and roles](directives.md) and [References](references.md).
 For keys that jump to files and labels, see [Find your way around](navigate.md).

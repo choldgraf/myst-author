@@ -1,4 +1,5 @@
 import { startCompletion } from '@codemirror/autocomplete';
+import { indentWithTab } from '@codemirror/commands';
 import { EditorSelection, type EditorState, type StateCommand } from '@codemirror/state';
 import { keymap, type EditorView } from '@codemirror/view';
 
@@ -49,4 +50,5 @@ export const formatKeymap = keymap.of([
   { key: 'Mod-i', run: toggleMark('*', 1) },
   { key: 'Mod-e', run: toggleMark('`', 1) },
   { key: 'Mod-k', run: link },
+  indentWithTab, // CodeMirror leaves Tab to move focus unless asked
 ].map((b) => ({ ...b, stopPropagation: true })));
