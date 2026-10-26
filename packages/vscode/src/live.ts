@@ -2,7 +2,7 @@ import { resolve } from 'node:path';
 import * as vscode from 'vscode';
 import { spawnLsp } from '@myst-author/lsp-client/spawn';
 import type { BuiltPage } from 'mystmd-client/content-server';
-import { followLink } from '@myst-author/preview/controller';
+import { followLink, isExternal } from '@myst-author/preview/controller';
 import { linkHost, projectPath, webviewHtml, type Project, type ProjectFor } from './project.ts';
 
 /** A position as VS Code and LSP count it (0-based). Not an offset: CodeMirror counts a CRLF as one character, VS Code as two. */
@@ -116,7 +116,9 @@ export class LiveEditor implements vscode.CustomTextEditorProvider {
         else if (m.type === 'definition') this.definition(document, at(m.at));
         else if (m.type === 'references') this.references(document, at(m.at), post);
         else if (m.type === 'rename') this.rename(document, at(m.at));
+        // Without a project, only external links go anywhere, as in JupyterLab.
         else if (m.type === 'follow' && project) this.follow(document, project, m, post);
+        else if (m.type === 'follow' && isExternal(m.href)) vscode.env.openExternal(vscode.Uri.parse(m.href));
       }),
       // Edits from anywhere else (the text editor, its undo, a rename, git) go to the webview.
       vscode.workspace.onDidChangeTextDocument((e) => {
