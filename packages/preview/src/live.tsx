@@ -309,7 +309,10 @@ const codeLook = StateField.define<DecorationSet>({
 export const pageLook: Extension = [
   EditorView.theme({
     // myst-theme's body text (Tailwind typography's `prose`).
-    '.cm-content': { maxWidth: '46rem', margin: '0 auto', padding: '2.5rem 1.5rem 30vh', fontFamily: 'system-ui, sans-serif', fontSize: '16px', lineHeight: '1.75', color: '#44403c' },
+    // Side padding sits on the scroller, so multi-line selections stop at the text's edges.
+    // .cm-content is border-box, so the text column stays 43rem wide, as before.
+    '.cm-scroller': { padding: '0 1.5rem' },
+    '.cm-content': { maxWidth: '43rem', margin: '0 auto', padding: '2.5rem 0 30vh', fontFamily: 'system-ui, sans-serif', fontSize: '16px', lineHeight: '1.75', color: '#44403c' },
     '.cm-gutters': { display: 'none' },
     '.cm-activeLine': { backgroundColor: 'transparent' }, // otherwise the blank line under the title, where the cursor starts, shows as a band
     '.cm-page-code, .cm-page-code-line': { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', fontSize: '0.875em' },
