@@ -100,6 +100,17 @@ export function builtWithLines(page: BuiltPage, text: string) {
  */
 export const hasTitle = (frontmatter: Record<string, any>) => !!frontmatter.title && !frontmatter.content_includes_title;
 
+/**
+ * The labels you can reference in a block, as `#a #b`, which the preview's CSS shows above it.
+ * Targets have an `html_id`, but so do references to them, which take their target's.
+ * A heading's automatic label is `implicit`.
+ */
+export function labels(node: GenericNode) {
+  const found = new Set<string>(); // a subfigure's caption number repeats its label
+  visit(node, (n: GenericNode) => void (n.html_id && !n.implicit && n.type !== 'crossReference' && found.add(`#${n.label}`)));
+  return [...found].join(' ') || undefined;
+}
+
 /** A range of source lines (1-based, inclusive) that the live editor in `./live` renders and reveals as one unit, and the blocks in it. */
 export type Span = { start: number; end: number; blocks: Block[] };
 

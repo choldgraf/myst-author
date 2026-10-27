@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { visit } from 'unist-util-visit';
-import { cellPages, fromBuiltPage, parseMyst, spans, withBuiltBlocks, withSourceLines } from './parse.ts';
+import { cellPages, fromBuiltPage, labels, parseMyst, spans, withBuiltBlocks, withSourceLines } from './parse.ts';
 
 const md = [
   '---', 'title: Hi', '---',          // 1-3
@@ -25,6 +25,10 @@ test('top-level blocks keep their source line ranges', () => {
     blocks.map((b) => [b.node.type, b.start, b.end]),
     [['heading', 4, 4], ['paragraph', 6, 6], ['container', 8, 11], ['math', 13, 13]],
   );
+});
+
+test("labels: a block's targets, but not its references or a heading's automatic label", () => {
+  assert.deepEqual(parseMyst(md).blocks.map((b) => labels(b.node)), [undefined, '#sec', '#fig-a', '#eq1']);
 });
 
 test('spans: the titled frontmatter, and each block with the label lines above it', () => {

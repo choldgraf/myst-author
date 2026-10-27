@@ -4,6 +4,10 @@
 /* The preview uses myst-theme's light theme whatever the host editor's theme is. */
 body { background: white; color: black; padding: 1rem 2rem; }
 [data-line-start]:hover { outline: 1px dashed #ccd; cursor: pointer; }
+/* A block's labels, faint like the editor's inlay hints, above its top-right corner. The `/ ''` keeps screen readers from reading them out. */
+[data-labels] { position: relative; }
+[data-labels]::after { content: attr(data-labels) / ''; position: absolute; bottom: 100%; right: 0; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #9ca3af; font-size: 0.8em; line-height: 1.4; }
+[data-labels]:hover::after { color: #6b7280; }
 /* A bar across the top, so the badge never covers the page text. */
 .badge-bar { position: sticky; top: 0; z-index: 10; display: flex; justify-content: flex-end; padding: 0.5rem 0; background: white; }
 .badge { padding: 0 0.4rem; border: 1px solid #ccc; border-radius: 999px; background: white; color: #666; font: 0.8rem system-ui, sans-serif; }

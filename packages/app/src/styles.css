@@ -44,6 +44,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Positioned, so KaTeX's hidden MathML scrolls with the pane instead of making the page taller. */
 .preview { position: relative; }
 .preview [data-line-start]:hover { outline: 1px dashed #ccd; cursor: pointer; }
+/* As in the preview package's page.css. */
+[data-labels] { position: relative; }
+[data-labels]::after { content: attr(data-labels) / ''; position: absolute; bottom: 100%; right: 0; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #9ca3af; font-size: 0.8em; line-height: 1.4; }
+[data-labels]:hover::after { color: #6b7280; }
 
 /* Quick switcher (Cmd+P) */
 .switcher { position: fixed; inset: 12% 0 auto; width: min(34rem, 90vw); margin: auto; overflow: hidden; background: white; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 24px 60px #00000029; }

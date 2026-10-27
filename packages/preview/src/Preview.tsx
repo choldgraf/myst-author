@@ -7,7 +7,7 @@ import { SourceFileKind } from 'myst-spec-ext';
 import { DEFAULT_RENDERERS, MyST } from 'myst-to-react';
 import { mystmdMissing, rebaseFetched, savedHashes, type Built } from 'mystmd-client/content-server';
 import { Output, Outputs } from './outputs.tsx';
-import { builtWithLines, fromBuiltPage, hasTitle, parseMyst, withBuiltBlocks, type ParseResult } from './parse.ts';
+import { builtWithLines, fromBuiltPage, hasTitle, labels, parseMyst, withBuiltBlocks, type ParseResult } from './parse.ts';
 
 /**
  * What to preview for a file's live text.
@@ -125,7 +125,7 @@ export function Preview({ result, topLine, onLineClick, onFollowLink }: Props) {
           <article className="article" onClick={onClick} ref={article}>
             {hasTitle(result.frontmatter) && <h1 data-line-start={1}>{String(result.frontmatter.title)}</h1>}
             {result.blocks.map((b) => (
-              <div key={b.node.key} data-line-start={b.start} data-line-end={b.end}>
+              <div key={b.node.key} data-line-start={b.start} data-line-end={b.end} data-labels={labels(b.node)}>
                 <MyST ast={b.node} />
               </div>
             ))}
